@@ -1,8 +1,9 @@
 ---
 title: RabbitMQ消息队列
-date: 2016-07-04 21:50:32
 tags: RabbitMQ
 categories: 消息队列
+abbrlink: 26d4999d
+date: 2016-07-04 21:50:32
 ---
 
 关于详细介绍：http://blog.csdn.net/column/details/rabbitmq.html

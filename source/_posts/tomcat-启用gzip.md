@@ -1,8 +1,9 @@
 ---
 title: tomcat 启用gzip
-date: tomcat 启用gzip 21:47:45
+date: 'tomcat 启用gzip 21:47:45'
 tags: tomcat
-categories: 容器 
+categories: 容器
+abbrlink: 26f8b378
 ---
 
 编辑conf/server.xml文件

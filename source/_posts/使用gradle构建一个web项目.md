@@ -1,8 +1,9 @@
 ---
 title: 使用gradle构建一个web项目
-date: 2016-05-19 21:49:03
 tags: gradle
-categories: 构建工具 
+categories: 构建工具
+abbrlink: 45ab4f18
+date: 2016-05-19 21:49:03
 ---
 
 安装过程略去，配置下GRADLE_HOME和GRADLE_HOME\bin

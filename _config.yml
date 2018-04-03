@@ -13,8 +13,8 @@ timezone:
 
 # URL
 ## If your site is put in a subdirectory, set url as 'http://yoursite.com/child' and root as '/child/'
-url: https://www1350.github.io/blog/
-root: /blog/
+url: https://www1350.github.io/hexo/
+root: /hexo/
 permalink: post/:abbrlink.html
 abbrlink:
   alg: crc32  # 算法：crc16(default) and crc32
