@@ -1,5 +1,6 @@
 ---
 title: maven 笔记
+abbrlink: 6badd4fd
 date: 2018-04-03 22:39:19
 tags:
 categories:

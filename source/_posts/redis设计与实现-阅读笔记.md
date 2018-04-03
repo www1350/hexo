@@ -1,5 +1,6 @@
 ---
 title: redis设计与实现 阅读笔记
+abbrlink: c6de90cc
 date: 2018-04-03 22:40:56
 tags:
 categories:

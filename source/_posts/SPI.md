@@ -1,5 +1,6 @@
 ---
 title: SPI
+abbrlink: 2400ed9b
 date: 2018-04-03 22:40:29
 tags:
 categories:

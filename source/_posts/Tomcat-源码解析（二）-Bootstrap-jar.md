@@ -1,5 +1,6 @@
 ---
 title: Tomcat 源码解析（二）--Bootstrap.jar
+abbrlink: 143b4ffc
 date: 2018-04-03 22:42:50
 tags:
 categories:

@@ -1,5 +1,6 @@
 ---
 title: JDK动态代理
+abbrlink: dfdc2005
 date: 2018-04-03 22:40:11
 tags:
 categories:

@@ -1,5 +1,6 @@
 ---
 title: Java字节码操纵
+abbrlink: bab06bbc
 date: 2018-04-03 22:42:04
 tags:
 categories:

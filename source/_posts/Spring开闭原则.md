@@ -1,5 +1,6 @@
 ---
 title: Spring开闭原则
+abbrlink: ab99c5ee
 date: 2018-04-03 22:55:43
 tags:
 categories:

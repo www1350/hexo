@@ -1,5 +1,6 @@
 ---
 title: Tomcat 源码解析（四）--Lifecycle 机制和实现原理
+abbrlink: bf6044ee
 date: 2018-04-03 22:43:10
 tags:
 categories:

@@ -1,5 +1,6 @@
 ---
 title: NIO
+abbrlink: 429dd195
 date: 2018-04-03 22:40:38
 tags:
 categories:

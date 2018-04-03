@@ -1,5 +1,6 @@
 ---
 title: 'HashMap源码之红黑树(jdk1.8) '
+abbrlink: a9f951c8
 date: 2018-04-03 22:52:19
 tags:
 categories:

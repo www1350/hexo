@@ -1,5 +1,6 @@
 ---
 title: RocketMQ 源码分析(三) ----broker模块分析
+abbrlink: cba0f441
 date: 2018-04-03 22:41:53
 tags:
 categories:

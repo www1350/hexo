@@ -1,5 +1,6 @@
 ---
 title: RocketMQ 源码分析(二) ----通信模块分析
+abbrlink: 58cc55f9
 date: 2018-04-03 22:41:42
 tags:
 categories:

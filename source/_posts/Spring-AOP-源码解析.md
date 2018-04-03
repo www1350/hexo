@@ -1,5 +1,6 @@
 ---
 title: Spring AOP 源码解析
+abbrlink: 79fd2ad8
 date: 2018-04-03 22:42:29
 tags:
 categories:

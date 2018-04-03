@@ -1,8 +1,9 @@
 ---
 title: spring实现多数据源同时访问（跨数据库查询）
-date: 2016-07-07 22:36:57
 tags: spring
 categories: spring
+abbrlink: 5d182a8d
+date: 2016-07-07 22:36:57
 ---
 
 假如配置了两个数据源dataSourceOne、dataSourceTwo

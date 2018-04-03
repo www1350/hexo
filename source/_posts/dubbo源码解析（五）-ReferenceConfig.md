@@ -1,5 +1,6 @@
 ---
 title: dubbo源码解析（五） ReferenceConfig
+abbrlink: 26e556d8
 date: 2018-04-03 22:44:25
 tags:
 categories:

@@ -1,5 +1,6 @@
 ---
 title: Mybatis/Mybatis-Spring源码
+abbrlink: 4df53b51
 date: 2018-04-03 22:43:46
 tags:
 categories:

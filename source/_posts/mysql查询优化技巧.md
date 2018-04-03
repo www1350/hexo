@@ -1,5 +1,6 @@
 ---
 title: mysql查询优化技巧
+abbrlink: c2da5a2b
 date: 2018-04-03 22:39:01
 tags:
 categories:

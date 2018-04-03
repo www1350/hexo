@@ -1,5 +1,6 @@
 ---
 title: dubbo源码解析（二）remoting
+abbrlink: dee5b4dd
 date: 2018-04-03 22:43:58
 tags:
 categories:

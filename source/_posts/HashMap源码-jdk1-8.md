@@ -1,5 +1,6 @@
 ---
 title: 'HashMap源码(jdk1.8) '
+abbrlink: afadb629
 date: 2018-04-03 22:58:47
 tags:
 categories:

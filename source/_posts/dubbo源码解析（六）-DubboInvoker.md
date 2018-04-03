@@ -1,5 +1,6 @@
 ---
 title: dubbo源码解析（六） DubboInvoker
+abbrlink: a645d07f
 date: 2018-04-03 22:44:43
 tags:
 categories:

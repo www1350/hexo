@@ -1,5 +1,6 @@
 ---
 title: Javassist
+abbrlink: 2e60fe2e
 date: 2018-04-03 22:40:46
 tags:
 categories:

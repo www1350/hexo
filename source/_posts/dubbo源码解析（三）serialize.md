@@ -1,5 +1,6 @@
 ---
 title: dubbo源码解析（三）serialize
+abbrlink: de6ecf19
 date: 2018-04-03 22:44:07
 tags:
 categories:
