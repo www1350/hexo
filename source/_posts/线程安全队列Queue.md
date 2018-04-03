@@ -1,8 +1,9 @@
 ---
 title: 线程安全队列Queue
-date: 2016-07-05 22:08:54
 tags: Queue
 categories: Queue
+abbrlink: a5db83c3
+date: 2016-07-05 22:08:54
 ---
 
 线程安全的Queue可以分为阻塞队列和非阻塞队列，其中阻塞队列的典型例子是BlockingQueue，非阻塞队列的典型例子是ConcurrentLinkedQueue

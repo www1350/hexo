@@ -1,8 +1,11 @@
 ---
 title: RabbitMq整合spring简单样例
-date: 2016-07-04 22:06:07
-tags: [RabbitMq,spring]
+tags:
+  - RabbitMq
+  - spring
 categories: 消息队列
+abbrlink: cb39cd53
+date: 2016-07-04 22:06:07
 ---
 
 **生产者**

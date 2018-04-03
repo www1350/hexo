@@ -1,8 +1,9 @@
 ---
 title: mongodb
-date: 2016-07-04 22:03:26
 tags: mongodb
 categories: 数据库
+abbrlink: effa6b88
+date: 2016-07-04 22:03:26
 ---
 
  http://www.mongodb.org/downloads 
