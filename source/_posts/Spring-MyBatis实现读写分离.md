@@ -12,6 +12,8 @@ categories:
 * 缺点：维护麻烦，需要对原有的xml文件进行重新修改，不支持多读，不易扩展
 * 实现方式
 
+<!-- more -->
+
 ```
 <bean id="abstractDataSource" abstract="true" class="com.alibaba.druid.pool.DruidDataSource" init-method="init"
       destroy-method="close">

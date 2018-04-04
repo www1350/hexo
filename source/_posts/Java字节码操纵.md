@@ -1,9 +1,9 @@
 ---
 title: Java字节码操纵
 abbrlink: bab06bbc
-date: 2018-04-03 22:42:04
-tags:
-categories:
+date: 2017-12-23 22:42:04
+tags: [java,字节码]
+categories: 基础
 ---
 
 # 什么是字节码？

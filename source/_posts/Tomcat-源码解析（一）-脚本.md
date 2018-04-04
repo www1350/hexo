@@ -1,9 +1,9 @@
 ---
 title: Tomcat 源码解析（一）--脚本
 abbrlink: f42d2c92
-date: 2018-04-03 22:42:39
-tags:
-categories:
+date: 2018-03-11 22:42:39
+tags: [tomcat]
+categories: 源码
 ---
 
 我们来看下startup.sh

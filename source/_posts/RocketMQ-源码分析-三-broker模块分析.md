@@ -1,9 +1,9 @@
 ---
 title: RocketMQ 源码分析(三) ----broker模块分析
 abbrlink: cba0f441
-date: 2018-04-03 22:41:53
-tags:
-categories:
+date: 2018-03-19 22:41:53
+tags: [RocketMQ,rpc]
+categories: [中间件,源码]
 ---
 
 # 脚本分析

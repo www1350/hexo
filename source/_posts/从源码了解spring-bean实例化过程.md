@@ -2,8 +2,8 @@
 title: 从源码了解spring bean实例化过程
 abbrlink: '60402e58'
 date: 2018-04-03 22:39:53
-tags:
-categories:
+tags: [spring]
+categories: 源码
 ---
 
 现在都在简书写了：http://www.jianshu.com/p/0a9c964dd28a

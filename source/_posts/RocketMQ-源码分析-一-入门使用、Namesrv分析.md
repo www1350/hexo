@@ -2,8 +2,8 @@
 title: RocketMQ 源码分析(一) ----入门使用、Namesrv分析
 abbrlink: 54de003f
 date: 2018-04-03 22:41:23
-tags:
-categories:
+tags: [RocketMQ,rpc]
+categories: [中间件,源码]
 ---
 
 入门使用 ：http://rocketmq.apache.org/docs/quick-start/

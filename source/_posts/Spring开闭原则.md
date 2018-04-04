@@ -21,6 +21,8 @@ int LOWEST_PRECEDENCE = Integer.MAX_VALUE;//最低优先级
 2.3、无序的，没有实现Ordered/ PriorityOrdered的会在第三个顺序注册；
 2.4、内部Bean后处理器，实现了MergedBeanDefinitionPostProcessor接口的是内部Bean PostProcessor，将在最后且无序注册。
 
+<!-- more -->
+
 
 3、接下来我们看看内置的BeanPostProcessor执行顺序
 

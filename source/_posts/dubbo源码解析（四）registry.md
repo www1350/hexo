@@ -2,8 +2,8 @@
 title: dubbo源码解析（四）registry
 abbrlink: ee087dca
 date: 2018-04-03 22:44:16
-tags:
-categories:
+tags: [dubbo,rpc]
+categories: [中间件,源码]
 ---
 
 registry层

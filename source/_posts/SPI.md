@@ -1,9 +1,9 @@
 ---
 title: SPI
 abbrlink: 2400ed9b
-date: 2018-04-03 22:40:29
-tags:
-categories:
+date: 2017-09-01 22:40:29
+tags: [字节码,java,SPI]
+categories: 基础
 ---
 
 SPI指的是Service Provider Interface，服务提供接口

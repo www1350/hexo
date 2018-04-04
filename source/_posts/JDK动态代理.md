@@ -1,9 +1,9 @@
 ---
 title: JDK动态代理
 abbrlink: dfdc2005
-date: 2018-04-03 22:40:11
-tags:
-categories:
+date: 2017-08-31 22:40:11
+tags: [java,代理]
+categories: 基础
 ---
 
 使用动态代理的五大步骤

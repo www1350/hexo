@@ -2,8 +2,8 @@
 title: dubbo源码解析（三）serialize
 abbrlink: de6ecf19
 date: 2018-04-03 22:44:07
-tags:
-categories:
+tags: [dubbo,rpc]
+categories: [中间件,源码]
 ---
 
 serialize层

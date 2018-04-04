@@ -1,9 +1,9 @@
 ---
 title: 从源码了解spring MVC
 abbrlink: da0ac317
-date: 2018-04-03 22:41:13
-tags:
-categories:
+date: 2017-11-01 22:41:13
+tags: [spring]
+categories: 源码
 ---
 
 一般要让springmvc生效，我们都在web.xml配上这么一段 

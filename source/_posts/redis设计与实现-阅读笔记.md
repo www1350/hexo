@@ -1,9 +1,9 @@
 ---
 title: redis设计与实现 阅读笔记
 abbrlink: c6de90cc
-date: 2018-04-03 22:40:56
-tags:
-categories:
+date: 2017-09-28 22:40:56
+tags: [redis,笔记]
+categories: 数据库
 ---
 
 1.redis数据结构

@@ -1,7 +1,7 @@
 ---
 title: Spring AOP 源码解析
 abbrlink: 79fd2ad8
-date: 2018-04-03 22:42:29
+date: 2018-03-09 22:42:29
 tags:
 categories:
 ---
@@ -14,6 +14,7 @@ categories:
 
 <img width="1074" alt="sssxx2 2x" src="https://user-images.githubusercontent.com/7789698/37197055-1d5bbd44-23b4-11e8-9784-cd943486df30.png">
 
+<!-- more -->
 
 既然AnnotationAwareAspectJAutoProxyCreator被注册了，而且实现了BeanPostProcessor（每个bean实例化都会过），我们先来看下
 

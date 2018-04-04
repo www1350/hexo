@@ -1,9 +1,9 @@
 ---
 title: Tomcat 源码解析（四）--Lifecycle 机制和实现原理
 abbrlink: bf6044ee
-date: 2018-04-03 22:43:10
-tags:
-categories:
+date: 2018-03-11 22:43:10
+tags: [tomcat]
+categories: 源码
 ---
 
 # Lifecycle接口

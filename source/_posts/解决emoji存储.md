@@ -2,8 +2,8 @@
 title: 解决emoji存储
 abbrlink: 1e7e0292
 date: 2018-04-03 22:39:29
-tags:
-categories:
+tags: 
+categories: 数据库
 ---
 
 1.utf8mb4的最低mysql版本支持版本为5.5.3+，若不是，请升级到较新版本。

@@ -1,9 +1,9 @@
 ---
 title: Tomcat 源码解析（二）--Bootstrap.jar
 abbrlink: 143b4ffc
-date: 2018-04-03 22:42:50
-tags:
-categories:
+date: 2018-03-11 22:42:50
+tags: [tomcat]
+categories: 源码
 ---
 
 之前我们看到其实启动脚本就是使用Bootstrap 的main启动的

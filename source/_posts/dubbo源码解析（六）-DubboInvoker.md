@@ -2,8 +2,8 @@
 title: dubbo源码解析（六） DubboInvoker
 abbrlink: a645d07f
 date: 2018-04-03 22:44:43
-tags:
-categories:
+tags: [dubbo,rpc]
+categories: [中间件,源码]
 ---
 
 当service被调用时，通过代理最后调用的是FailoverClusterInvoker的invoke

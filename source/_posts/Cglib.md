@@ -1,9 +1,9 @@
 ---
 title: Cglib
 abbrlink: 29cef8e0
-date: 2018-04-03 22:40:21
-tags:
-categories:
+date: 2017-08-31 22:40:21
+tags: [Cglib,java,字节码]
+categories: 基础
 ---
 
 cglib（字节码生成库）是一个生成和转化Java字节码的高级api。被使用在AOP上。在实现内部，CGLIB库使用了ASM这一个轻量但高性能的字节码操作框架来转化字节码，产生新类

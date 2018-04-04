@@ -2,8 +2,8 @@
 title: Javassist
 abbrlink: 2e60fe2e
 date: 2018-04-03 22:40:46
-tags:
-categories:
+tags: [Javassist,字节码,java]
+categories: 基础
 ---
 
 java字节码被存储在一个叫做类文件的二进制文件。CtClass的对象代表一个类文件。ClassPool是存放CtClass的hash列表，用类名做key，如果CtClass没发现get()会读取一个class建造一个新的类记录到hash表并返回。

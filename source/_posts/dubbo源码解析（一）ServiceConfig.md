@@ -2,8 +2,8 @@
 title: dubbo源码解析（一）ServiceConfig
 abbrlink: 34093d70
 date: 2018-04-03 22:43:34
-tags:
-categories:
+tags: [dubbo,rpc]
+categories: [中间件,源码]
 ---
 
 ## 什么是Dubbo?

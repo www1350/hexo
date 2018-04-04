@@ -2,8 +2,8 @@
 title: dubbo源码解析（五） ReferenceConfig
 abbrlink: 26e556d8
 date: 2018-04-03 22:44:25
-tags:
-categories:
+tags: [dubbo,rpc]
+categories: [中间件,源码]
 ---
 
 分析完了服务提供者，紧接着分析消费者。

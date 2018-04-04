@@ -2,8 +2,8 @@
 title: dubbo源码解析（七） Cluster
 abbrlink: 914f0fc6
 date: 2018-04-03 22:44:53
-tags:
-categories:
+tags: [dubbo,rpc]
+categories: [中间件,源码]
 ---
 
 在集群调用失败时，Dubbo 提供了多种容错方案，缺省为 failover 重试。
