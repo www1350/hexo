@@ -2,8 +2,8 @@
 title: Spring AOP 源码解析
 abbrlink: 79fd2ad8
 date: 2018-03-09 22:42:29
-tags:
-categories:
+tags: spring
+categories: 源码
 ---
 
 首先通过继承BeanDefinitionParser的触发过程看http://www1350.github.io/#post/84
@@ -19,7 +19,7 @@ categories:
 既然AnnotationAwareAspectJAutoProxyCreator被注册了，而且实现了BeanPostProcessor（每个bean实例化都会过），我们先来看下
 
 
-```
+```java
 	@Override
 	public Object postProcessAfterInitialization(Object bean, String beanName) throws BeansException {
 		if (bean != null) {
@@ -98,7 +98,7 @@ protected Object wrapIfNecessary(Object bean, String beanName, Object cacheKey) 
 
 这个是比较重要的createProxy
 
-```
+```java
 protected Object createProxy(
 			Class<?> beanClass, String beanName, Object[] specificInterceptors, TargetSource targetSource) {
 
@@ -138,7 +138,7 @@ protected Object createProxy(
 
 ProxyFactory
 
-```
+```java
 	public Object getProxy(ClassLoader classLoader) {
 		return createAopProxy().getProxy(classLoader);
 	}
@@ -153,7 +153,7 @@ ProxyFactory
 ```
 
 JdkDynamicAopProxy jdk动态代理
-```
+```java
 	@Override
 	public Object getProxy(ClassLoader classLoader) {
 		if (logger.isDebugEnabled()) {
@@ -265,7 +265,7 @@ JdkDynamicAopProxy jdk动态代理
 
 
 ObjenesisCglibAopProxy cglib代理
-```
+```java
 @Override
 	public Object getProxy(ClassLoader classLoader) {
 		if (logger.isDebugEnabled()) {

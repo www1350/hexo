@@ -1,18 +1,15 @@
 ---
 title: RocketMQ 源码分析(一) ----入门使用、Namesrv分析
 abbrlink: 54de003f
-date: 2018-04-03 22:41:23
+date: 2017-11-16 22:41:23
 tags: [RocketMQ,rpc]
 categories: [中间件,源码]
 ---
 
 入门使用 ：http://rocketmq.apache.org/docs/quick-start/
 
-Download & Build from Release
-Click here to download the 4.2.0 source release. Also you could download a binary release from here.
-
-Now execute the following commands to unpack 4.2.0 source release and build the binary artifact.
-```
+下载
+```shell
 unzip rocketmq-all-4.2.0-source-release.zip
 cd rocketmq-all-4.2.0/
 mvn -Prelease-all -DskipTests clean install -U
@@ -20,23 +17,23 @@ cd distribution/target/apache-rocketmq
 ```
 
 Start Name Server
-```
- nohup sh bin/mqnamesrv &
+```shell
+nohup sh bin/mqnamesrv &
 tail -f ~/logs/rocketmqlogs/namesrv.log
 ```
 
   The Name Server boot success...
 
 Start Broker
-```
- nohup sh bin/mqbroker -n localhost:9876 &
+```shell
+nohup sh bin/mqbroker -n localhost:9876 &
 tail -f ~/logs/rocketmqlogs/broker.log 
 ```
 
   The broker[%s, 172.30.30.233:10911] boot success...
 
 ## 发送消息可靠同步的
-```
+```java
 public class SyncProducer {
     public static void main(String[] args) throws Exception {
         //Instantiate with a producer group name.
@@ -62,7 +59,7 @@ public class SyncProducer {
 ```
 
 ## 可靠的异步
-```
+```java
 public class AsyncProducer {
     public static void main(String[] args) throws Exception {
         //Instantiate with a producer group name.
@@ -96,9 +93,38 @@ public class AsyncProducer {
 }
 ```
 
+## 消费者
+
+```java
+public class Consumer {
+    public static void main(String[] args) throws InterruptedException, MQClientException {
+        DefaultMQPushConsumer consumer = new DefaultMQPushConsumer("please_rename_unique_group_name_4");
+        
+        consumer.setConsumeFromWhere(ConsumeFromWhere.CONSUME_FROM_FIRST_OFFSET);
+
+        consumer.subscribe("TopicTest", "*");
+
+        consumer.registerMessageListener(new MessageListenerConcurrently() {
+            @Override
+            public ConsumeConcurrentlyStatus consumeMessage(List<MessageExt> msgs,
+                ConsumeConcurrentlyContext context) {
+                System.out.printf("%s Receive New Messages: %s %n", Thread.currentThread().getName(), msgs);
+                return ConsumeConcurrentlyStatus.CONSUME_SUCCESS;
+            }
+        });
+
+        consumer.start();
+
+        System.out.printf("Consumer Started.%n");
+    }
+}
+```
 
 ## 单向传播
-```
+
+弱可靠
+
+```java
 public class OnewayProducer {
     public static void main(String[] args) throws Exception{
         //Instantiate with a producer group name.
@@ -124,7 +150,10 @@ public class OnewayProducer {
 ```
 
 # 广播
-```
+
+给所有订阅者广播
+
+```java
 public class BroadcastProducer {
     public static void main(String[] args) throws Exception {
         DefaultMQProducer producer = new DefaultMQProducer("ProducerGroupName");
@@ -143,7 +172,7 @@ public class BroadcastProducer {
 }
 ```
 
-```
+```java
 public class BroadcastConsumer {
     public static void main(String[] args) throws Exception {
         DefaultMQPushConsumer consumer = new DefaultMQPushConsumer("example_group_name");
@@ -172,8 +201,9 @@ public class BroadcastConsumer {
 ```
 
 # 定时消息
+
 1.订阅等待消息
-```
+```java
  import org.apache.rocketmq.client.consumer.DefaultMQPushConsumer;
  import org.apache.rocketmq.client.consumer.listener.ConsumeConcurrentlyContext;
  import org.apache.rocketmq.client.consumer.listener.ConsumeConcurrentlyStatus;
@@ -207,7 +237,7 @@ public class BroadcastConsumer {
 ```
 
 2.发送
-```
+```java
 import org.apache.rocketmq.client.producer.DefaultMQProducer;
  import org.apache.rocketmq.common.message.Message;
     
@@ -226,16 +256,14 @@ import org.apache.rocketmq.client.producer.DefaultMQProducer;
              // Send the message
              producer.send(message);
          }
-    
          // Shutdown producer after use.
          producer.shutdown();
-     }
-        
+     } 
  }
 ```
 
 # 批量消息
-```
+```java
 String topic = "BatchTest";
 List<Message> messages = new ArrayList<>();
 messages.add(new Message(topic, "TagA", "OrderID001", "Hello world 0".getBytes()));
@@ -251,7 +279,7 @@ try {
 
 ！！因为最大只能发4M消息，最好每个不要超过1M
 ## 消息切分
-```
+```java
 public class ListSplitter implements Iterator<List<Message>> {
     private final int SIZE_LIMIT = 1000 * 1000;
     private final List<Message> messages;
@@ -308,12 +336,12 @@ while (splitter.hasNext()) {
 ```
 
 # 过滤消息
-```
+```java
 DefaultMQPushConsumer consumer = new DefaultMQPushConsumer("CID_EXAMPLE");
 consumer.subscribe("TOPIC", "TAGA || TAGB || TAGC");
 ```
 
-```
+```java
 DefaultMQProducer producer = new DefaultMQProducer("please_rename_unique_group_name");
 producer.start();
 
@@ -329,7 +357,7 @@ SendResult sendResult = producer.send(msg);
 producer.shutdown();
 ```
 
-```
+```java
 DefaultMQPushConsumer consumer = new DefaultMQPushConsumer("please_rename_unique_group_name_4");
 
 // only subsribe messages have property a, also a >=0 and a <= 3
@@ -375,7 +403,7 @@ RocketMQ从3.0版本开始支持同步双写。
 # 脚本源码分析
 mqnamesrv.sh
 
-```
+```shell
 #!/bin/sh
 if [ -z "$ROCKETMQ_HOME" ] ; then
   ## resolve links - $0 may be a link to maven's home
@@ -410,7 +438,7 @@ sh ${ROCKETMQ_HOME}/bin/runserver.sh org.apache.rocketmq.namesrv.NamesrvStartup 
 
 runserver.sh
 
-```
+```shell
 #!/bin/sh
 error_exit ()
 {
@@ -441,13 +469,10 @@ JAVA_OPT="${JAVA_OPT} ${JAVA_OPT_EXT}"
 JAVA_OPT="${JAVA_OPT} -cp ${CLASSPATH}"
 
 $JAVA ${JAVA_OPT} $@
-
 ```
-
-
 
 ## NamesrvStartup
-```
+```java
 public class NamesrvStartup {
     public static Properties properties = null;
     public static CommandLine commandLine = null;
@@ -469,7 +494,7 @@ public class NamesrvStartup {
         }
 
         try {
-//见https://my.oschina.net/cloudcoder/blog/363793
+//见 https://my.oschina.net/cloudcoder/blog/363793
             Options options = ServerUtil.buildCommandlineOptions(new Options());
             commandLine = ServerUtil.parseCmdLine("mqnamesrv", args, buildCommandlineOptions(options), new PosixParser());
             if (null == commandLine) {
@@ -553,12 +578,11 @@ public class NamesrvStartup {
         return null;
     }
 }
-
 ```
 
 ## NamesrvController
 
-```
+```java
     public NamesrvController(NamesrvConfig namesrvConfig, NettyServerConfig nettyServerConfig) {
         this.namesrvConfig = namesrvConfig;
         this.nettyServerConfig = nettyServerConfig;
@@ -571,12 +595,11 @@ public class NamesrvStartup {
         );
         this.configuration.setStorePathFromConfig(this.namesrvConfig, "configStorePath");
     }
-
 ```
 
 initialize
 
-```
+```java
  public boolean initialize() {
 
         this.kvConfigManager.load();
@@ -621,7 +644,7 @@ initialize
 
 
 start && shutdown
-```
+```java
     public void start() throws Exception {
         this.remotingServer.start();
     }
@@ -634,7 +657,7 @@ start && shutdown
 ```
 
 ## NettyRemotingServer
-```
+```java
 public NettyRemotingServer(final NettyServerConfig nettyServerConfig,
         final ChannelEventListener channelEventListener) {
         super(nettyServerConfig.getServerOnewaySemaphoreValue(), nettyServerConfig.getServerAsyncSemaphoreValue());

@@ -22,7 +22,7 @@ categories: [中间件,源码]
 
 - `LoadBalance` 负责从多个 `Invoker` 中选出具体的一个用于本次调用，选的过程包含了负载均衡算法，调用失败后，需要重选
 
-  ​
+  <!-- more -->
 
 ## cluster层
 
@@ -30,17 +30,17 @@ categories: [中间件,源码]
 
 按照以下示例在服务提供方和消费方配置集群模式
 
-```
+```xml
 <dubbo:service cluster="failsafe" />
 ```
 
 或
 
-```
+```xml
 <dubbo:reference cluster="failsafe" />
 ```
 
-```
+```java
 @SPI(FailoverCluster.NAME)
 public interface Cluster {
 
@@ -60,29 +60,29 @@ public interface Cluster {
 
 ### Failover Cluster
 
-失败自动切换，当出现失败，重试其它服务器 [1](http://dubbo.incubator.apache.org/books/dubbo-user-book/demos/fault-tolerent-strategy.html#fn_1)。通常用于读操作，但重试会带来更长延迟。可通过 `retries="2"` 来设置重试次数(不含第一次)。
+failover失败自动切换，当出现失败，重试其它服务器 [1](http://dubbo.incubator.apache.org/books/dubbo-user-book/demos/fault-tolerent-strategy.html#fn_1)。通常用于读操作，但重试会带来更长延迟。可通过 `retries="2"` 来设置重试次数(不含第一次)。
 
 重试次数配置如下：
 
-```
+```xml
 <dubbo:service retries="2" />
 ```
 
 或
 
-```
+```xml
 <dubbo:reference retries="2" />
 ```
 
 或
 
-```
+```xml
 <dubbo:reference>
     <dubbo:method name="findFoo" retries="2" />
 </dubbo:reference>
 ```
 
-```
+```java
 public class FailoverCluster implements Cluster {
 
     public final static String NAME = "failover";
@@ -98,11 +98,11 @@ public class FailoverCluster implements Cluster {
 
 ### Failfast Cluster
 
-快速失败，只发起一次调用，失败立即报错。通常用于非幂等性的写操作，比如新增记录。
+failfast快速失败，只发起一次调用，失败立即报错。通常用于非幂等性的写操作，比如新增记录。
 
 使用FailfastClusterInvoker
 
-```
+```java
 public class FailfastClusterInvoker<T> extends AbstractClusterInvoker<T> {
 
     public FailfastClusterInvoker(Directory<T> directory) {
@@ -128,11 +128,11 @@ public class FailfastClusterInvoker<T> extends AbstractClusterInvoker<T> {
 
 ### Failsafe Cluster
 
-失败安全，出现异常时，直接忽略。通常用于写入审计日志等操作。
+failsafe失败安全，出现异常时，直接忽略。通常用于写入审计日志等操作。
 
 使用FailsafeClusterInvoker
 
-```
+```java
 public class FailsafeClusterInvoker<T> extends AbstractClusterInvoker<T> {
     private static final Logger logger = LoggerFactory.getLogger(FailsafeClusterInvoker.class);
 
@@ -156,11 +156,11 @@ public class FailsafeClusterInvoker<T> extends AbstractClusterInvoker<T> {
 
 ### Failback Cluster
 
-失败自动恢复，后台记录失败请求，定时重发。通常用于消息通知操作。
+failback失败自动恢复，后台记录失败请求，定时重发。通常用于消息通知操作。
 
 使用FailbackClusterInvoker
 
-```
+```java
 public class FailbackClusterInvoker<T> extends AbstractClusterInvoker<T> {
 
     private static final Logger logger = LoggerFactory.getLogger(FailbackClusterInvoker.class);
@@ -237,7 +237,7 @@ public class FailbackClusterInvoker<T> extends AbstractClusterInvoker<T> {
 
 使用ForkingClusterInvoker
 
-```
+```java
 public class ForkingClusterInvoker<T> extends AbstractClusterInvoker<T> {
 
     private final ExecutorService executor = Executors.newCachedThreadPool(new NamedThreadFactory("forking-cluster-timer", true));
@@ -300,11 +300,11 @@ public class ForkingClusterInvoker<T> extends AbstractClusterInvoker<T> {
 
 ### Broadcast Cluster
 
-广播调用所有提供者，逐个调用，任意一台报错则报错 [2](http://dubbo.incubator.apache.org/books/dubbo-user-book/demos/fault-tolerent-strategy.html#fn_2)。通常用于通知所有提供者更新缓存或日志等本地资源信息。
+broadcast 广播调用所有提供者，逐个调用，任意一台报错则报错 [2](http://dubbo.incubator.apache.org/books/dubbo-user-book/demos/fault-tolerent-strategy.html#fn_2)。通常用于通知所有提供者更新缓存或日志等本地资源信息。
 
 使用BroadcastClusterInvoker
 
-```
+```java
 public class BroadcastClusterInvoker<T> extends AbstractClusterInvoker<T> {
 
     private static final Logger logger = LoggerFactory.getLogger(BroadcastClusterInvoker.class);
@@ -340,11 +340,80 @@ public class BroadcastClusterInvoker<T> extends AbstractClusterInvoker<T> {
 }
 ```
 
+### Available Cluster 
+
+available选取第一个可用的
+
+```java
+public class AvailableClusterInvoker<T> extends AbstractClusterInvoker<T> {
+
+    public AvailableClusterInvoker(Directory<T> directory) {
+        super(directory);
+    }
+
+    public Result doInvoke(Invocation invocation, List<Invoker<T>> invokers, LoadBalance loadbalance) throws RpcException {
+        for (Invoker<T> invoker : invokers) {
+            if (invoker.isAvailable()) {
+                return invoker.invoke(invocation);
+            }
+        }
+        throw new RpcException("No provider available in " + invokers);
+    }
+
+}
+```
+
+
+
 ### Mergeable Cluster
 
-合并分组
+搜索所有分组
 
+```xml
+<dubbo:reference interface="com.xxx.MenuService" group="*" merger="true" />
 ```
+
+合并指定分组
+
+```xml
+<dubbo:reference interface="com.xxx.MenuService" group="aaa,bbb" merger="true" />
+```
+
+指定方法合并结果，其它未指定的方法，将只调用一个 Group
+
+```xml
+<dubbo:reference interface="com.xxx.MenuService" group="*">
+    <dubbo:method name="getMenuItems" merger="true" />
+</dubbo:service>
+```
+
+某个方法不合并结果，其它都合并结果
+
+```xml
+<dubbo:reference interface="com.xxx.MenuService" group="*" merger="true">
+    <dubbo:method name="getMenuItems" merger="false" />
+</dubbo:service>
+```
+
+指定合并策略，缺省根据返回值类型自动匹配，如果同一类型有两个合并器时，需指定合并器的名称 [2](http://dubbo.apache.org/books/dubbo-user-book/demos/group-merger.html#fn_2)
+
+```xml
+<dubbo:reference interface="com.xxx.MenuService" group="*">
+    <dubbo:method name="getMenuItems" merger="mymerge" />
+</dubbo:service>
+```
+
+指定合并方法，将调用返回结果的指定方法进行合并，合并方法的参数类型必须是返回结果类型本身
+
+```xml
+<dubbo:reference interface="com.xxx.MenuService" group="*">
+    <dubbo:method name="getMenuItems" merger=".addAll" />
+</dubbo:service>
+```
+
+mergeable 合并分组
+
+```java
 public class MergeableClusterInvoker<T> implements Invoker<T> {
 
     private static final Logger log = LoggerFactory.getLogger(MergeableClusterInvoker.class);
@@ -358,7 +427,7 @@ public class MergeableClusterInvoker<T> implements Invoker<T> {
     @SuppressWarnings("rawtypes")
     public Result invoke(final Invocation invocation) throws RpcException {
         List<Invoker<T>> invokers = directory.list(invocation);
-
+//获取merger配置
         String merger = getUrl().getMethodParameter(invocation.getMethodName(), Constants.MERGER_KEY);
         //不需要合并，调用第一个可用的group
         if (ConfigUtils.isEmpty(merger)) { // If a method doesn't have a merger, only invoke one Group
@@ -372,6 +441,7 @@ public class MergeableClusterInvoker<T> implements Invoker<T> {
 
         Class<?> returnType;
         try {
+            //获取返回的类型
             returnType = getInterface().getMethod(
                     invocation.getMethodName(), invocation.getParameterTypes()).getReturnType();
         } catch (NoSuchMethodException e) {
@@ -385,13 +455,14 @@ public class MergeableClusterInvoker<T> implements Invoker<T> {
                     return invoker.invoke(new RpcInvocation(invocation, invoker));
                 }
             });
+            //遍历结果
             results.put(invoker.getUrl().getServiceKey(), future);
         }
 
         Object result = null;
 
         List<Result> resultList = new ArrayList<Result>(results.size());
-
+//获取timeout 超时配置
         int timeout = getUrl().getMethodParameter(invocation.getMethodName(), Constants.TIMEOUT_KEY, Constants.DEFAULT_TIMEOUT);
         for (Map.Entry<String, Future<Result>> entry : results.entrySet()) {
             Future<Result> future = entry.getValue();
@@ -404,6 +475,7 @@ public class MergeableClusterInvoker<T> implements Invoker<T> {
                                     .append(r.getException().getMessage()).toString(),
                             r.getException());
                 } else {
+                    //获取未超时结果
                     resultList.add(r);
                 }
             } catch (Exception e) {
@@ -425,7 +497,7 @@ public class MergeableClusterInvoker<T> implements Invoker<T> {
         if (returnType == void.class) {
             return new RpcResult((Object) null);
         }
-
+//.开头则按方法合并
         if (merger.startsWith(".")) {
             merger = merger.substring(1);
             Method method;
@@ -448,9 +520,11 @@ public class MergeableClusterInvoker<T> implements Invoker<T> {
                 if (method.getReturnType() != void.class
                         && method.getReturnType().isAssignableFrom(result.getClass())) {
                     for (Result r : resultList) {
+                        //执行.xxx获取结果
                         result = method.invoke(result, r.getValue());
                     }
                 } else {
+                    //结果为空
                     for (Result r : resultList) {
                         method.invoke(result, r.getValue());
                     }
@@ -464,9 +538,11 @@ public class MergeableClusterInvoker<T> implements Invoker<T> {
             }
         } else {
             Merger resultMerger;
+            //true或者default，按类型加载
             if (ConfigUtils.isDefault(merger)) {
                 resultMerger = MergerFactory.getMerger(returnType);
             } else {
+                //指定了，则按指定加载
                 resultMerger = ExtensionLoader.getExtensionLoader(Merger.class).getExtension(merger);
             }
             if (resultMerger != null) {

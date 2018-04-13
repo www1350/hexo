@@ -6,11 +6,11 @@ tags: [spring]
 categories: 源码
 ---
 
-现在都在简书写了：http://www.jianshu.com/p/0a9c964dd28a
+## 初始化示例
 
 我们先来看下spring如何手动初始化一个对象
 
-```
+```java
 ClassPathResource res = new ClassPathResource("beans.xml");
 DefaultListableBeanFactory factory = new DefaultListableBeanFactory();
 XmlBeanDefinitionReader reader = new XmlBeanDefinitionReader(factory);
@@ -21,39 +21,40 @@ User user=(User) factory.getBean("user");
 
 ![Paste_Image.png](http://upload-images.jianshu.io/upload_images/3095882-5ff18c4b78b18301.png?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240)
 
+## spring源码解析
 
 所以我们先从DefaultListableBeanFactory开始了解
-AbstractBeanFactory
 
-```
+### AbstractBeanFactory
+
+```java
 public <T> T getBean(String name, Class<T> requiredType, Object... args) throws BeansException {
 		return doGetBean(name, requiredType, args, false);
-	}
+}
 ```
 
-```
-	protected <T> T doGetBean(
-			final String name, final Class<T> requiredType, final Object[] args, boolean typeCheckOnly)
+```java
+	protected <T> T doGetBean(final String name, final Class<T> requiredType, final Object[] args, boolean typeCheckOnly)
 			throws BeansException {
 
 ```
 
-1.去掉&
+- 1.去掉&开头
 
-```
+```java
 		final String beanName = transformedBeanName(name);
 ```
-```
+```java
 	protected String transformedBeanName(String name) {
 		return canonicalName(BeanFactoryUtils.transformedBeanName(name));
 	}
 ```
 
-2.如果是单例且存在，就直接取过来
+- 2.如果是单例且存在，就直接取过来
 
-```
+```java
 		Object bean;
-		// 
+		//拿到缓存的单例实例
 		Object sharedInstance = getSingleton(beanName);
 		if (sharedInstance != null && args == null) {
 			....
@@ -61,21 +62,24 @@ public <T> T getBean(String name, Class<T> requiredType, Object... args) throws 
 		}
 ```
 
-3.如果已经创建，抛出异常
+- 3.不存在单例缓存里面却处于创建状态，可能是循环引用，抛出异常
 
-```
+```java
 		else {
+            //可能是一个循环引用，因为拿不到bean但是却处于创建状态
 			if (isPrototypeCurrentlyInCreation(beanName)) {
+                //Requested bean is currently in creation: Is there an unresolvable circular reference?
 				throw new BeanCurrentlyInCreationException(beanName);
 			}
 ```
 
-4.在父BeanFactory查找
+- 4.在父BeanFactory查找
 
-```
+```java
 			BeanFactory parentBeanFactory = getParentBeanFactory();
+//本beanfactory找不到
 			if (parentBeanFactory != null && !containsBeanDefinition(beanName)) {
-				// Not found -> check parent.
+				// 找不到拿原始名去找
 				String nameToLookup = originalBeanName(name);
 				if (args != null) {
 					// Delegation to parent with explicit args.
@@ -88,24 +92,26 @@ public <T> T getBean(String name, Class<T> requiredType, Object... args) throws 
 			}
 ```
 
-5.创建标记，（用于清除）
+<!-- more -->
 
-```
+- 5.创建标记，（用于清除）
+
+```java
 			if (!typeCheckOnly) {
 				markBeanAsCreated(beanName);
 			}
 ```
 
-6.寻找bean定义信息，并针对bean定义进行验证
+- 6.寻找bean定义信息，并针对bean定义进行验证
 
-```
+```java
 			try {
 				final RootBeanDefinition mbd = getMergedLocalBeanDefinition(beanName);
 				checkMergedBeanDefinition(mbd, beanName, args);
 ```
-7.处理依赖信息，这里会针对xml定义中的depends-on进行处理
+- 7.处理依赖信息，这里会针对xml定义中的depends-on进行处理
 
-```
+```java
 				String[] dependsOn = mbd.getDependsOn();
 				if (dependsOn != null) {
 					for (String dependsOnBean : dependsOn) {
@@ -120,7 +126,7 @@ public <T> T getBean(String name, Class<T> requiredType, Object... args) throws 
 假设A依赖于B，那么在创建A之前，必须保证B先被创建。
 在创建了B之后，这里会进行依赖信息存储。后面在递归调用一下，不过依赖关系反过来。
 dependentBeanMap放 A->［B,C,D］ （A所依赖的B,C,D）
-```
+```java
 private boolean isDependent(String beanName, String dependentBeanName, Set<String> alreadySeen) {
 		if (alreadySeen != null && alreadySeen.contains(beanName)) {
 			return false;
@@ -147,8 +153,7 @@ private boolean isDependent(String beanName, String dependentBeanName, Set<Strin
 ```
 单例模式就调用getSingleton(String beanName, ObjectFactory<?> singletonFactory)
 
-```
-
+```java
 				// 单例
 				if (mbd.isSingleton()) {
 					....
@@ -156,9 +161,10 @@ private boolean isDependent(String beanName, String dependentBeanName, Set<Strin
 				}
 ```
 
-```
+```java
 	public Object getSingleton(String beanName, ObjectFactory<?> singletonFactory) {
               ....
+//private final Map<String, Object> singletonObjects = new ConcurrentHashMap<String, Object>(256);
 		synchronized (this.singletonObjects) {
 			Object singletonObject = this.singletonObjects.get(beanName);
 				....
@@ -173,8 +179,8 @@ private boolean isDependent(String beanName, String dependentBeanName, Set<Strin
 		}
 	}
 ```
-原型模式
-```
+原型模式，来一次创一个
+```java
 				else if (mbd.isPrototype()) {
 					Object prototypeInstance = null;
 					try {
@@ -190,9 +196,10 @@ private boolean isDependent(String beanName, String dependentBeanName, Set<Strin
 
 其他模式，比如scope=request
 
-```
+```java
 				else {
 					String scopeName = mbd.getScope();
+//private final Map<String, Scope> scopes = new LinkedHashMap<String, Scope>(8);
 					final Scope scope = this.scopes.get(scopeName);
 					....
 					try {
@@ -217,12 +224,11 @@ private boolean isDependent(String beanName, String dependentBeanName, Set<Strin
 		}
 ```
 
-8.无论哪种模式都会进入AbstractAutowireCapableBeanFactory的createBean(final String beanName, final RootBeanDefinition mbd, final Object[] args)
+- 8.无论哪种模式都会进入AbstractAutowireCapableBeanFactory的createBean(final String beanName, final RootBeanDefinition mbd, final Object[] args)
 
-```
+```java
                 ....
 				RootBeanDefinition mbdToUse = mbd;
-
 		// 解析beanDefinition，以确保bean定义中的class可以被正确解析
 		Class<?> resolvedClass = resolveBeanClass(mbd, beanName);
 		if (resolvedClass != null && !mbd.hasBeanClass() && mbd.getBeanClassName() != null) {
@@ -230,7 +236,7 @@ private boolean isDependent(String beanName, String dependentBeanName, Set<Strin
 			mbdToUse.setBeanClass(resolvedClass);
 		}
 
-		// Prepare method overrides.
+		// 准备和验证配置的方法注入，若验证失败抛出BeanDefinitionValidationException
 		try {
 			mbdToUse.prepareMethodOverrides();
 		}
@@ -251,20 +257,45 @@ private boolean isDependent(String beanName, String dependentBeanName, Set<Strin
 		return beanInstance;
 ```
 
-9.Object doCreateBean(final String beanName, final RootBeanDefinition mbd, final Object[] args)
+- 9.Object doCreateBean(final String beanName, final RootBeanDefinition mbd, final Object[] args)
 
-```
-                         ....
-			if (exposedObject != null) {
-				exposedObject = initializeBean(beanName, exposedObject, mbd);
+```java
+	if (instanceWrapper == null) {
+        //反射出类
+		instanceWrapper = createBeanInstance(beanName, mbd, args);
+	}            
+	final Object bean = (instanceWrapper != null ? instanceWrapper.getWrappedInstance() : null);
+	Class<?> beanType = (instanceWrapper != null ? instanceWrapper.getWrappedClass() : null);
+	mbd.resolvedTargetType = beanType;
+
+	// Allow post-processors to modify the merged bean definition.
+	synchronized (mbd.postProcessingLock) {
+		if (!mbd.postProcessed) {
+			try {
+                //获取所有MergedBeanDefinitionPostProcessor，调用一遍postProcessMergedBeanDefinition
+                //这里将会调用@PostConstruct注解的方法
+				applyMergedBeanDefinitionPostProcessors(mbd, beanType, beanName);
 			}
-		       ....
-
+			catch (Throwable ex) {
+				throw new BeanCreationException(mbd.getResourceDescription(), beanName,
+						"Post-processing of merged bean definition failed", ex);
+			}
+			mbd.postProcessed = true;
+		}
+	}
+	....
+    //InstantiationAwareBeanPostProcessor#postProcessAfterInstantiation
+      //InstantiationAwareBeanPostProcessor#postProcessPropertyValues
+    populateBean(beanName, mbd, instanceWrapper);
+	if (exposedObject != null) {
+		exposedObject = initializeBean(beanName, exposedObject, mbd);
+	}
+	....
 ```
 
 10.Object initializeBean(final String beanName, final Object bean, RootBeanDefinition mbd)
 
-```
+```java
 		if (System.getSecurityManager() != null) {
 			AccessController.doPrivileged(new PrivilegedAction<Object>() {
 				@Override
@@ -300,7 +331,7 @@ private boolean isDependent(String beanName, String dependentBeanName, Set<Strin
 		return wrappedBean;
 ```
 
-```
+```java
 	private void invokeAwareMethods(final String beanName, final Object bean) {
 		if (bean instanceof Aware) {
 			if (bean instanceof BeanNameAware) {
@@ -316,7 +347,7 @@ private boolean isDependent(String beanName, String dependentBeanName, Set<Strin
 	}
 ```
 
-```
+```java
 	protected void invokeInitMethods(String beanName, final Object bean, RootBeanDefinition mbd)
 			throws Throwable {
 
@@ -352,19 +383,63 @@ private boolean isDependent(String beanName, String dependentBeanName, Set<Strin
 	}
 ```
 
-```
-postProcessBeforeInstantiation(Class<?> beanClass, String beanName)#InstantiationAwareBeanPostProcessor
-->postProcessAfterInitialization(Object bean, String beanName)#InstantiationAwareBeanPostProcessor
-->setBeanName#BeanNameAware
-->setBeanClassLoader#BeanClassLoaderAware
-->setBeanFactory#BeanFactoryAware
-->postProcessBeforeInitialization#BeanPostProcessor
-->afterPropertiesSet#InitializingBean
-->postProcessAfterInitialization#BeanPostProcessor
+- 10.destroyBean
+
+```java
+@Override
+public void destroyBean(Object existingBean) {
+   new DisposableBeanAdapter(existingBean, getBeanPostProcessors(), getAccessControlContext()).destroy();
+}
+
+@Override
+public void destroy() {
+	if (!CollectionUtils.isEmpty(this.beanPostProcessors)) {
+        //获取所有DestructionAwareBeanPostProcessor 调用postProcessBeforeDestruction
+        //@PreDestroy
+		for (DestructionAwareBeanPostProcessor processor : this.beanPostProcessors) {
+			processor.postProcessBeforeDestruction(this.bean, this.beanName);
+		}
+	}
+
+    //调用DisposableBean#destroy
+	if (this.invokeDisposableBean) {
+		if (logger.isDebugEnabled()) {
+			logger.debug("Invoking destroy() on bean with name '" + this.beanName + "'");
+		}
+		try {
+			if (System.getSecurityManager() != null) {
+				AccessController.doPrivileged(new PrivilegedExceptionAction<Object>() {
+					@Override
+					public Object run() throws Exception {
+						((DisposableBean) bean).destroy();
+						return null;
+					}
+				}, acc);
+			}
+			else {
+				((DisposableBean) bean).destroy();
+			}
+		}
+		catch (Throwable ex) {
+			String msg = "Invocation of destroy method failed on bean with name '" + this.beanName + "'";
+			//...
+		}
+	}
+         //xml的destroy-method
+	if (this.destroyMethod != null) {
+		invokeCustomDestroyMethod(this.destroyMethod);
+	}
+	else if (this.destroyMethodName != null) {
+		Method methodToCall = determineDestroyMethod();
+		if (methodToCall != null) {
+			invokeCustomDestroyMethod(methodToCall);
+		}
+	}
+}
 ```
 
 
-```
+```java
 public class InitAndDestroySeqBean implements InitializingBean,DisposableBean,BeanPostProcessor,InstantiationAwareBeanPostProcessor {
 
     public InitAndDestroySeqBean() {
@@ -442,7 +517,7 @@ public class InitAndDestroySeqBean implements InitializingBean,DisposableBean,Be
 
 ```
 
-```
+```java
 20170308:11:34:52.866 [main] INFO   Using TestExecutionListeners: [org.springframework.test.context.web.ServletTestExecutionListener@49c43f4e, org.springframework.test.context.support.DirtiesContextBeforeModesTestExecutionListener@290dbf45, org.springframework.test.context.support.DependencyInjectionTestExecutionListener@12028586, org.springframework.test.context.support.DirtiesContextTestExecutionListener@17776a8, org.springframework.test.context.transaction.TransactionalTestExecutionListener@69a10787, org.springframework.test.context.jdbc.SqlScriptsTestExecutionListener@2d127a61]20170308:11:34:52.972 [main] INFO   Loading XML bean definitions from URL [file:/Users/dsc/IdeaProjects/firDemo/firdemo/web/target/classes/init.xml]
 20170308:11:34:53.105 [main] INFO   Refreshing org.springframework.context.support.GenericApplicationContext@2b4a2ec7: startup date [Wed Mar 08 11:34:53 CST 2017]; root of context hierarchy
 构造方法
@@ -464,46 +539,119 @@ destroy-method
   
 ```
 
+## Spring生命周期
+
+通过源码我们清晰的看到
+
+1. 拿到应用中所有实现了InstantiationAwareBeanPostProcessor接口的类，就先postProcessBeforeInstantiation(Class<?> beanClass, String beanName)->postProcessAfterInitialization(Object bean, String beanName)
+
+如果已经能拿到相应的bean则直接返回不进行下面的操作
+
+2. 拿到应用中所有实现了InstantiationAwareBeanPostProcessor调用postProcessAfterInstantiation
+   然后调用postProcessPropertyValues
+   
+3. 本bean如果
+   - 实现了BeanNameAware就调用setBeanName把bean名字放入
+
+   - 实现了BeanClassLoaderAware就调用setBeanClassLoader把ClassLoader放入
+
+   - 实现了BeanFactoryAware调用setBeanFactory把BeanFactory放入
+3. 拿到应用中所有实现了BeanPostProcessor接口的类，调用postProcessBeforeInstantiation(Class<?> beanClass, String beanName)拿到bean
+4. **反射实例化bean**
+5. @PostConstruct注解的方法（获取所有MergedBeanDefinitionPostProcessor，调用一遍postProcessMergedBeanDefinition）
+6. 本bean如果实现了InitializingBean接口，则调用afterPropertiesSet
+7. 本bean如果在xml里面配置了init-method则调用
+8. 拿到应用中所有实现了BeanPostProcessor接口的类，调用postProcessAfterInitialization(Object bean, String beanName) 拿到bean返回，就是最终在容器里面的bean
+9. @PreDestroy注解的方法（获取所有DestructionAwareBeanPostProcessor 调用postProcessBeforeDestruction）
+10. 本bean如果实现了DisposableBean则调用destroy()
+11. 本bean如果在xml里面配置了destroy-method则调用
+
 
 
 刚才反复提到了几个接口，我们来单独看下他们的使用：
 
-BeanPostProcessor接口
-```
-public interface BeanPostProcessor {
-
-	Object postProcessBeforeInitialization(Object bean, String beanName) throws BeansException;
-
-	Object postProcessAfterInitialization(Object bean, String beanName) throws BeansException;
-
-}
-```
-
 InstantiationAwareBeanPostProcessor接口
-```
-public interface InstantiationAwareBeanPostProcessor extends BeanPostProcessor {
 
+```java
+public interface InstantiationAwareBeanPostProcessor extends BeanPostProcessor {
 	Object postProcessBeforeInstantiation(Class<?> beanClass, String beanName) throws BeansException;
 
 	boolean postProcessAfterInstantiation(Object bean, String beanName) throws BeansException;
 
-	PropertyValues postProcessPropertyValues(
-			PropertyValues pvs, PropertyDescriptor[] pds, Object bean, String beanName) throws BeansException;
+	PropertyValues postProcessPropertyValues(PropertyValues pvs, PropertyDescriptor[] pds, Object bean, String beanName) throws BeansException;
+}
+```
+
+BeanNameAware接口，通过实现这个接口可以获取到bean的id名
+
+```java
+public interface BeanNameAware extends Aware {
+   void setBeanName(String name);
+}
+```
+
+BeanClassLoaderAware接口，可以获取到bean的ClassLoader
+
+```java
+public interface BeanClassLoaderAware extends Aware {
+   void setBeanClassLoader(ClassLoader classLoader);
+}
+```
+
+BeanFactoryAware接口，通过实现这个接口可以获取到beanFactory
+
+```java
+public interface BeanFactoryAware extends Aware {
+   void setBeanFactory(BeanFactory beanFactory) throws BeansException;
+}
+```
+
+ApplicationContextAware接口，获取ApplicationContext
+
+```java
+public interface ApplicationContextAware extends Aware {
+   void setApplicationContext(ApplicationContext applicationContext) throws BeansException;
+}
+```
+
+BeanPostProcessor接口
+
+```java
+public interface BeanPostProcessor {
+	Object postProcessBeforeInitialization(Object bean, String beanName) throws BeansException;
+
+	Object postProcessAfterInitialization(Object bean, String beanName) throws BeansException;
 }
 ```
 
 InitializingBean接口
-```
+```java
 public interface InitializingBean {
-        //本bean
 	void afterPropertiesSet() throws Exception;
 }
 ```
 
 DisposableBean接口
-```
+```java
 public interface DisposableBean {
 	void destroy() throws Exception;
 }
+```
 
+MergedBeanDefinitionPostProcessor接口
+
+```java
+public interface MergedBeanDefinitionPostProcessor extends BeanPostProcessor {
+   void postProcessMergedBeanDefinition(RootBeanDefinition beanDefinition, Class<?> beanType, String beanName);
+}
+```
+
+DestructionAwareBeanPostProcessor接口
+
+```java
+public interface DestructionAwareBeanPostProcessor extends BeanPostProcessor {
+   void postProcessBeforeDestruction(Object bean, String beanName) throws BeansException;
+
+   boolean requiresDestruction(Object bean);
+}
 ```

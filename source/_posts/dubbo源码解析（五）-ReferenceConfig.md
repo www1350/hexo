@@ -10,6 +10,8 @@ categories: [中间件,源码]
 
 从ReferenceBean入手
 
+<!-- more -->
+
 ## Config层
 
 ### ReferenceBean

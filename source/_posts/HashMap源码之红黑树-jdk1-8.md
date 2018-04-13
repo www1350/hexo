@@ -12,7 +12,7 @@ https://juejin.im/post/5a0658f76fb9a04523415a8d
 
 基本结构:
 
-```
+```java
     static final class TreeNode<K,V> extends LinkedHashMap.Entry<K,V> {
 //父节点
         TreeNode<K,V> parent;  // red-black tree links
@@ -28,8 +28,7 @@ https://juejin.im/post/5a0658f76fb9a04523415a8d
 ```
 
 
-```
-
+```java
 //返回根结点
         final TreeNode<K,V> root() {
             for (TreeNode<K,V> r = this, p;;) {
@@ -40,8 +39,7 @@ https://juejin.im/post/5a0658f76fb9a04523415a8d
         }
 ```
 
-```
-//
+```java
         static <K,V> void moveRootToFront(Node<K,V>[] tab, TreeNode<K,V> root) {
             int n;
             if (root != null && tab != null && (n = tab.length) > 0) {
@@ -65,7 +63,7 @@ https://juejin.im/post/5a0658f76fb9a04523415a8d
         }
 ```
 
-```
+```java
         final TreeNode<K,V> find(int h, Object k, Class<?> kc) {
             TreeNode<K,V> p = this;
             do {
@@ -94,13 +92,13 @@ https://juejin.im/post/5a0658f76fb9a04523415a8d
         }
 ```
 
-```
+```java
         final TreeNode<K,V> getTreeNode(int h, Object k) {
             return ((parent != null) ? root() : this).find(h, k, null);
         }
 ```
 
-```
+```java
         static int tieBreakOrder(Object a, Object b) {
             int d;
             if (a == null || b == null ||
@@ -114,7 +112,7 @@ https://juejin.im/post/5a0658f76fb9a04523415a8d
 
 hd.treeify(tab);
 
-```
+```java
         final void treeify(Node<K,V>[] tab) {
             TreeNode<K,V> root = null;
             for (TreeNode<K,V> x = this, next; x != null; x = next) {
@@ -164,7 +162,7 @@ hd.treeify(tab);
 ```
 
 
-```
+```java
         static <K,V> TreeNode<K,V> balanceInsertion(TreeNode<K,V> root,
                                                     TreeNode<K,V> x) {
             x.red = true;
@@ -222,7 +220,7 @@ hd.treeify(tab);
 
 ```
 
-```
+```java
         final Node<K,V> untreeify(HashMap<K,V> map) {
             Node<K,V> hd = null, tl = null;
             for (Node<K,V> q = this; q != null; q = q.next) {
@@ -237,7 +235,7 @@ hd.treeify(tab);
         }
 ```
 
-```
+```java
         final TreeNode<K,V> putTreeVal(HashMap<K,V> map, Node<K,V>[] tab,
                                        int h, K k, V v) {
             Class<?> kc = null;
@@ -284,7 +282,7 @@ hd.treeify(tab);
             }
         }
 ```
-```
+```java
         final void removeTreeNode(HashMap<K,V> map, Node<K,V>[] tab,
                                   boolean movable) {
             int n;
@@ -380,7 +378,10 @@ hd.treeify(tab);
                 moveRootToFront(tab, r);
         }
 ```
-```
+
+当扩容的时候，节点使用split，`((TreeNode<K,V>)e).split(this, newTab, j, oldCap);`
+
+```java
         final void split(HashMap<K,V> map, Node<K,V>[] tab, int index, int bit) {
             TreeNode<K,V> b = this;
             // Relink into lo and hi lists, preserving order
@@ -429,7 +430,7 @@ hd.treeify(tab);
         }
 
 ```
-```
+```java
         static <K,V> TreeNode<K,V> rotateLeft(TreeNode<K,V> root,
                                               TreeNode<K,V> p) {
             TreeNode<K,V> r, pp, rl;
@@ -448,7 +449,7 @@ hd.treeify(tab);
             return root;
         }
 ```
-```
+```java
         static <K,V> TreeNode<K,V> rotateRight(TreeNode<K,V> root,
                                                TreeNode<K,V> p) {
             TreeNode<K,V> l, pp, lr;
@@ -467,7 +468,7 @@ hd.treeify(tab);
             return root;
         }
 ```
-```
+```java
 
         static <K,V> TreeNode<K,V> balanceDeletion(TreeNode<K,V> root,
                                                    TreeNode<K,V> x) {
@@ -561,7 +562,7 @@ hd.treeify(tab);
             }
         }
 ```
-```
+```java
          static <K,V> boolean checkInvariants(TreeNode<K,V> t) {
             TreeNode<K,V> tp = t.parent, tl = t.left, tr = t.right,
                 tb = t.prev, tn = (TreeNode<K,V>)t.next;
@@ -587,7 +588,7 @@ hd.treeify(tab);
 ```
 
 treeifyBin
-```
+```java
 /**
      * Replaces all linked nodes in bin at index for given hash unless
      * table is too small, in which case resizes instead.

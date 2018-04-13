@@ -2,8 +2,8 @@
 title: 'HashMap源码(jdk1.8) '
 abbrlink: afadb629
 date: 2018-04-03 22:58:47
-tags:
-categories:
+tags: HashMap
+categories: 源码
 ---
 
 - HashMap的底层主要是基于数组和链表来实现的，它之所以有相当快的查询速度主要是因为它是通过计算散列码来决定存储的位置。HashMap中主要是通过key的hashCode来计算hash值的，只要hashCode相同，计算出来的hash值就一样。如果存储的对象对多了，就有可能不同的对象所算出来的hash值是相同的，这就出现了所谓的hash冲突。学过数据结构的同学都知道，解决hash冲突的方法有很多，HashMap底层是通过链表来解决hash冲突的。
@@ -14,7 +14,7 @@ categories:
 
 ![image](https://cloud.githubusercontent.com/assets/7789698/18426598/702f1838-78f5-11e6-80ff-47cba88423ed.png)
 
-```
+```java
 public class HashMap<K,V> extends AbstractMap<K,V>
     implements Map<K,V>, Cloneable, Serializable{
 //默认初始化容量，HashMap容量必须是2的幂次方
@@ -78,7 +78,31 @@ public class HashMap<K,V> extends AbstractMap<K,V>
     public V put(K key, V value) {
         return putVal(hash(key), key, value, false, true);
     }
+//如16，则
+// n|= 15 >>> 1   01111    --移位--> 00111      01111 | 00111   = 01111 (15)
+// n|= 15 >>> 2   01111    --移位--> 00011      01111 | 00011   = 01111 (15)
+// n|= 15 >>> 4   01111    --移位--> 00000      01111 | 00000   = 01111 (15)
+// n|= 15 >>> 8
+// n|= 15 >>> 16
+//得 threshold 为16
 
+
+//如15，则
+// n|= 14 >>> 1   01110    --移位--> 00111      01110 | 00111   = 01111 (15)
+// n|= 15 >>> 2   01111    --移位--> 00011      01111 | 00011   = 01111 (15)
+// n|= 15 >>> 4   01111    --移位--> 00000      01111 | 00000   = 01111 (15)
+// n|= 15 >>> 8
+// n|= 15 >>> 16
+//得 threshold 为16
+
+//如19,则
+// n|= 18 >>> 1   10010    --移位--> 01001      10010 | 01001   = 11011 (27)
+// n|= 27 >>> 2   11011    --移位--> 00110      11011 | 00110   = 11111 (31)
+// n|= 31 >>> 4   11111    --移位--> 00001      11111 | 00001   = 01111 (31)
+// n|= 31 >>> 8
+// n|= 31 >>> 16
+//得 threshold 为32
+//最后得能往2^n靠
     static final int tableSizeFor(int cap) {
         int n = cap - 1; //减1是为了排除“100000”这种情况
         n |= n >>> 1;
@@ -94,7 +118,7 @@ public class HashMap<K,V> extends AbstractMap<K,V>
 
 Node类似一个单链表
 
-```
+```java
     static class Node<K,V> implements Map.Entry<K,V> {
         final int hash;
         final K key;
@@ -136,7 +160,7 @@ Node类似一个单链表
     }
 ```
 
-```
+```java
     final V putVal(int hash, K key, V value, boolean onlyIfAbsent,
                    boolean evict) {
         Node<K,V>[] tab; Node<K,V> p; int n, i;
@@ -204,10 +228,13 @@ Node类似一个单链表
 resize
 ![image](https://cloud.githubusercontent.com/assets/7789698/18426619/8fa7f77a-78f5-11e6-91cd-bc0dca0a3bbd.png)
 
-```
+```java
     final Node<K,V>[] resize() {
+        //原数组
         Node<K,V>[] oldTab = table;
+        //原数组大小
         int oldCap = (oldTab == null) ? 0 : oldTab.length;
+        //临界值，默认16
         int oldThr = threshold;
         int newCap, newThr = 0;
 //原数组不为空
@@ -227,33 +254,34 @@ resize
             newCap = DEFAULT_INITIAL_CAPACITY;
             newThr = (int)(DEFAULT_LOAD_FACTOR * DEFAULT_INITIAL_CAPACITY);
         }
-//无元素
+		//无元素
         if (newThr == 0) {
             float ft = (float)newCap * loadFactor;
             newThr = (newCap < MAXIMUM_CAPACITY && ft < (float)MAXIMUM_CAPACITY ?
                       (int)ft : Integer.MAX_VALUE);
         }
+        //新的大小作为新的临界值
         threshold = newThr;
+        //构造新数组
         @SuppressWarnings({"rawtypes","unchecked"})
             Node<K,V>[] newTab = (Node<K,V>[])new Node[newCap];
         table = newTab;
-
-
+		//旧数组不为空
         if (oldTab != null) {
             for (int j = 0; j < oldCap; ++j) {
                 Node<K,V> e;
                 if ((e = oldTab[j]) != null) {
                     oldTab[j] = null;
-//如果只有一个元素，rehash并放入桶中
+					//如果只有一个元素，直接rehash并放入桶中
                     if (e.next == null)
                         newTab[e.hash & (newCap - 1)] = e;
                     else if (e instanceof TreeNode)
+                        //如果是红黑树进行拆分
                         ((TreeNode<K,V>)e).split(this, newTab, j, oldCap);
                     else {
 /*桶中存在一个链表，需要将链表重新整理到新表当中，因为newCap是oldCap的两倍所以原节点的索引
 值要么和原来一样，要么就是原(索引+oldCap)和JDK 1.7中实现不同这里不存在rehash，直接使用原hash
 值JDK 1.7中resize过程是在链表头插入，这里是在链表尾插入*/
-
                         Node<K,V> loHead = null, loTail = null;
                         Node<K,V> hiHead = null, hiTail = null;
                         Node<K,V> next;
@@ -290,9 +318,9 @@ resize
     }
 ```
 
-LinkedHashMap里面的Entry很神奇的。
+LinkedHashMap里面的Entry很神奇的（如何实现有序的hashmap，其实就是在hashmap的Entry加入前后指针）。
 
-```
+```java
     static class Entry<K,V> extends HashMap.Node<K,V> {
         Entry<K,V> before, after;
         Entry(int hash, K key, V value, Node<K,V> next) {
@@ -302,7 +330,7 @@ LinkedHashMap里面的Entry很神奇的。
 ```
 
 
-```
+```java
     final Node<K,V> getNode(int hash, Object key) {
         Node<K,V>[] tab; Node<K,V> first, e; int n; K k;
         if ((tab = table) != null && (n = tab.length) > 0 &&
@@ -326,7 +354,7 @@ LinkedHashMap里面的Entry很神奇的。
 
 附：
 
-```
+```java
     static Class<?> comparableClassFor(Object x) {
         if (x instanceof Comparable) {
             Class<?> c; Type[] ts, as; Type t; ParameterizedType p;

@@ -8,7 +8,7 @@ categories: [中间件,源码]
 
 当service被调用时，通过代理最后调用的是FailoverClusterInvoker的invoke
 
-![sequencediagram111](https://user-images.githubusercontent.com/7789698/38227884-f84568c4-3732-11e8-991b-26baf6d6f4d9.png)
+![sequencediagram111](https://user-images.githubusercontent.com/7789698/38479764-eb2fa4d6-3bf3-11e8-9c7b-2f16e095b33f.png)
 
 ## proxy 服务代理层
 
@@ -24,6 +24,8 @@ public class JavassistProxyFactory extends AbstractProxyFactory {
 真正的service通过Javassist代理被代理成代理子类
 
 InvokerInvocationHandler
+
+<!-- more -->
 
 ```java
 public class InvokerInvocationHandler implements InvocationHandler {

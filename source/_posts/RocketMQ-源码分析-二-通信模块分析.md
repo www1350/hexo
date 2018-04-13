@@ -10,7 +10,7 @@ categories: [中间件,源码]
 ![image](https://user-images.githubusercontent.com/7789698/32897440-358e21d4-caab-11e7-8f66-76a302229a2d.png)
 
 NettyRemotingClient
-```
+```java
  @Override
     public void start() {
 //业务线程池
@@ -69,7 +69,7 @@ NettyRemotingClient
     }
 ```
 
-```
+```java
 public void scanResponseTable() {
         final List<ResponseFuture> rfList = new LinkedList<ResponseFuture>();
         Iterator<Entry<Integer, ResponseFuture>> it = this.responseTable.entrySet().iterator();
@@ -98,7 +98,7 @@ public void scanResponseTable() {
 ## RocketMQ 通信编解码源码解析
 
 编码
-```
+```java
 public class NettyEncoder extends MessageToByteEncoder<RemotingCommand> {
     private static final Logger log = LoggerFactory.getLogger(RemotingHelper.ROCKETMQ_REMOTING);
 
@@ -126,7 +126,7 @@ public class NettyEncoder extends MessageToByteEncoder<RemotingCommand> {
 
 
 解码
-```
+```java
 public class NettyDecoder extends LengthFieldBasedFrameDecoder {
     private static final Logger log = LoggerFactory.getLogger(RemotingHelper.ROCKETMQ_REMOTING);
 
@@ -175,7 +175,7 @@ public class NettyDecoder extends LengthFieldBasedFrameDecoder {
 ![main](https://user-images.githubusercontent.com/7789698/32903410-e1ca3d8c-cb2f-11e7-85dd-7cabb312482c.jpg)
 
 处理header
-```
+```java
 public ByteBuffer encodeHeader() {
         return encodeHeader(this.body != null ? this.body.length : 0);
     }
@@ -235,7 +235,7 @@ public ByteBuffer encodeHeader() {
 | extFields | HashMap<String, String> |                    请求自定义字段                     |       应答自定义字段       |             customHeader的每个字段 |
 
 
-```
+```java
  private static final int RPC_TYPE = 0; // 0, REQUEST_COMMAND rpc类型的标注，一种是普通的RPC请求
  private static final int RPC_ONEWAY = 1; // 0, 这种ONEWAY 是指单向RPC,比如心跳包
 
@@ -258,7 +258,7 @@ private transient byte[] body; //body数据，注意transient标记，不会被�
 ```
 
 
- ```
+ ```java
    private byte[] headerEncode() {
         this.makeCustomHeaderToNet();
 //基于rocketmq还是基于JSON的序列化方式
@@ -302,7 +302,7 @@ public void makeCustomHeaderToNet() {
 ![ba3e2d6c-d79a-4148-9c88-facba76ff0e1](https://user-images.githubusercontent.com/7789698/32938009-b6449d98-cbb5-11e7-848a-cebb2631fc97.png)
 
 ### RocketMQ序列化
-```
+```java
 public static byte[] rocketMQProtocolEncode(RemotingCommand cmd) {
         // String remark
         byte[] remarkBytes = null;
@@ -353,7 +353,7 @@ public static byte[] rocketMQProtocolEncode(RemotingCommand cmd) {
 ```
 
 ### JSON序列化
-```
+```java
     public static byte[] encode(final Object obj) {
         final String json = toJson(obj, false);
         if (json != null) {
@@ -364,7 +364,7 @@ public static byte[] rocketMQProtocolEncode(RemotingCommand cmd) {
 ```
 
 ### OnewayRPC
-```
+```java
     public void markOnewayRPC() {
         int bits = 1 << RPC_ONEWAY;
         this.flag |= bits;
@@ -378,7 +378,7 @@ public static byte[] rocketMQProtocolEncode(RemotingCommand cmd) {
 
 ```
 
-```
+```java
     @JSONField(serialize = false)
     public boolean isResponseType() {
         int bits = 1 << RPC_TYPE;
@@ -387,7 +387,7 @@ public static byte[] rocketMQProtocolEncode(RemotingCommand cmd) {
 ```
 
 
-```
+```java
     class NettyClientHandler extends SimpleChannelInboundHandler<RemotingCommand> {
 
         @Override
@@ -415,7 +415,7 @@ public static byte[] rocketMQProtocolEncode(RemotingCommand cmd) {
 
 
 ### processRequestCommand
-```
+```java
 public void processRequestCommand(final ChannelHandlerContext ctx, final RemotingCommand cmd) {
 //缓存着每个请求的code对应的处理器
 //MQClientAPIImpl构造器里面初始化了
@@ -506,7 +506,7 @@ public void processRequestCommand(final ChannelHandlerContext ctx, final Remotin
 ```
 
 ## processRequestCommand
-```
+```java
 public void processResponseCommand(ChannelHandlerContext ctx, RemotingCommand cmd) {
         final int opaque = cmd.getOpaque();
        //获取请求对应的responseFuture
@@ -829,5 +829,3 @@ SendResult [sendStatus=SEND_OK, msgId=AC1107140D7C3764951D701DA4250000, offsetMs
 <img width="1279" alt="wx20171122-231321 2x" src="https://user-images.githubusercontent.com/7789698/33134496-d6f9a352-cfda-11e7-9250-2e87e9b32275.png">
 
 <img width="1246" alt="wx20171122-231450 2x" src="https://user-images.githubusercontent.com/7789698/33134824-b2d92ed8-cfdb-11e7-9e4b-dc92a98af1a8.png">
-
- <p style="display:none;">666</p>

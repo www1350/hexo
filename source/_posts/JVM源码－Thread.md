@@ -16,8 +16,9 @@ new Thread()不会启动一个新线程，而是调用init的这个方法设置�
 
 start0 -> JVM_StartThread
 
-
 虾面是openjdk 的jvm源码http://hg.openjdk.java.net/jdk8u/jdk8u/hotspot/file/75d40493551f/src/share/vm/prims/jvm.cpp
+
+<!-- more -->
 
 
 ```

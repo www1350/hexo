@@ -8,7 +8,7 @@ categories: [中间件,源码]
 
 # 脚本分析
 mqbroker.sh
-```
+```shell
 #!/bin/sh
 if [ -z "$ROCKETMQ_HOME" ] ; then
   ## resolve links - $0 may be a link to maven's home
@@ -38,11 +38,10 @@ fi
 export ROCKETMQ_HOME
 
 sh ${ROCKETMQ_HOME}/bin/runbroker.sh org.apache.rocketmq.broker.BrokerStartup $@
-
 ```
 
 `BrokerStartup`
-```
+```java
 public class BrokerStartup {
     public static Properties properties = null;
     public static CommandLine commandLine = null;

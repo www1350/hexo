@@ -2,8 +2,8 @@
 title: Spring开闭原则
 abbrlink: ab99c5ee
 date: 2018-04-03 22:55:43
-tags:
-categories:
+tags: spring
+categories: 
 ---
 
 BeanPostProcessor的执行顺序
@@ -49,84 +49,91 @@ ServletContextAwareProcessor          无序
 
 
 
-
-
 看源码毕竟清晰
 AbstractApplicationContext
-```
+```java
 @Override
-	public void refresh() throws BeansException, IllegalStateException {
-		synchronized (this.startupShutdownMonitor) {
-			// Prepare this context for refreshing.
-			prepareRefresh();
+public void refresh() throws BeansException, IllegalStateException {
+	synchronized (this.startupShutdownMonitor) {
+		// Prepare this context for refreshing.
+        //initPropertySources(初始化propertySources)->validateRequiredProperties( ConfigurablePropertyResolver#setRequiredProperties)
+		prepareRefresh();
 
-			// Tell the subclass to refresh the internal bean factory.
-			ConfigurableListableBeanFactory beanFactory = obtainFreshBeanFactory();
+		// Tell the subclass to refresh the internal bean factory.
+        //refreshBeanFactory（主要loadBeanDefinitions 解析xml, 转换成beanDefinition）->getBeanFactory
+        //返回DefaultListableBeanFactory
+		ConfigurableListableBeanFactory beanFactory = obtainFreshBeanFactory();
 
-			// Prepare the bean factory for use in this context.
-			prepareBeanFactory(beanFactory);
+		// Prepare the bean factory for use in this context.
+        //表达式解析，点位符替换
+		prepareBeanFactory(beanFactory);
 
-			try {
-				// Allows post-processing of the bean factory in context subclasses.
-				postProcessBeanFactory(beanFactory);
+		try {
+			// Allows post-processing of the bean factory in context subclasses.
+            //注册web servlet相关处理类的实例
+			postProcessBeanFactory(beanFactory);
 
-				// Invoke factory processors registered as beans in the context.
-				invokeBeanFactoryPostProcessors(beanFactory);
+			// Invoke factory processors registered as beans in the context.
+            //PostProcessorRegistrationDelegate注册后处理代理类（BeanDefinitionRegistryPostProcessor）, 主要初始化两个类ConfigurationClassPostProcessor(处理配置自动扫描注解)和PropertyPlaceholderConfigurer(替换点位符))
+			invokeBeanFactoryPostProcessors(beanFactory);
 
-				// Register bean processors that intercept bean creation.
-				registerBeanPostProcessors(beanFactory);
+			// Register bean processors that intercept bean creation.
+			registerBeanPostProcessors(beanFactory);
 
-				// Initialize message source for this context.
-				initMessageSource();
+			// Initialize message source for this context.
+            //初始化messageSource
+			initMessageSource();
 
-				// Initialize event multicaster for this context.
-				initApplicationEventMulticaster();
+			// Initialize event multicaster for this context.
+            //初始化事件广播,如果不包含applicationEventMulticaster bean定义就使用默认的SimpleApplicationEventMulticaster
+			initApplicationEventMulticaster();
 
-				// Initialize other special beans in specific context subclasses.
-				onRefresh();
+			// Initialize other special beans in specific context subclasses.
+            //初始化主题资源，没有就采用默认
+			onRefresh();
 
-				// Check for listener beans and register them.
-				registerListeners();
+			// Check for listener beans and register them.
+            //用于注册监听到事件广播 ，必须实现org.springframework.context.ApplicationListener接口
+			registerListeners();
 
-				// Instantiate all remaining (non-lazy-init) singletons.
-				finishBeanFactoryInitialization(beanFactory);
+			// Instantiate all remaining (non-lazy-init) singletons.
+            //所有定义的单例bean全部初始化
+			finishBeanFactoryInitialization(beanFactory);
 
-				// Last step: publish corresponding event.
-				finishRefresh();
+			// Last step: publish corresponding event.
+            //初始化生命周期上下文事件
+			finishRefresh();
 			}
 
-			catch (BeansException ex) {
-				if (logger.isWarnEnabled()) {
-					logger.warn("Exception encountered during context initialization - " +
-							"cancelling refresh attempt: " + ex);
-				}
+		catch (BeansException ex) {
+			//...
 
-				// Destroy already created singletons to avoid dangling resources.
-				destroyBeans();
+			// Destroy already created singletons to avoid dangling resources.
+			destroyBeans();
 
-				// Reset 'active' flag.
-				cancelRefresh(ex);
+			// Reset 'active' flag.
+			cancelRefresh(ex);
 
-				// Propagate exception to caller.
-				throw ex;
-			}
+			// Propagate exception to caller.
+			throw ex;
+		}
 
-			finally {
-				// Reset common introspection caches in Spring's core, since we
-				// might not ever need metadata for singleton beans anymore...
-				resetCommonCaches();
-			}
+		finally {
+			// Reset common introspection caches in Spring's core, since we
+			// might not ever need metadata for singleton beans anymore...
+			resetCommonCaches();
 		}
 	}
+}
 ```
 
 
 registerBeanPostProcessors(beanFactory); 这个是关键所在，对吧
 
-```
+```java
 protected void registerBeanPostProcessors(ConfigurableListableBeanFactory beanFactory) {
-		PostProcessorRegistrationDelegate.registerBeanPostProcessors(beanFactory, this);
-	}
+	PostProcessorRegistrationDelegate.registerBeanPostProcessors(beanFactory, this);
+}
 ```
 
 
@@ -136,10 +143,9 @@ priorityOrderedPostProcessors：PriorityOrdered
 internalPostProcessors：MergedBeanDefinitionPostProcessor
 orderedPostProcessorNames：Ordered
 nonOrderedPostProcessorNames：（非PriorityOrdered，Ordered）
-```
+```java
 public static void registerBeanPostProcessors(
 			ConfigurableListableBeanFactory beanFactory, AbstractApplicationContext applicationContext) {
-
 		String[] postProcessorNames = beanFactory.getBeanNamesForType(BeanPostProcessor.class, true, false);
 
 		// Register BeanPostProcessorChecker that logs an info message when

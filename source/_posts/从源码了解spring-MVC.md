@@ -8,7 +8,7 @@ categories: 源码
 
 一般要让springmvc生效，我们都在web.xml配上这么一段 
 
- ```
+ ```xml
   <servlet>
         <servlet-name>dispatcher</servlet-name>
         <servlet-class>org.springframework.web.servlet.DispatcherServlet</servlet-class>
@@ -25,8 +25,6 @@ categories: 源码
 ![image](https://user-images.githubusercontent.com/7789698/32280463-f0a242e8-bee9-11e7-973d-9c9b3a9461c8.png)
 
 ![sequencediagram1](https://user-images.githubusercontent.com/7789698/32544587-d40df77e-c4b3-11e7-8e2d-c77cb5e1c3c9.png)
-
-
 
 Servlet接口 包括 `public void init(ServletConfig config) throws ServletException;`、 ` public void service(ServletRequest req, ServletResponse res) throws ServletException, IOException;`、`public void destroy();`
 

@@ -12,19 +12,19 @@ categories: [中间件,源码]
 
 #### 服务端服务级别
 
-```
+```xml
 <dubbo:service interface="..." loadbalance="roundrobin" />
 ```
 
 #### 客户端服务级别
 
-```
+```xml
 <dubbo:reference interface="..." loadbalance="roundrobin" />
 ```
 
 #### 服务端方法级别
 
-```
+```xml
 <dubbo:service interface="...">
     <dubbo:method name="..." loadbalance="roundrobin"/>
 </dubbo:service>
@@ -32,7 +32,7 @@ categories: [中间件,源码]
 
 #### 客户端方法级别
 
-```
+```xml
 <dubbo:reference interface="...">
     <dubbo:method name="..." loadbalance="roundrobin"/>
 </dubbo:reference>
@@ -40,7 +40,7 @@ categories: [中间件,源码]
 
 在集群负载均衡时，Dubbo 提供了多种均衡策略，缺省为 `random` 随机调用。
 
-```
+```java
 @SPI(RandomLoadBalance.NAME)
 public interface LoadBalance {
 
@@ -58,6 +58,8 @@ public interface LoadBalance {
 }
 ```
 
+<!-- more -->
+
 ## 负载均衡策略
 
 ### Random LoadBalance
@@ -65,7 +67,7 @@ public interface LoadBalance {
 - **随机**，按权重设置随机概率。
 - 在一个截面上碰撞的概率高，但调用量越大分布越均匀，而且按概率使用权重后也比较均匀，有利于动态调整提供者权重。
 
-```
+```java
 public class RandomLoadBalance extends AbstractLoadBalance {
     public static final String NAME = "random";
 
@@ -106,7 +108,7 @@ public class RandomLoadBalance extends AbstractLoadBalance {
 - **轮循**，按公约后的权重设置轮循比率。
 - 存在慢的提供者累积请求的问题，比如：第二台机器很慢，但没挂，当请求调到第二台时就卡在那，久而久之，所有请求都卡在调到第二台上。
 
-```
+```java
 public class RoundRobinLoadBalance extends AbstractLoadBalance {
 
     public static final String NAME = "roundrobin";
@@ -183,7 +185,7 @@ public class RoundRobinLoadBalance extends AbstractLoadBalance {
 - **最少活跃调用数**，相同活跃数的随机，活跃数指调用前后计数差。
 - 使慢的提供者收到更少请求，因为越慢的提供者的调用前后计数差会越大。
 
-```
+```java
 public class LeastActiveLoadBalance extends AbstractLoadBalance {
 
     public static final String NAME = "leastactive";
@@ -249,7 +251,7 @@ public class LeastActiveLoadBalance extends AbstractLoadBalance {
 - 缺省只对第一个参数 Hash，如果要修改，请配置 `<dubbo:parameter key="hash.arguments" value="0,1" />`
 - 缺省用 160 份虚拟节点，如果要修改，请配置 `<dubbo:parameter key="hash.nodes" value="320" />`
 
-```
+```java
 public class ConsistentHashLoadBalance extends AbstractLoadBalance {
 
     private final ConcurrentMap<String, ConsistentHashSelector<?>> selectors = new ConcurrentHashMap<String, ConsistentHashSelector<?>>();
