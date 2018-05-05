@@ -14,7 +14,7 @@ categories:
 
 <!-- more -->
 
-```
+```xml
 <bean id="abstractDataSource" abstract="true" class="com.alibaba.druid.pool.DruidDataSource" init-method="init"
       destroy-method="close">
     <property name="driverClassName" value="com.microsoft.sqlserver.jdbc.SQLServerDriver"/>
@@ -101,7 +101,7 @@ public @interface DataSource {
 }
 ```
 
-```
+```java
 /** 
 * 本地线程设置和获取数据源信息 
 * Desc: 

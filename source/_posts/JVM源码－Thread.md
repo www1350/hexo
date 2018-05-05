@@ -11,7 +11,7 @@ new Thread()不会启动一个新线程，而是调用init的这个方法设置�
 
 其实start方法的核心就是调用了
 ```
-    private native void start0();
+private native void start0();
 ```
 
 start0 -> JVM_StartThread
@@ -21,7 +21,7 @@ start0 -> JVM_StartThread
 <!-- more -->
 
 
-```
+```c++
 JVM_ENTRY(void, JVM_StartThread(JNIEnv* env, jobject jthread))
   JVMWrapper("JVM_StartThread");
   JavaThread *native_thread = NULL;
@@ -102,7 +102,7 @@ JVM_END
 
 http://hg.openjdk.java.net/jdk8u/jdk8u/hotspot/file/75d40493551f/src/share/vm/runtime/thread.cpp
 
-```
+```c++
 JavaThread::JavaThread(ThreadFunction entry_point, size_t stack_sz) :
   Thread()
 #if INCLUDE_ALL_GCS
@@ -142,7 +142,7 @@ http://hg.openjdk.java.net/jdk8u/jdk8u/hotspot/file/75d40493551f/src/os/linux/vm
 
 
 
-```
+```c++
 
 bool os::create_thread(Thread* thread, ThreadType thr_type, size_t stack_size) {
   assert(thread->osthread() == NULL, "caller responsible");

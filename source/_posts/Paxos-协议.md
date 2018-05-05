@@ -4,6 +4,12 @@ tags:
   - 笔记
   - Paxos
   - 分布式
+  - Raft
+  - zookeeper
+  - ZAB
+  - CAP
+  - 2PC
+  - 3PC
 categories: 一致性
 abbrlink: 410c3782
 date: 2018-04-12 10:13:02
@@ -27,6 +33,8 @@ date: 2018-04-12 10:13:02
 
 根据定理，分布式系统只能满足三项中的两项而不可能满足全部三项[[4\]](https://zh.wikipedia.org/wiki/CAP%E5%AE%9A%E7%90%86#cite_note-4)。理解CAP理论的最简单方式是想象两个节点分处分区两侧。允许至少一个节点更新状态会导致数据不一致，即丧失了C性质。如果为了保证数据一致性，将分区一侧的节点设置为不可用，那么又丧失了A性质。除非两个节点可以互相通信，才能既保证C又保证A，这又会导致丧失P性质。
 
+<!-- more -->
+
 ## BASE理论
 
 ### 基本可用（Basically Available）
@@ -43,6 +51,10 @@ date: 2018-04-12 10:13:02
 ### 最终一致性（Eventually consistent）
 
 最终一致性是指系统中的所有数据副本经过一定时间后，最终能够达到一致的状态。弱一致性和强一致性相反，最终一致性是弱一致性的一种特殊情况。
+
+## 集群脑裂
+
+集群的脑裂通常是发生在集群中部分节点之间不可达而引起的（或者因为节点请求压力较大，导致其他节点与该节点的心跳检测不可用）。当上述情况发生时，不同分裂的小集群会自主的选择出master节点，造成原本的集群会同时存在多个master节点。
 
 ## 两阶段提交（Two-Phase Commit）
 
@@ -208,6 +220,28 @@ date: 2018-04-12 10:13:02
 
 > 有两支军队，它们分别有一位将军领导，现在准备攻击一座修筑了防御工事的城市。这两支军队都驻扎在那座城市的附近，分占一座山头。一道山谷把两座山分隔开来，并且两位将军唯一的通信方式就是派各自的信使来往于山谷两边。不幸的是，这个山谷已经被那座城市的保卫者占领，并且存在一种可能，那就是任何被派出的信使通过山谷是会被捕。 请注意，虽然两位将军已经就攻击那座城市达成共识，但在他们各自占领山头阵地之前，并没有就进攻时间达成共识。两位将军必须让自己的军队同时进攻城市才能取得成功。因此，他们必须互相沟通，以确定一个时间来攻击，并同意就在那时攻击。如果只有一个将军进行攻击，那么这将是一个灾难性的失败。
 
+### 三军问题
+
+![image](https://user-images.githubusercontent.com/7789698/38786841-12c90a14-415d-11e8-980b-eede0b8ec1f5.png)
+
+> 1） 1支红军在山谷里扎营，在周围的山坡上驻扎着3支蓝军；
+>
+> 2） 红军比任意1支蓝军都要强大；如果1支蓝军单独作战，红军胜；如果2支或以上蓝军同时进攻，蓝军胜；
+>
+> 3） 三支蓝军需要同步他们的进攻时间；但他们惟一的通信媒介是派通信兵步行进入山谷，在那里他们可能被俘虏，从而将信息丢失；或者为了避免被俘虏，可能在山谷停留很长时间；
+>
+> 4） 每支军队有1个参谋负责提议进攻时间；每支军队也有1个将军批准参谋提出的进攻时间；很明显，1个参谋提出的进攻时间需要获得至少2个将军的批准才有意义；
+>
+> 5） 问题：是否存在一个协议，能够使得蓝军同步他们的进攻时间？
+
+接下来以两个假设的场景来演绎BasicPaxos；参谋和将军需要遵循一些基本的规则
+
+> 1） 参谋以两阶段提交（prepare/commit）的方式来发起提议，在prepare阶段需要给出一个编号；
+>
+> 2） 在prepare阶段产生冲突，将军以编号大小来裁决，编号大的参谋胜出；
+>
+> 3） 参谋在prepare阶段如果收到了将军返回的已接受进攻时间，在commit阶段必须使用这个返回的进攻时间；
+
 ## 拜占庭将军问题（Byzantine Generals Problem）
 
 > 一组拜占庭将军分别各率领一支军队共同围困一座城市。为了简化问题，将各支军队的行动策略限定为进攻或撤离两种。因为部分军队进攻部分军队撤离可能会造成灾难性后果，因此各位将军必须通过投票来达成一致策略，即所有军队一起进攻或所有军队一起撤离。因为各位将军分处城市不同方向，他们只能通过信使互相联系。在投票过程中每位将军都将自己投票给进攻还是撤退的信息通过信使分别通知其他所有将军，这样一来每位将军根据自己的投票和其他所有将军送来的信息就可以知道共同的投票结果而决定行动策略。
@@ -325,7 +359,9 @@ Paxos 协议能够让 Proposer 发送的提议朝着能被大多数 Acceptor 接
 
 ### Multi-Paxos
 
-### Zab 原子广播协议
+
+
+## Zab 原子广播协议
 
 Zab的全称是Zookeeper atomic broadcast protocol，是Zookeeper内部用到的一致性协议。相比Paxos，Zab最大的特点是保证强一致性(strong consistency，或叫线性一致性linearizable consistency)。
 
@@ -346,15 +382,17 @@ ZAB 中的节点有三种状态
 - **history**：当前节点接收到事务提议的 log
 - **acceptedEpoch**：follower 已经接受的 leader 更改年号的 NEWEPOCH 提议
 - **currentEpoch**：当前所处的年代
+- **zxid**：事务请求的唯一标记，由leader服务器负责进行分配。由2部分构成，高32位是上述的peerEpoch，低32位是请求的计数，从0开始。所以由zxid我们就可以知道该请求是哪个轮次的，并且是该轮次的第几个请求。
 - **lastZxid**：history 中最近接收到的提议的 zxid （最大的）
+- **lastProcessedZxid**：最后一次commit的事务请求的zxid
+- **electionEpoch**：每执行一次leader选举，electionEpoch就会自增，用来标记leader选举的轮次
+- **peerEpoch**：每次leader选举完成之后，都会选举出一个新的peerEpoch，用来标记事务请求所属的轮次d
 
 > 在 ZAB 协议的事务编号 Zxid 设计中，Zxid 是一个 64 位的数字，其中低 32 位是一个简单的单调递增的计数器，针对客户端每一个事务请求，计数器加 1；而高 32 位则代表 Leader 周期 epoch 的编号，每个当选产生一个新的 Leader 服务器，就会从这个 Leader 服务器上取出其本地日志中最大事务的ZXID，并从中读取 epoch 值，然后加 1，以此作为新的 epoch，并将低 32 位从 0 开始计数。
 >
 > epoch：可以理解为当前集群所处的年代或者周期，每个 leader 就像皇帝，都有自己的年号，所以每次改朝换代，leader 变更之后，都会在前一个年代的基础上加 1。这样就算旧的 leader 崩溃恢复之后，也没有人听他的了，因为 follower 只听从当前年代的 leader 的命令。
 
-
-
-![mage-20180412181706](/var/folders/cf/lq_f9wkn3gx_l9nghhvyt7240000gn/T/abnerworks.Typora/image-201804121817063.png)
+![image](https://user-images.githubusercontent.com/7789698/38787192-1f444b76-415f-11e8-8e4a-434b73380f99.png)
 
 #### Phase 0: Leader election（选举阶段）
 
@@ -379,23 +417,198 @@ ZAB 中的节点有三种状态
 [![phase 3](http://7xjtfr.com1.z0.glb.clouddn.com/phase3.png)](http://7xjtfr.com1.z0.glb.clouddn.com/phase3.png)
 值得注意的是，ZAB 提交事务并不像 2PC 一样需要全部follower都 ACK，只需要得到quorum（超过半数的节点）的 ACK 就可以了。
 
+### 协议实现
+
+协议的 Java 版本实现跟上面的定义有些不同，选举阶段使用的是 Fast Leader Election（FLE），它包含了 Phase 1 的发现职责。因为 FLE 会选举拥有最新提议历史的节点作为 leader，这样就省去了发现最新提议的步骤。实际的实现将 Phase 1 和 Phase 2 合并为 Recovery Phase（恢复阶段）。所以，ZAB 的实现只有三个阶段：
+
+- **Fast Leader Election**
+- **Recovery Phase**
+- **Broadcast Phase**
+
+#### Fast Leader Election
+
+前面提到 FLE 会选举拥有最新提议历史（lastZixd最大）的节点作为 leader，这样就省去了发现最新提议的步骤。这是基于拥有最新提议的节点也有最新提交记录的前提。
+
+##### 成为 leader 的条件
+
+1. 选`epoch`最大的
+2. `epoch`相等，选 zxid 最大的
+3. `epoch`和`zxid`都相等，选择`server id`最大的（就是我们配置`zoo.cfg`中的`myid`）
+
+节点在选举开始都默认投票给自己，当接收其他节点的选票时，会根据上面的条件更改自己的选票并重新发送选票给其他节点，当有一个节点的得票超过半数，该节点会设置自己的状态为 leading，其他节点会设置自己的状态为 following。
+
+##### 选举过程
+
+![mage-20180416103037](/var/folders/cf/lq_f9wkn3gx_l9nghhvyt7240000gn/T/abnerworks.Typora/image-201804161030378.png)
+
+##### Recovery Phase （恢复阶段）
+
+这一阶段 follower 发送它们的 lastZixd 给 leader，leader 根据 lastZixd 决定如何同步数据。这里的实现跟前面 Phase 2 有所不同：Follower 收到 TRUNC 指令会中止 L.lastCommittedZxid 之后的提议，收到 DIFF 指令会接收新的提议。
+
+> history.lastCommittedZxid：最近被提交的提议的 zxid
+> history:oldThreshold：被认为已经太旧的已提交提议的 zxid
+
+![mage-20180416103102](/var/folders/cf/lq_f9wkn3gx_l9nghhvyt7240000gn/T/abnerworks.Typora/image-201804161031025.png)
+
+
+
+## Raft 协议
+
+在一个由 Raft 协议组织的集群中有三类角色：
+
+- Leader（领袖）
+- Follower（群众）
+- Candidate（候选人）
+
+### Leader 选举过程
+
+在极简的思维下，一个最小的 Raft 民主集群需要三个参与者（如下图：A、B、C），这样才可能投出多数票。初始状态 ABC 都是 Follower，然后发起选举这时有三种可能情形发生。下图中前二种都能选出 Leader，第三种则表明本轮投票无效（Split Votes），每方都投给了自己，结果没有任何一方获得多数票。之后每个参与方随机休息一阵（Election Timeout）重新发起投票直到一方获得多数票。这里的关键就是随机 timeout，最先从 timeout 中恢复发起投票的一方向还在 timeout 中的另外两方请求投票，这时它们就只能投给对方了，很快达成一致。
+
+![image](https://user-images.githubusercontent.com/7789698/38790076-2c6de066-4171-11e8-82f3-4310c7cb3873.png)
+
+选出 Leader 后，Leader 通过定期向所有 Follower 发送心跳信息维持其统治。若 Follower 一段时间未收到 Leader 的心跳则认为 Leader 可能已经挂了再次发起选主过程。
+
+### Leader 节点对一致性的影响
+
+Raft 协议强依赖 Leader 节点的可用性来确保集群数据的一致性。数据的流向只能从 Leader 节点向 Follower 节点转移。当 Client 向集群 Leader 节点提交数据后，Leader 节点接收到的数据处于未提交状态（Uncommitted），接着 Leader 节点会并发向所有 Follower 节点复制数据并等待接收响应，确保至少集群中超过半数节点已接收到数据后再向 Client 确认数据已接收。一旦向 Client 发出数据接收 Ack 响应后，表明此时数据状态进入已提交（Committed），Leader 节点再向 Follower 节点发通知告知该数据状态已提交。
+
+![image](https://user-images.githubusercontent.com/7789698/38790297-bf18a51c-4172-11e8-974d-3449e0790e56.png)
+
+
+
+在这个过程中，主节点可能在任意阶段挂掉，看下 Raft 协议如何针对不同阶段保障数据一致性的。
+
+#### 1. 数据到达 Leader 节点前
+
+这个阶段 Leader 挂掉不影响一致性，不多说。
+
+![img](https://images2015.cnblogs.com/blog/815275/201603/815275-20160301175405705-1452838896.png)
+
+#### 2. 数据到达 Leader 节点，但未复制到 Follower 节点
+
+这个阶段 Leader 挂掉，数据属于未提交状态，Client 不会收到 Ack 会认为**超时失败**可安全发起重试。Follower 节点上没有该数据，**重新选主**后 Client **重试重新提交**可成功。原来的 Leader 节点恢复后作为 Follower 加入集群重新从当前任期的新 Leader 处同步数据，强制保持和 Leader 数据一致。
+
+![img](https://images2015.cnblogs.com/blog/815275/201603/815275-20160301175412580-649716029.png)
+
+#### 3. 数据到达 Leader 节点，成功复制到 Follower 所有节点，但还未向 Leader 响应接收
+
+这个阶段 Leader 挂掉，虽然数据在 Follower 节点处于未提交状态（Uncommitted）但保持一致，重新选出 Leader 后可完成数据提交，此时 Client 由于不知到底提交成功没有，可**重试提交**。针对这种情况 Raft 要求 RPC 请求实现幂等性，也就是要实现内部去重机制。
+
+![img](https://images2015.cnblogs.com/blog/815275/201603/815275-20160301175419501-326023047.png)
+
+#### 4. 数据到达 Leader 节点，成功复制到 Follower 部分节点，但还未向 Leader 响应接收
+
+这个阶段 Leader 挂掉，数据在 Follower 节点处于未提交状态（Uncommitted）且不一致，Raft 协议要求投票只能投给拥有最新数据的节点。所以拥有最新数据的节点会被选为 Leader 再强制同步数据到 Follower，数据不会丢失并最终一致。
+
+![img](https://images2015.cnblogs.com/blog/815275/201603/815275-20160301175427314-1771762822.png)
+
+#### 5. 数据到达 Leader 节点，成功复制到 Follower 所有或多数节点，数据在 Leader 处于已提交状态，但在 Follower 处于未提交状态
+
+这个阶段 Leader 挂掉，重新选出新 Leader 后的处理流程和阶段 3 一样。
+
+![img](https://images2015.cnblogs.com/blog/815275/201603/815275-20160301175434189-317254838.png)
+
+#### 6. 数据到达 Leader 节点，成功复制到 Follower 所有或多数节点，数据在所有节点都处于已提交状态，但还未响应 Client
+
+这个阶段 Leader 挂掉，Cluster 内部数据其实已经是一致的，Client 重复重试基于幂等策略对一致性无影响。
+
+![img](https://images2015.cnblogs.com/blog/815275/201603/815275-20160301175628111-980324469.png)
+
+#### 7. 网络分区导致的脑裂情况，出现双 Leader
+
+网络分区将原先的 Leader 节点和 Follower 节点分隔开，Follower 收不到 Leader 的心跳将发起选举产生新的 Leader。这时就产生了双 Leader，原先的 Leader 独自在一个区，向它提交数据不可能复制到多数节点所以永远提交不成功。向新的 Leader 提交数据可以提交成功，网络恢复后旧的 Leader 发现集群中有更新任期（Term）的新 Leader 则自动降级为 Follower 并从新 Leader 处同步数据达成集群数据一致。
+
+![img](https://images2015.cnblogs.com/blog/815275/201603/815275-20160301175637220-1693295968.png)
+
+### 图解
+
+1. 刚开始所有的节点都是follower。
+
+![image](https://user-images.githubusercontent.com/7789698/38790429-dc07722e-4173-11e8-8ebb-6298a3a46af8.png)
+
+2. 如果follower不能接收到leader的消息就成为candidate。这里有个选举超时时间election timeout，这个时间是随机在150ms到300ms之间，第一个到达超时时间恢复的节点将会认为自己是candidate，并且投自己。
+
+
+
+![image](https://user-images.githubusercontent.com/7789698/38790454-f736b474-4173-11e8-8c99-1a5cb429bae9.png)
+
+3. candidate发送投票请求，请求选举自己为leader。如果follow节点尚未投票则返回响应给候选人投票且重置自己的election timeout。
+
+![image](https://user-images.githubusercontent.com/7789698/38790495-30cb3bf6-4174-11e8-9312-9cc50da7ef79.png)
+
+![image](https://user-images.githubusercontent.com/7789698/38790385-8af85808-4173-11e8-9e15-e392d86a5fc7.png)
+
+
+
+4. 候选人获得超过半数的票则被选举为leader。
+
+![image](https://user-images.githubusercontent.com/7789698/38790512-5afcc674-4174-11e8-91f8-e10c60f9bbdf.png)
+
+5. leader停止将会触发重新选举
+
+![image](https://user-images.githubusercontent.com/7789698/38790657-4bb35f24-4175-11e8-9916-5e5ed1dcc821.png)
+
+![image](https://user-images.githubusercontent.com/7789698/38790664-54980a86-4175-11e8-9d37-0fc915b4c945.png)
+
+6. 当有两个节点同时成为候选人。节点已经投票的时候将不会在接受后续投票请求。一旦没有超过半数投票，就会等待超时重新投票。
+
+![image](https://user-images.githubusercontent.com/7789698/38790720-9c80060a-4175-11e8-950b-cb2c2a379e2e.png)![image](https://user-images.githubusercontent.com/7789698/38790726-a3766aee-4175-11e8-89dd-3b4f3d21deb4.png)
+
+![image](https://user-images.githubusercontent.com/7789698/38790739-b76b6608-4175-11e8-994c-2db0082a89a1.png)
+
+
+
+7. leader将会采用两段式提交的方法发送log，这一个阶段也叫做log replication。这时候每个节点将会有一个被指定的heartbeat timeout。首先，客户端发送的变更将会增加到leader的log里面。然后，这个log将会被在heartbeat timeout结束之前发送到followers。接下来，超过半数的节点响应接受了这个请求则leader会进入commit状态，并且会返回给client响应。最后，leader会提交给followers commit状态。
+
+![image](https://user-images.githubusercontent.com/7789698/38792973-e7a9c204-4181-11e8-8cba-c954e2b35ea2.png)![image](https://user-images.githubusercontent.com/7789698/38792979-edbc5bac-4181-11e8-89dc-bf8d00973869.png)![image](https://user-images.githubusercontent.com/7789698/38793077-4865746c-4182-11e8-9dd9-46af5e615b92.png)
+![image](https://user-images.githubusercontent.com/7789698/38793087-4ffb7f78-4182-11e8-8324-d9e1a4762e53.png)
+
+![image](https://user-images.githubusercontent.com/7789698/38793134-82a6b3a2-4182-11e8-8097-d912dda1e05e.png)
+
+![image](https://user-images.githubusercontent.com/7789698/38793177-b650267a-4182-11e8-88e5-2cd39ec3e0ff.png)
+
+![image](https://user-images.githubusercontent.com/7789698/38793222-f709e782-4182-11e8-94b6-fbc177386855.png)
+
+![image](https://user-images.githubusercontent.com/7789698/38793251-172ea7be-4183-11e8-89cb-78c2a9e21760.png)
 
 
 
 
+
+
+
+8. 当raft节点面临网络分区的时候，也能够保持一致。比如我们现在把节点A、B和节点C、D、E分区。这时候节点C、D、E将会重新选举出节点E。这时候我们尝试用两个客户端分别与两个分区通信：1.第一个客户端向第一个分区发送set 3的请求的时候，由于节点B没法得到超过半数的响应所以将会停留在uncommitted状态 2.第二个客户端发送set 8 请求的时候，由于节点E能得到超过半数的响应（包括自己3个），所以将会形成一次完整的复制。当网络分区请求得到恢复之后：节点B做为leader接收到了term更高的leader的消息，便下线成为follow
+
+![image](https://user-images.githubusercontent.com/7789698/38793354-82d6dbf8-4183-11e8-8845-fdf31420b8c6.png)![image](https://user-images.githubusercontent.com/7789698/38793367-904b8676-4183-11e8-9d8e-1604b54eebef.png)
+
+![image](https://user-images.githubusercontent.com/7789698/38793437-e12c9f30-4183-11e8-8500-aae5f3cab84d.png)
+
+![image](https://user-images.githubusercontent.com/7789698/38793564-6377404e-4184-11e8-9b60-2ce830d11ed0.png)![image](https://user-images.githubusercontent.com/7789698/38793763-1a5d0ca8-4185-11e8-99dc-f3cd935312d7.png)
 
 
 
 参考：
 
+http://mp.weixin.qq.com/s?__biz=MzI4NDMyNTU2Mw==&mid=2247483815&idx=1&sn=74ee0b591ada2c24b6bd13f8d3171670&chksm=ebfc6273dc8beb65113c585ece8f5feda02e4be29684d9d8f8a173b25986374cc755c80b6ca5&scene=21#wechat_redirect
+
 http://www.cnblogs.com/hapjin/p/4748603.html
 
 https://segmentfault.com/a/1190000004474543
 
-blog.csdn.net/liweisnake/article/details/69253206
+http://blog.csdn.net/liweisnake/article/details/69253206
+
+https://my.oschina.net/pingpangkuangmo/blog/778927
 
 https://zh.wikipedia.org/wiki/%E6%8B%9C%E5%8D%A0%E5%BA%AD%E5%B0%86%E5%86%9B%E9%97%AE%E9%A2%98
 
 https://mp.weixin.qq.com/s?__biz=MzI4NDMyNTU2Mw==&mid=2247483815&idx=1&sn=74ee0b591ada2c24b6bd13f8d3171670&chksm=ebfc6273dc8beb65113c585ece8f5feda02e4be29684d9d8f8a173b25986374cc755c80b6ca5&scene=21#wechat_redirect
 
 http://blog.jobbole.com/104985/
+
+http://www.infoq.com/cn/articles/raft-paper
+
+[In search of an Understandable Consensus Algorithm (Extended Version)](https://ramcloud.atlassian.net/wiki/download/attachments/6586375/raft.pdf)
+
+https://www.cnblogs.com/mindwind/p/5231986.html
+
+http://thesecretlivesofdata.com/raft/

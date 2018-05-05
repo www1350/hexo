@@ -11,7 +11,7 @@ categories:
 这里只是摘录点笔记
 ## 坐标的原则
 
-```
+```xml
 <dependency>
   <groupId>junit</groupId>
   <artifactId>junit</artifactId>
@@ -82,9 +82,9 @@ categories:
 </dependency>
 ```
 
-你会在一个项目中使用不同版本的SpringFramework组件么？答案显然是不会。因此这里就没必要重复写三次<version>2.5</version>，使用Maven属性将2.5提取出来如下：
+你会在一个项目中使用不同版本的SpringFramework组件么？答案显然是不会。因此这里就没必要重复写三次`<version>2.5</version>`，使用Maven属性将2.5提取出来如下：
 
-```
+```xml
 <properties>
   <spring.version>2.5</spring.version>
 </properties>
@@ -113,7 +113,7 @@ categories:
 
 dependencyManagement只会影响现有依赖的配置，但不会引入依赖。例如我们可以在父模块中配置如下：
 
-```
+```xml
 <dependencyManagement>
   <dependencies>
     <dependency>
@@ -133,7 +133,7 @@ dependencyManagement只会影响现有依赖的配置，但不会引入依赖。
 
 这段配置不会给任何子模块引入依赖，但如果某个子模块需要使用JUnit和Log4j的时候，我们就可以简化依赖配置成这样：
 
-```
+```xml
   <dependency>
     <groupId>junit</groupId>
     <artifactid>junit</artifactId>
@@ -146,7 +146,7 @@ dependencyManagement只会影响现有依赖的配置，但不会引入依赖。
 
 你可以把dependencyManagement放到单独的专门用来管理依赖的POM中，然后在需要使用依赖的模块中通过import scope依赖，就可以引入dependencyManagement。例如可以写这样一个用于依赖管理的POM：
 
-```
+```xml
 <project>
   <modelVersion>4.0.0</modelVersion>
   <groupId>com.juvenxu.sample</groupId>
@@ -173,7 +173,7 @@ dependencyManagement只会影响现有依赖的配置，但不会引入依赖。
 
 然后我就可以通过非继承的方式来引入这段依赖管理配置：
 
-```
+```xml
   <dependencyManagement>
     <dependencies>
         <dependency>
@@ -201,7 +201,7 @@ dependencyManagement只会影响现有依赖的配置，但不会引入依赖。
 
 与dependencyManagement类似的，我们也可以使用pluginManagement元素管理插件。一个常见的用法就是我们希望项目所有模块的使用Maven Compiler Plugin的时候，都使用Java 1.5，以及指定Java源文件编码为UTF-8，这时可以在父模块的POM中如下配置pluginManagement：
 
-```
+```xml
 <build>
   <pluginManagement>
     <plugins>
@@ -235,7 +235,7 @@ dependencyManagement只会影响现有依赖的配置，但不会引入依赖。
 
 现在，我们希望Maven在integration-test阶段执行所有以IT结尾命名的测试类，配置Maven Surefire Plugin如下：
 
-```
+```xml
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-surefire-plugin</artifactId>
@@ -259,7 +259,7 @@ dependencyManagement只会影响现有依赖的配置，但不会引入依赖。
 
 对应于同样的package生命周期阶段，Maven为jar项目调用了maven-jar-plugin，为war项目调用了maven-war-plugin，换言之，packaging直接影响Maven的构建生命周期。了解这一点非常重要，特别是当你需要自定义打包行为的时候，你就必须知道去配置哪个插件。一个常见的例子就是在打包war项目的时候排除某些web资源文件，这时就应该配置maven-war-plugin如下：
 
-```
+```xml
 <plugin>
     <groupId>org.apache.maven.plugins</groupId>
     <artifactId>maven-war-plugin</artifactId>
@@ -279,7 +279,7 @@ dependencyManagement只会影响现有依赖的配置，但不会引入依赖。
 
 本专栏的《坐标规划》一文中曾解释过，一个Maven项目只生成一个主构件，当需要生成其他附属构件的时候，就需要用上classifier。源码包和Javadoc包就是附属构件的极佳例子。它们有着广泛的用途，尤其是源码包，当你使用一个第三方依赖的时候，有时候会希望在IDE中直接进入该依赖的源码查看其实现的细节，如果该依赖将源码包发布到了Maven仓库，那么像Eclipse就能通过m2eclipse插件解析下载源码包并关联到你的项目中，十分方便。由于生成源码包是极其常见的需求，因此Maven官方提供了一个插件来帮助用户完成这个任务：
 
-```
+```xml
 <plugin>
     <groupId>org.apache.maven.plugins</groupId>
     <artifactId>maven-source-plugin</artifactId>
@@ -298,7 +298,7 @@ dependencyManagement只会影响现有依赖的配置，但不会引入依赖。
 
 类似的，生成Javadoc包只需要配置插件如下：
 
-```
+```xml
   <plugin>          
     <groupId>org.apache.maven.plugins</groupId>
     <artifactId>maven-javadoc-plugin</artifactId>
@@ -323,7 +323,7 @@ JAR包中的/META-INF/MANIFEST.MF元数据文件必须包含Main-Class信息。
 项目所有的依赖都必须在Classpath中。
 Maven有好几个插件能帮助用户完成上述任务，不过用起来最方便的还是maven-shade-plugin，它可以让用户配置Main-Class的值，然后在打包的时候将值填入/META-INF/MANIFEST.MF文件。关于项目的依赖，它很聪明地将依赖JAR文件全部解压后，再将得到的.class文件连同当前项目的.class文件一起合并到最终的CLI包中，这样，在执行CLI JAR文件的时候，所有需要的类就都在Classpath中了。下面是一个配置样例：
 
-```
+```xml
   <plugin>
     <groupId>org.apache.maven.plugins</groupId>
     <artifactId>maven-shade-plugin</artifactId>
@@ -371,7 +371,7 @@ README.txt
 
 描述清楚需求后，我们就要搬出Maven最强大的打包插件：maven-assembly-plugin。它支持各种打包文件格式，包括zip、tar.gz、tar.bz2等等，通过一个打包描述文件（该例中是src/main/assembly.xml），它能够帮助用户选择具体打包哪些文件集合、依赖、模块、和甚至本地仓库文件，每个项的具体打包路径用户也能自由控制。如下就是对应上述需求的打包描述文件src/main/assembly.xml：
 
-```
+```xml
 <assembly>
   <id>bin</id>
   <formats>
@@ -410,7 +410,7 @@ fileSets允许用户通过文件或目录的粒度来控制打包。这里的第
 
 最后，我们需要配置maven-assembly-plugin使用打包描述文件，并绑定生命周期阶段使其自动执行打包操作：
 
-```
+```xml
   <plugin>
     <groupId>org.apache.maven.plugins</groupId>
     <artifactId>maven-assembly-plugin</artifactId>

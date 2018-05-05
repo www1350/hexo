@@ -594,7 +594,7 @@ doExportUrlsFor1Protocol部分重要源码
 
 incubator-dubbo/dubbo-rpc/dubbo-rpc-api/src/main/resources/META-INF/dubbo/internal/com.alibaba.dubbo.rpc.ProxyFactory
 
-```
+```properties
 stub=com.alibaba.dubbo.rpc.proxy.wrapper.StubProxyFactoryWrapper
 jdk=com.alibaba.dubbo.rpc.proxy.jdk.JdkProxyFactory
 javassist=com.alibaba.dubbo.rpc.proxy.javassist.JavassistProxyFactory
@@ -727,11 +727,9 @@ public class DelegateProviderMetaDataInvoker<T> implements Invoker {
 }
 ```
 
-
-
 incubator-dubbo/dubbo-rpc/dubbo-rpc-dubbo/src/main/resources/META-INF/dubbo/internal/com.alibaba.dubbo.rpc.Protocol
 
-```
+```properties
 dubbo=com.alibaba.dubbo.rpc.protocol.dubbo.DubboProtocol
 ```
 

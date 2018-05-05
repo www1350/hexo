@@ -212,7 +212,6 @@ public class BroadcastConsumer {
  import java.util.List;
     
  public class ScheduledMessageConsumer {
-    
      public static void main(String[] args) throws Exception {
          // Instantiate message consumer
          DefaultMQPushConsumer consumer = new DefaultMQPushConsumer("ExampleConsumer");
@@ -224,8 +223,7 @@ public class BroadcastConsumer {
              public ConsumeConcurrentlyStatus consumeMessage(List<MessageExt> messages, ConsumeConcurrentlyContext context) {
                  for (MessageExt message : messages) {
                      // Print approximate delay time period
-                     System.out.println("Receive message[msgId=" + message.getMsgId() + "] "
-                             + (System.currentTimeMillis() - message.getStoreTimestamp()) + "ms later");
+                     System.out.println("Receive message[msgId=" + message.getMsgId() + "] " + (System.currentTimeMillis() - message.getStoreTimestamp()) + "ms later");
                  }
                  return ConsumeConcurrentlyStatus.CONSUME_SUCCESS;
              }
@@ -372,6 +370,71 @@ consumer.registerMessageListener(new MessageListenerConcurrently() {
 consumer.start();
 ```
 
+## 事务
+
+```java
+public class TransactionProducer {
+    public static void main(String[] args) throws MQClientException, InterruptedException {
+        TransactionCheckListener transactionCheckListener = new TransactionCheckListenerImpl();
+        TransactionMQProducer producer = new TransactionMQProducer("please_rename_unique_group_name");
+        producer.setCheckThreadPoolMinSize(2);
+        producer.setCheckThreadPoolMaxSize(2);
+        producer.setCheckRequestHoldMax(2000);
+        producer.setTransactionCheckListener(transactionCheckListener);
+        producer.start();
+
+        String[] tags = new String[] {"TagA", "TagB", "TagC", "TagD", "TagE"};
+        TransactionExecuterImpl tranExecuter = new TransactionExecuterImpl();
+        for (int i = 0; i < 100; i++) {
+            try {
+                Message msg =
+                    new Message("TopicTest", tags[i % tags.length], "KEY" + i,
+                        ("Hello RocketMQ " + i).getBytes(RemotingHelper.DEFAULT_CHARSET));
+                SendResult sendResult = producer.sendMessageInTransaction(msg, tranExecuter, null);
+                System.out.printf("%s%n", sendResult);
+
+                Thread.sleep(10);
+            } catch (MQClientException | UnsupportedEncodingException e) {
+                e.printStackTrace();
+            }
+        }
+
+        for (int i = 0; i < 100000; i++) {
+            Thread.sleep(1000);
+        }
+        producer.shutdown();
+    }
+}
+```
+
+```java
+public interface TransactionCheckListener {
+    LocalTransactionState checkLocalTransactionState(final MessageExt msg);
+}
+```
+
+```java
+public class TransactionCheckListenerImpl implements TransactionCheckListener {
+    private AtomicInteger transactionIndex = new AtomicInteger(0);
+
+    @Override
+    public LocalTransactionState checkLocalTransactionState(MessageExt msg) {
+        System.out.printf("server checking TrMsg %s%n", msg);
+
+        int value = transactionIndex.getAndIncrement();
+        if ((value % 6) == 0) {
+            throw new RuntimeException("Could not find db");
+        } else if ((value % 5) == 0) {
+            return LocalTransactionState.ROLLBACK_MESSAGE;
+        } else if ((value % 4) == 0) {
+            return LocalTransactionState.COMMIT_MESSAGE;
+        }
+
+        return LocalTransactionState.UNKNOW;
+    }
+}
+```
+
 log配置http://rocketmq.apache.org/docs/logappender-example/
 
 # OpenMessaging
@@ -513,9 +576,7 @@ public class NamesrvStartup {
                     properties.load(in);
                     MixAll.properties2Object(properties, namesrvConfig);
                     MixAll.properties2Object(properties, nettyServerConfig);
-
                     namesrvConfig.setConfigStorePath(file);
-
                     System.out.printf("load config properties file OK, " + file + "%n");
                     in.close();
                 }
@@ -601,7 +662,6 @@ initialize
 
 ```java
  public boolean initialize() {
-
         this.kvConfigManager.load();
 //构造NettyRemotingServer
         this.remotingServer = new NettyRemotingServer(this.nettyServerConfig, this.brokerHousekeepingService);
@@ -628,7 +688,6 @@ initialize
 
         return true;
     }
-
 
 
     private void registerProcessor() {

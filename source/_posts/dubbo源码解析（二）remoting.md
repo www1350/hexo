@@ -16,34 +16,11 @@ categories: [中间件,源码]
 
 ```java
 public class Exchangers {
-
     static {
         // check duplicate jar package
         Version.checkDuplicate(Exchangers.class);
     }
-
-    private Exchangers() {
-    }
-
-    public static ExchangeServer bind(String url, Replier<?> replier) throws RemotingException {
-        return bind(URL.valueOf(url), replier);
-    }
-
-    public static ExchangeServer bind(URL url, Replier<?> replier) throws RemotingException {
-        return bind(url, new ChannelHandlerAdapter(), replier);
-    }
-
-    public static ExchangeServer bind(String url, ChannelHandler handler, Replier<?> replier) throws RemotingException {
-        return bind(URL.valueOf(url), handler, replier);
-    }
-
-    public static ExchangeServer bind(URL url, ChannelHandler handler, Replier<?> replier) throws RemotingException {
-        return bind(url, new ExchangeHandlerDispatcher(replier, handler));
-    }
-
-    public static ExchangeServer bind(String url, ExchangeHandler handler) throws RemotingException {
-        return bind(URL.valueOf(url), handler);
-    }
+//bind ...
 
     public static ExchangeServer bind(URL url, ExchangeHandler handler) throws RemotingException {
         if (url == null) {
@@ -55,35 +32,7 @@ public class Exchangers {
         url = url.addParameterIfAbsent(Constants.CODEC_KEY, "exchange");
         return getExchanger(url).bind(url, handler);
     }
-
-    public static ExchangeClient connect(String url) throws RemotingException {
-        return connect(URL.valueOf(url));
-    }
-
-    public static ExchangeClient connect(URL url) throws RemotingException {
-        return connect(url, new ChannelHandlerAdapter(), null);
-    }
-
-    public static ExchangeClient connect(String url, Replier<?> replier) throws RemotingException {
-        return connect(URL.valueOf(url), new ChannelHandlerAdapter(), replier);
-    }
-
-    public static ExchangeClient connect(URL url, Replier<?> replier) throws RemotingException {
-        return connect(url, new ChannelHandlerAdapter(), replier);
-    }
-
-    public static ExchangeClient connect(String url, ChannelHandler handler, Replier<?> replier) throws RemotingException {
-        return connect(URL.valueOf(url), handler, replier);
-    }
-
-    public static ExchangeClient connect(URL url, ChannelHandler handler, Replier<?> replier) throws RemotingException {
-        return connect(url, new ExchangeHandlerDispatcher(replier, handler));
-    }
-
-    public static ExchangeClient connect(String url, ExchangeHandler handler) throws RemotingException {
-        return connect(URL.valueOf(url), handler);
-    }
-
+//connect ...
     public static ExchangeClient connect(URL url, ExchangeHandler handler) throws RemotingException {
         if (url == null) {
             throw new IllegalArgumentException("url == null");
@@ -94,7 +43,7 @@ public class Exchangers {
         url = url.addParameterIfAbsent(Constants.CODEC_KEY, "exchange");
         return getExchanger(url).connect(url, handler);
     }
-
+//取到HeaderExchanger
     public static Exchanger getExchanger(URL url) {
         String type = url.getParameter(Constants.EXCHANGER_KEY, Constants.DEFAULT_EXCHANGER);
         return getExchanger(type);
@@ -106,8 +55,6 @@ public class Exchangers {
 
 }
 ```
-
-
 
 ### Exchanger
 
@@ -138,11 +85,9 @@ public interface Exchanger {
 }
 ```
 
-
-
 incubator-dubbo/dubbo-remoting/dubbo-remoting-api/src/main/resources/META-INF/dubbo/internal/com.alibaba.dubbo.remoting.exchange.Exchanger
 
-```
+```properties
 header=com.alibaba.dubbo.remoting.exchange.support.header.HeaderExchanger
 ```
 
@@ -454,7 +399,6 @@ public class Transporters {
 ```java
 @SPI("netty")
 public interface Transporter {
-
     /**
      * Bind a server.
      *
@@ -498,7 +442,7 @@ netty=com.alibaba.dubbo.remoting.transport.netty.NettyTransporter
 public class NettyTransporter implements Transporter {
 
     public static final String NAME = "netty";
-
+//DecodeHandler
     public Server bind(URL url, ChannelHandler listener) throws RemotingException {
         return new NettyServer(url, listener);
     }
@@ -601,8 +545,6 @@ public class ChannelHandlerDispatcher implements ChannelHandler {
 
 ![image](https://user-images.githubusercontent.com/7789698/38122701-1b4b084c-3409-11e8-91c3-54b151aa9a24.png)
 
-
-
 * AbstractServer的构造方法调用了子类的doOpen
 
 ```java
@@ -636,6 +578,8 @@ public AbstractServer(URL url, ChannelHandler handler) throws RemotingException 
 }
 ```
 
+### Netty部分
+
 netty3
 
 ```java
@@ -648,7 +592,7 @@ public class NettyServer extends AbstractServer implements Server {
     private ServerBootstrap bootstrap;
 
     private org.jboss.netty.channel.Channel channel;
-
+//DecodeHandler
     public NettyServer(URL url, ChannelHandler handler) throws RemotingException {
         super(url, ChannelHandlers.wrap(handler, ExecutorUtil.setThreadName(url, SERVER_THREAD_POOL_NAME)));
     }
@@ -664,7 +608,7 @@ public class NettyServer extends AbstractServer implements Server {
         //workCount 设置为如果iothreads有值就取否则则取cpu数+1和32中较小的
         ChannelFactory channelFactory = new NioServerSocketChannelFactory(boss, worker, getUrl().getPositiveParameter(Constants.IO_THREADS_KEY, Constants.DEFAULT_IO_THREADS));
         bootstrap = new ServerBootstrap(channelFactory);
-
+//handler封装
         final NettyHandler nettyHandler = new NettyHandler(getUrl(), this);
         //pipeline
         channels = nettyHandler.getChannels();
@@ -1057,7 +1001,9 @@ protected Object decode(Channel channel, ChannelBuffer buffer, int readable, byt
 
 编解码后就会使用Handler处理
 
-netty3
+#### ChannelHandler
+
+netty3使用SimpleChannelHandler处理
 
 ```java
 @Sharable
@@ -1144,7 +1090,7 @@ public class NettyHandler extends SimpleChannelHandler {
 
 
 
-netty4
+netty4使用ChannelDuplexHandler
 
 ```java
 @io.netty.channel.ChannelHandler.Sharable

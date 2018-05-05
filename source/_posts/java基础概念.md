@@ -256,21 +256,38 @@ new的时候：1.检查指令参数是否能在常量池中定位到一个类的
 
 ### 对象头
 
-对象头包括两部分信息：运行时数据和类型指针。
+对象头包括两部分信息：标记字段和类型指针。
 
-#### 运行时数据
+#### 标记字段 Mark Word
 
 用于存储对象自身的运行时数据，如哈希码（HashCode）、GC分代年龄、锁状态标志、线程持有的锁、偏向线程ID、偏向时间戳等。
 
 32bit中25bit存储对象哈希码，4bit存储对象分代年龄，2bit存储锁标志位，1bit固定为0
 ![image](https://user-images.githubusercontent.com/7789698/29488278-1a557e0a-853a-11e7-81d6-ef16d53f9f85.png)
 
-#### 类型指针
+#### 类型指针 Klass Pointer
 
 对象头另一部分是类型指针，即对象指向它的类元数据的指针，虚拟机通过这个指针来确定这个对象是哪个类的实例。
 
 如果对象是一个Java数组，那在对象头中还必须有一块用于记录数组长度的数据，因为虚拟机可以通过普通Java对象的元数据信息确定Java对象的大小，但是从数组的元数据中无法确定数组的大小。 
 (并不是所有的虚拟机实现都必须在对象数据上保留类型指针，换句话说，查找对象的元数据并不一定要经过对象本身，可参考对象的访问定位)
+
+### Monitor
+
+每一个Java对象都有成为Monitor的潜质，因为在Java的设计中 ，每一个Java对象自打娘胎里出来就带了一把看不见的锁，它叫做内部锁或者Monitor锁。 
+
+Monitor 是线程私有的数据结构，每一个线程都有一个可用monitor record列表，同时还有一个全局的可用列表。每一个被锁住的对象都会和一个monitor关联（对象头的MarkWord中的LockWord指向monitor的起始地址），同时monitor中有一个Owner字段存放拥有该锁的线程的唯一标识，表示该锁被这个线程占用。其结构如下：  
+
+![image](https://user-images.githubusercontent.com/7789698/38797787-3bf97a92-4192-11e8-8a76-1475f4cfeb6b.png)
+
+- Owner：初始时为NULL表示当前没有任何线程拥有该monitor record，当线程成功拥有该锁后保存线程唯一标识，当锁被释放时又设置为NULL； 
+- EntryQ:关联一个系统互斥锁（semaphore），阻塞所有试图锁住monitor record失败的线程。 
+- RcThis:表示blocked或waiting在该monitor record上的所有线程的个数。 
+- Nest:用来实现重入锁的计数。 
+- HashCode:保存从对象头拷贝过来的HashCode值（可能还包含GC age）。 
+- Candidate:用来避免不必要的阻塞或等待线程唤醒，因为每一次只有一个线程能够成功拥有锁，如果每次前一个释放锁的线程唤醒所有正在阻塞或等待的线程，会引起不必要的上下文切换（从阻塞到就绪然后因为竞争锁失败又被阻塞）从而导致性能严重下降。Candidate只有两种可能的值0表示没有需要唤醒的线程1表示要唤醒一个继任线程来竞争锁。 摘自：Java中synchronized的实现原理与应用） 
+
+
 
 ### 数据类型
 
@@ -533,7 +550,7 @@ Young区Survivor满后触发minor GC后仍然存活的对象存到Old区，如�
 
 `public abstract class ClassLoader`
 
-```
+```java
     public Class<?> loadClass(String name) throws ClassNotFoundException {
         return loadClass(name, false);
     }
@@ -579,7 +596,7 @@ protected Class<?> loadClass(String name, boolean resolve)
 ```
 
 
-```
+```java
     protected Object getClassLoadingLock(String className) {
         Object lock = this;
         if (parallelLockMap != null) {
@@ -658,3 +675,335 @@ protected Class<?> loadClass(String name, boolean resolve)
 ## 类装载方式:
 1. 隐式装载， 程序在运行过程中当碰到通过new 等方式生成对象时，隐式调用类装载器加载对应的类到jvm中。 
 2. 显式装载， 通过class.forname()等方法，显式加载需要的类
+
+
+## java内存模型
+
+在程序运行中，会将运行所需要的数据复制一份到CPU高速缓存中，在进行运算时CPU不再也主存打交道，而是直接从高速缓存中读写数据，只有当运行结束后才会将数据刷新到主存中。
+
+### final
+
+如果一个类包含final字段，且在构造函数中初始化，那么**正确的构造一个对象后**，final字段被设置后对于其它线程是可见的。一个类被**final**修饰后，它的方法默认被修饰为**final** ，这时方法的内联起到作用了。
+
+### Synchronization 
+
+> synchronized可以保证方法或者代码块在运行时，同一时刻只有一个方法可以进入到临界区，同时它还可以保证共享变量的内存可见性
+
+Java中每一个对象都可以作为锁，这是synchronized实现同步的基础：
+
+1. 普通同步方法，锁是当前实例对象
+2. 静态同步方法，锁是当前类的class对象
+3. 同步方法块，锁是括号里面的对象
+
+- 同步代码块：monitorenter指令插入到同步代码块的开始位置，monitorexit指令插入到同步代码块的结束位置，JVM需要保证每一个monitorenter都有一个monitorexit与之相对应。任何对象都有一个monitor与之相关联，当且一个monitor被持有之后，他将处于锁定状态。线程执行到monitorenter指令时，将会尝试获取对象所对应的monitor所有权，即尝试获取对象的锁； 
+- 同步方法：synchronized方法则会被翻译成普通的方法调用和返回指令如:invokevirtual、areturn指令，在VM字节码层面并没有任何特别的指令来实现被synchronized修饰的方法，而是在Class文件的方法表中将该方法的access_flags字段中的synchronized标志位置1，表示该方法是同步方法并使用调用该方法的对象或该方法所属的Class在JVM的内部对象表示Klass做为锁对象。(摘自：http://www.cnblogs.com/javaminer/p/3889023.html)
+
+### volatile
+
+
+
+
+
+
+## 线程池
+
+### ThreadPoolExecutor
+
+![image](https://user-images.githubusercontent.com/7789698/38788998-dba9647c-4169-11e8-8f08-410fed67f06e.png)
+
+线程池类为 java.util.concurrent.ThreadPoolExecutor，常用构造方法为：
+
+`ThreadPoolExecutor(int corePoolSize, int maximumPoolSize,`
+`long keepAliveTime, TimeUnit unit,`
+`BlockingQueue<Runnable> workQueue,`
+`RejectedExecutionHandler handler)`
+- corePoolSize： 线程池维护线程的最少数量
+- maximumPoolSize：线程池维护线程的最大数量
+- keepAliveTime： 线程池维护线程所允许的空闲时间
+- unit： 线程池维护线程所允许的空闲时间的单位
+- workQueue： 线程池所使用的缓冲队列
+- handler： 线程池对拒绝任务的处理策略
+
+  一个任务通过 execute(Runnable)方法被添加到线程池，任务就是一个 Runnable类型的对象，任务的执行方法就是Runnable类型对象的run()方法。
+
+当一个任务通过execute(Runnable)方法欲添加到线程池时：
+1. 如果此时线程池中的数量小于corePoolSize，即使线程池中的线程都处于空闲状态，也要创建新的线程来处理被添加的任务。
+2. 如果此时线程池中的数量等于 corePoolSize，但是缓冲队列 workQueue未满，那么任务被放入缓冲队列。
+3. 如果此时线程池中的数量大于corePoolSize，缓冲队列workQueue满，并且线程池中的数量小于maximumPoolSize，建新的线程来处理被添加的任务。
+4. 如果此时线程池中的数量大于corePoolSize，缓冲队列workQueue满，并且线程池中的数量等于maximumPoolSize，那么通过 handler所指定的策略来处理此任务。也就是：处理任务的优先级为：核心线程corePoolSize、任务队列workQueue、最大线程maximumPoolSize，如果三者都满了，使用handler处理被拒绝的任务。
+5. 当线程池中的线程数量大于 corePoolSize时，如果某线程空闲时间超过keepAliveTime，线程将被终止。这样，线程池可以动态的调整池中的线程数。
+
+handler有四个选择：
+
+```java
+ThreadPoolExecutor.AbortPolicy()
+```
+
+抛出java.util.concurrent.RejectedExecutionException异常
+
+
+```java
+ThreadPoolExecutor.CallerRunsPolicy()
+```
+
+当抛出RejectedExecutionException异常时，会调用rejectedExecution方法
+(如果主线程没有关闭，则主线程调用run方法,源码如下
+
+``` java
+public void rejectedExecution(Runnable r, ThreadPoolExecutor e) {
+            if (!e.isShutdown()) {
+                r.run();
+            }
+        }
+)
+```
+
+
+```
+ThreadPoolExecutor.DiscardOldestPolicy()
+```
+
+抛弃旧的任务
+
+
+```
+ThreadPoolExecutor.DiscardPolicy()
+```
+
+抛弃当前的任务
+
+
+
+#### Executor
+
+```java
+public interface Executor {
+    void execute(Runnable command);
+}
+```
+
+#### ExecutorService
+
+```java
+public interface ExecutorService extends Executor {
+
+    void shutdown();
+
+    List<Runnable> shutdownNow();
+
+    boolean isShutdown();
+
+    boolean isTerminated();
+
+    boolean awaitTermination(long timeout, TimeUnit unit)
+        throws InterruptedException;
+
+    <T> Future<T> submit(Callable<T> task);
+
+    <T> Future<T> submit(Runnable task, T result);
+
+    Future<?> submit(Runnable task);
+
+    <T> List<Future<T>> invokeAll(Collection<? extends Callable<T>> tasks)
+        throws InterruptedException;
+
+    <T> List<Future<T>> invokeAll(Collection<? extends Callable<T>> tasks,
+                                  long timeout, TimeUnit unit)
+        throws InterruptedException;
+
+    <T> T invokeAny(Collection<? extends Callable<T>> tasks)
+        throws InterruptedException, ExecutionException;
+
+    <T> T invokeAny(Collection<? extends Callable<T>> tasks,
+                    long timeout, TimeUnit unit)
+        throws InterruptedException, ExecutionException, TimeoutException;
+}
+```
+
+- ExecutorService                             真正的线程池接口。
+- ScheduledExecutorService             能和Timer/TimerTask类似，解决那些需要任务重复执行的问题。
+- ThreadPoolExecutor                       ExecutorService的默认实现。
+- ScheduledThreadPoolExecutor       继承ThreadPoolExecutor的ScheduledExecutorService接口实现，周期性任务调度的类实现。
+
+### newFixedThreadPool
+
+```java
+    public static ExecutorService newFixedThreadPool(int nThreads) {
+        return new ThreadPoolExecutor(nThreads, nThreads,
+                                      0L, TimeUnit.MILLISECONDS,
+                                      new LinkedBlockingQueue<Runnable>());
+    }
+
+```
+
+很明显，这个线程池内部每个Runnable是用LinkedBlockingQueue管理的。创建一个最大线程数目固定的线程池，该线程池用一个共享的无界队列来存储提交的任务。参数nThreads指定线程池的最大线程数，参数threadFactory是线程工厂类，主要用于自定义线程池中创建新线程时的行为。需要说明的是，创建线程池时，如果线程池没有接收到任何任务，则线程池中不会创建新线程，在线程池中线程数目少于最大线程数时，每来一个新任务就创建一个新线程，当线程数达到最大线程数时，不再创建新线程，新来的任务存储在队列中，之后线程数目不再变化！使用如下：
+（java8）
+
+```java
+//实现Callable
+public static int longOperation() {
+    System.out.println("Running on thread #"+ Thread.currentThread().getId());
+    // [...]
+    return 42;
+}
+```
+
+```java
+ExecutorService executorService = Executors.newFixedThreadPool(10);
+Future[] answers = {
+    executorService.submit(() -> longOperation()),
+    executorService.submit(ThreadGoodies::longOperation)
+};
+Arrays.stream(answers).forEach(Unchecked.consumer(
+    f -> System.out.println(f.get())
+));
+```
+
+jdk8以前
+
+```java
+ExecutorService executorService = Executors.newFixedThreadPool(10);
+    executorService.execute(t1);
+    executorService.execute(t2);
+        pool.shutdown();
+```
+
+这部分：http://www.tuicool.com/articles/2iI7b23
+###  newWorkStealingPool（JDK7引入）
+
+parallelism表示并行数
+
+```java
+    public static ExecutorService newWorkStealingPool(int parallelism) {
+        return new ForkJoinPool
+            (parallelism,
+             ForkJoinPool.defaultForkJoinWorkerThreadFactory,
+             null, true);
+    }
+```
+
+```java
+      TreeNode tree = new TreeNode(5,
+                new TreeNode(3), new TreeNode(2,
+                new TreeNode(2), new TreeNode(8)));
+
+        ForkJoinPool forkJoinPool = ForkJoinPool.commonPool();
+        int sum = forkJoinPool.invoke(new CountingTask(tree));
+```
+
+创建ForkJoin框架中用到的ForkJoinPool线程池。ForkJoinPool实现了工作窃取算法（work-stealing），线程会主动寻找新创建的任务去执行，从而保证较高的线程利用率。它使用守护线程（deamon）来执行任务，因此无需对他显示的调用shutdown()来关闭。
+https://www.ibm.com/developerworks/cn/java/j-lo-forkjoin/
+###  newScheduledThreadPool
+
+```java
+ScheduledExecutorService executor = Executors.newScheduledThreadPool(1);
+
+Runnable task = () -> System.out.println("Scheduling: " + System.nanoTime());
+ScheduledFuture<?> future = executor.schedule(task, 3, TimeUnit.SECONDS);
+
+TimeUnit.MILLISECONDS.sleep(1337);
+
+long remainingDelay = future.getDelay(TimeUnit.MILLISECONDS);
+System.out.printf("Remaining Delay: %sms", remainingDelay);
+```
+
+```java
+        CountDownLatch lock = new CountDownLatch(3);
+
+        ScheduledExecutorService executor = Executors.newScheduledThreadPool(5);
+        ScheduledFuture<?> future = executor.scheduleAtFixedRate(() -> {
+            System.out.println("Hello World");
+            lock.countDown();
+        }, 500, 100, TimeUnit.MILLISECONDS);
+
+        lock.await();
+        future.cancel(true);
+```
+
+
+
+tasks ：每秒的任务数，假设为500～1000
+taskcost：每个任务花费时间，假设为0.1s
+responsetime：系统允许容忍的最大响应时间，假设为1s
+做几个计算
+corePoolSize = 每秒需要多少个线程处理？ 
+threadcount = tasks/(1/taskcost) =tasks*taskcout =  (500～1000)*0.1 = 50～100 个线程。corePoolSize设置应该大于50
+根据8020原则，如果80%的每秒任务数小于800，那么corePoolSize设置为80即可
+queueCapacity = (coreSizePool/taskcost)*responsetime
+计算可得 queueCapacity = 80/0.1*1 = 80。意思是队列里的线程可以等待1s，超过了的需要新开线程来执行
+切记不能设置为Integer.MAX_VALUE，这样队列会很大，线程数只会保持在corePoolSize大小，当任务陡增时，不能新开线程来执行，响应时间会随之陡增。
+maxPoolSize = (max(tasks)- queueCapacity)/(1/taskcost)
+计算可得 maxPoolSize = (1000-80)/10 = 92
+（最大任务数-队列容量）/每个线程每秒处理能力 = 最大线程数
+rejectedExecutionHandler：根据具体情况来决定，任务不重要可丢弃，任务重要则要利用一些缓冲机制来处理  （https://my.oschina.net/u/169390/blog/97415）
+keepAliveTime和allowCoreThreadTimeout采用默认通常能满足
+
+
+
+## 可重入性
+
+​    可 重入（reentrant）函数可以由多于一个任务并发使用，而不必担心数据错误。相反，不可重入（non-reentrant）函数不能由超过一个任务所共享，除非能确保函数的互斥（或者使用信号量，或者在代码的关键部分禁用中断）。可重入函数可以在任意时刻被中断，稍后再继续运行，不会丢失数据。可重入函数要么使用本地变量，要么在使用全局变量时保护自己的数据。
+
+
+
+## 锁优化
+
+### 自旋锁
+
+让该线程等待一段时间，不会被立即挂起，看持有锁的线程是否会很快释放锁。怎么等待呢？执行一段无意义的循环即可（自旋）。 
+
+自旋锁在JDK 1.4.2中引入，默认关闭，但是可以使用-XX:+UseSpinning开开启，在JDK1.6中默认开启。同时自旋的默认次数为10次，可以通过参数-XX:PreBlockSpin来调整； 
+
+### 适应自旋锁
+
+如果通过参数-XX:preBlockSpin来调整自旋锁的自旋次数，会带来诸多不便。假如我将参数调整为10，但是系统很多线程都是等你刚刚退出的时候就释放了锁（假如你多自旋一两次就可以获取锁）。线程如果自旋成功了，那么下次自旋的次数会更加多，因为虚拟机认为既然上次成功了，那么此次自旋也很有可能会再次成功，那么它就会允许自旋等待持续的次数更多。反之，如果对于某个锁，很少有自旋能够成功的，那么在以后要或者这个锁的时候自旋的次数会减少甚至省略掉自旋过程，以免浪费处理器资源。 
+
+### 锁消除
+
+为了保证数据的完整性，我们在进行操作时需要对这部分操作进行同步控制，但是在有些情况下，JVM检测到不可能存在共享数据竞争，这是JVM会对这些同步锁进行锁消除。锁消除的依据是逃逸分析的数据支持。 
+
+### 锁粗化
+
+将多个连续的加锁、解锁操作连接在一起，扩展成一个范围更大的锁。
+
+### 轻量级锁
+
+减少传统的重量级锁使用操作系统互斥量产生的性能消耗。当关闭偏向锁功能或者多个线程竞争偏向锁导致偏向锁升级为轻量级锁，则会尝试获取轻量级锁。
+
+### 偏向锁
+
+为了在无多线程竞争的情况下尽量减少不必要的轻量级锁执行路径。
+
+### 重量级锁
+
+重量级锁通过对象内部的监视器（monitor）实现，其中monitor的本质是依赖于底层操作系统的Mutex Lock实现，操作系统实现线程之间的切换需要从用户态到内核态的切换，切换成本非常高。
+
+![image](https://user-images.githubusercontent.com/7789698/38798131-45870b1e-4193-11e8-830e-72585851526d.png)
+
+###  Little-Endian
+
+低位字节排放在内存的低地址端，高位字节排放在内存的高地址端。
+
+```
+低地址 ------------------> 高地址
+0x78  |  0x56  |  0x34  |  0x12
+```
+
+### Big-Endian
+
+高位字节排放在内存的低地址端，低位字节排放在内存的高地址端。
+
+```
+低地址 -----------------> 高地址
+0x12  |  0x34  |  0x56  |  0x78
+```
+
+
+
+参考：
+
+https://mp.weixin.qq.com/s?__biz=MzUzMTA2NTU2Ng==&mid=2247483784&idx=1&sn=672cd788380b2096a7e60aae8739d264&chksm=fa497e39cd3ef72fcafe7e9bcc21add3dce0d47019ab6e31a775ba7a7e4adcb580d4b51021a9&scene=21#wechat_redirect
+
+https://www.jianshu.com/p/f68d6ef2dcf0
+
+https://mp.weixin.qq.com/s?__biz=MzUzMTA2NTU2Ng==&mid=2247483775&idx=1&sn=e3c249e55dc25f323d3922d215e17999&chksm=fa497ececd3ef7d82a9ce86d6ca47353acd45d7d1cb296823267108a06fbdaf71773f576a644&scene=21#wechat_redirect

@@ -70,11 +70,13 @@ public class BrokerStartup {
     }
 
     public static BrokerController createBrokerController(String[] args) {
+        //设置rocketmq.remoting.version，设置版本号
         System.setProperty(RemotingCommand.REMOTING_VERSION_KEY, Integer.toString(MQVersion.CURRENT_VERSION));
+        //获取com.rocketmq.remoting.socket.sndbuf.size配置，没有则设置为131072
         if (null == System.getProperty(NettySystemConfig.COM_ROCKETMQ_REMOTING_SOCKET_SNDBUF_SIZE)) {
             NettySystemConfig.socketSndbufSize = 131072;
         }
-
+//com.rocketmq.remoting.socket.rcvbuf.size配置
         if (null == System.getProperty(NettySystemConfig.COM_ROCKETMQ_REMOTING_SOCKET_RCVBUF_SIZE)) {
             NettySystemConfig.socketRcvbufSize = 131072;
         }
@@ -86,18 +88,17 @@ public class BrokerStartup {
             if (null == commandLine) {
                 System.exit(-1);
             }
-
             final BrokerConfig brokerConfig = new BrokerConfig();
             final NettyServerConfig nettyServerConfig = new NettyServerConfig();
             final NettyClientConfig nettyClientConfig = new NettyClientConfig();
             nettyServerConfig.setListenPort(10911);
             final MessageStoreConfig messageStoreConfig = new MessageStoreConfig();
 
+            //ASYNC_MASTER,SYNC_MASTER,SLAVE; new的时候默认ASYNC_MASTER
             if (BrokerRole.SLAVE == messageStoreConfig.getBrokerRole()) {
                 int ratio = messageStoreConfig.getAccessMessageInMemoryMaxRatio() - 10;
                 messageStoreConfig.setAccessMessageInMemoryMaxRatio(ratio);
             }
-
             if (commandLine.hasOption('c')) {
                 String file = commandLine.getOptionValue('c');
                 if (file != null) {
@@ -105,13 +106,11 @@ public class BrokerStartup {
                     InputStream in = new BufferedInputStream(new FileInputStream(file));
                     properties = new Properties();
                     properties.load(in);
-
                     properties2SystemEnv(properties);
                     MixAll.properties2Object(properties, brokerConfig);
                     MixAll.properties2Object(properties, nettyServerConfig);
                     MixAll.properties2Object(properties, nettyClientConfig);
                     MixAll.properties2Object(properties, messageStoreConfig);
-
                     BrokerPathConfigHelper.setBrokerConfigPath(file);
                     in.close();
                 }
@@ -192,7 +191,7 @@ public class BrokerStartup {
                 messageStoreConfig);
             // remember all configs to prevent discard
             controller.getConfiguration().registerConfig(properties);
-
+//初始化
             boolean initResult = controller.initialize();
             if (!initResult) {
                 controller.shutdown();
@@ -231,55 +230,58 @@ public class BrokerStartup {
 ```
 
 BrokerController
-```
-public BrokerController(
-        final BrokerConfig brokerConfig,
-        final NettyServerConfig nettyServerConfig,
-        final NettyClientConfig nettyClientConfig,
-        final MessageStoreConfig messageStoreConfig
-    ) {
-        this.brokerConfig = brokerConfig;
-        this.nettyServerConfig = nettyServerConfig;
-        this.nettyClientConfig = nettyClientConfig;
-        this.messageStoreConfig = messageStoreConfig;
-        this.consumerOffsetManager = new ConsumerOffsetManager(this);
-        this.topicConfigManager = new TopicConfigManager(this);
-        this.pullMessageProcessor = new PullMessageProcessor(this);
-        this.pullRequestHoldService = new PullRequestHoldService(this);
-        this.messageArrivingListener = new NotifyMessageArrivingListener(this.pullRequestHoldService);
-        this.consumerIdsChangeListener = new DefaultConsumerIdsChangeListener(this);
-        this.consumerManager = new ConsumerManager(this.consumerIdsChangeListener);
-        this.consumerFilterManager = new ConsumerFilterManager(this);
-        this.producerManager = new ProducerManager();
-        this.clientHousekeepingService = new ClientHousekeepingService(this);
-        this.broker2Client = new Broker2Client(this);
-        this.subscriptionGroupManager = new SubscriptionGroupManager(this);
-        this.brokerOuterAPI = new BrokerOuterAPI(nettyClientConfig);
-        this.filterServerManager = new FilterServerManager(this);
 
-        this.slaveSynchronize = new SlaveSynchronize(this);
-
-        this.sendThreadPoolQueue = new LinkedBlockingQueue<Runnable>(this.brokerConfig.getSendThreadPoolQueueCapacity());
-
-        this.pullThreadPoolQueue = new LinkedBlockingQueue<Runnable>(this.brokerConfig.getPullThreadPoolQueueCapacity());
-        this.clientManagerThreadPoolQueue = new LinkedBlockingQueue<Runnable>(this.brokerConfig.getClientManagerThreadPoolQueueCapacity());
-        this.consumerManagerThreadPoolQueue = new LinkedBlockingQueue<Runnable>(this.brokerConfig.getConsumerManagerThreadPoolQueueCapacity());
-
-        this.brokerStatsManager = new BrokerStatsManager(this.brokerConfig.getBrokerClusterName());
-        this.setStoreHost(new InetSocketAddress(this.getBrokerConfig().getBrokerIP1(), this.getNettyServerConfig().getListenPort()));
-
-        this.brokerFastFailure = new BrokerFastFailure(this);
-        this.configuration = new Configuration(
-            log,
-            BrokerPathConfigHelper.getBrokerConfigPath(),
-            this.brokerConfig, this.nettyServerConfig, this.nettyClientConfig, this.messageStoreConfig
-        );
-    }
+```java
+private final BrokerConfig brokerConfig;
+private final NettyServerConfig nettyServerConfig;
+private final NettyClientConfig nettyClientConfig;
+private final MessageStoreConfig messageStoreConfig;
+private final ConsumerOffsetManager consumerOffsetManager;
+private final ConsumerManager consumerManager;
+private final ConsumerFilterManager consumerFilterManager;
+private final ProducerManager producerManager;
+private final ClientHousekeepingService clientHousekeepingService;
+private final PullMessageProcessor pullMessageProcessor;
+private final PullRequestHoldService pullRequestHoldService;
+private final MessageArrivingListener messageArrivingListener;
+private final Broker2Client broker2Client;
+private final SubscriptionGroupManager subscriptionGroupManager;
+private final ConsumerIdsChangeListener consumerIdsChangeListener;
+private final RebalanceLockManager rebalanceLockManager = new RebalanceLockManager();
+private final BrokerOuterAPI brokerOuterAPI;
+private final ScheduledExecutorService scheduledExecutorService = Executors.newSingleThreadScheduledExecutor(new ThreadFactoryImpl(
+    "BrokerControllerScheduledThread"));
+private final SlaveSynchronize slaveSynchronize;
+private final BlockingQueue<Runnable> sendThreadPoolQueue;
+private final BlockingQueue<Runnable> pullThreadPoolQueue;
+private final BlockingQueue<Runnable> queryThreadPoolQueue;
+private final BlockingQueue<Runnable> clientManagerThreadPoolQueue;
+private final BlockingQueue<Runnable> consumerManagerThreadPoolQueue;
+private final FilterServerManager filterServerManager;
+private final BrokerStatsManager brokerStatsManager;
+private final List<SendMessageHook> sendMessageHookList = new ArrayList<SendMessageHook>();
+private final List<ConsumeMessageHook> consumeMessageHookList = new ArrayList<ConsumeMessageHook>();
+private MessageStore messageStore;
+private RemotingServer remotingServer;
+private RemotingServer fastRemotingServer;
+private TopicConfigManager topicConfigManager;
+private ExecutorService sendMessageExecutor;
+private ExecutorService pullMessageExecutor;
+private ExecutorService queryMessageExecutor;
+private ExecutorService adminBrokerExecutor;
+private ExecutorService clientManageExecutor;
+private ExecutorService consumerManageExecutor;
+private boolean updateMasterHAServerAddrPeriodically = false;
+private BrokerStats brokerStats;
+private InetSocketAddress storeHost;
+private BrokerFastFailure brokerFastFailure;
+private Configuration configuration;
 ```
 
 initialize
-```
+```java
 public boolean initialize() throws CloneNotSupportedException {
+    //加载主要模块的配置信息
         boolean result = this.topicConfigManager.load();
 
         result = result && this.consumerOffsetManager.load();
@@ -303,12 +305,14 @@ public boolean initialize() throws CloneNotSupportedException {
         }
 
         result = result && this.messageStore.load();
-
+    
         if (result) {
+ //启动服务器初始化
             this.remotingServer = new NettyRemotingServer(this.nettyServerConfig, this.clientHousekeepingService);
             NettyServerConfig fastConfig = (NettyServerConfig) this.nettyServerConfig.clone();
             fastConfig.setListenPort(nettyServerConfig.getListenPort() - 2);
             this.fastRemotingServer = new NettyRemotingServer(fastConfig, this.clientHousekeepingService);
+//初始化线程池
             this.sendMessageExecutor = new BrokerFixedThreadPoolExecutor(
                 this.brokerConfig.getSendMessageThreadPoolNums(),
                 this.brokerConfig.getSendMessageThreadPoolNums(),
@@ -340,9 +344,10 @@ public boolean initialize() throws CloneNotSupportedException {
             this.consumerManageExecutor =
                 Executors.newFixedThreadPool(this.brokerConfig.getConsumerManageThreadPoolNums(), new ThreadFactoryImpl(
                     "ConsumerManageThread_"));
-
+//注册请求处理器
             this.registerProcessor();
-
+//设置各种定时任务 、、等等。
+            //获取broker状态的
             final long initialDelay = UtilAll.computNextMorningTimeMillis() - System.currentTimeMillis();
             final long period = 1000 * 60 * 60 * 24;
             this.scheduledExecutorService.scheduleAtFixedRate(new Runnable() {
@@ -355,7 +360,7 @@ public boolean initialize() throws CloneNotSupportedException {
                     }
                 }
             }, initialDelay, period, TimeUnit.MILLISECONDS);
-
+//周期性将消费者的offset刷到硬盘
             this.scheduledExecutorService.scheduleAtFixedRate(new Runnable() {
                 @Override
                 public void run() {
@@ -366,7 +371,7 @@ public boolean initialize() throws CloneNotSupportedException {
                     }
                 }
             }, 1000 * 10, this.brokerConfig.getFlushConsumerOffsetInterval(), TimeUnit.MILLISECONDS);
-
+//周期性将消费者消息记录写入文件
             this.scheduledExecutorService.scheduleAtFixedRate(new Runnable() {
                 @Override
                 public void run() {
@@ -377,7 +382,7 @@ public boolean initialize() throws CloneNotSupportedException {
                     }
                 }
             }, 1000 * 10, 1000 * 10, TimeUnit.MILLISECONDS);
-
+//周期性检查消费者的消费能力以保护broker
             this.scheduledExecutorService.scheduleAtFixedRate(new Runnable() {
                 @Override
                 public void run() {
@@ -388,7 +393,7 @@ public boolean initialize() throws CloneNotSupportedException {
                     }
                 }
             }, 3, 3, TimeUnit.MINUTES);
-
+//定期打印消息消费标记
             this.scheduledExecutorService.scheduleAtFixedRate(new Runnable() {
                 @Override
                 public void run() {
@@ -401,7 +406,6 @@ public boolean initialize() throws CloneNotSupportedException {
             }, 10, 1, TimeUnit.SECONDS);
 
             this.scheduledExecutorService.scheduleAtFixedRate(new Runnable() {
-
                 @Override
                 public void run() {
                     try {
@@ -411,13 +415,11 @@ public boolean initialize() throws CloneNotSupportedException {
                     }
                 }
             }, 1000 * 10, 1000 * 60, TimeUnit.MILLISECONDS);
-
-            if (this.brokerConfig.getNamesrvAddr() != null) {
-                this.brokerOuterAPI.updateNameServerAddressList(this.brokerConfig.getNamesrvAddr());
+//获取name server的地址
+            if (this.brokerConfig.getNamesrvAddr() != null) {  this.brokerOuterAPI.updateNameServerAddressList(this.brokerConfig.getNamesrvAddr());
                 log.info("Set user specified name server address: {}", this.brokerConfig.getNamesrvAddr());
             } else if (this.brokerConfig.isFetchNamesrvAddrByAddressServer()) {
                 this.scheduledExecutorService.scheduleAtFixedRate(new Runnable() {
-
                     @Override
                     public void run() {
                         try {
@@ -436,9 +438,8 @@ public boolean initialize() throws CloneNotSupportedException {
                 } else {
                     this.updateMasterHAServerAddrPeriodically = true;
                 }
-
+//如果是slave，主从同步
                 this.scheduledExecutorService.scheduleAtFixedRate(new Runnable() {
-
                     @Override
                     public void run() {
                         try {
@@ -449,8 +450,8 @@ public boolean initialize() throws CloneNotSupportedException {
                     }
                 }, 1000 * 10, 1000 * 60, TimeUnit.MILLISECONDS);
             } else {
+//打印主从差异配置
                 this.scheduledExecutorService.scheduleAtFixedRate(new Runnable() {
-
                     @Override
                     public void run() {
                         try {
@@ -465,4 +466,107 @@ public boolean initialize() throws CloneNotSupportedException {
 
         return result;
     }
+```
+
+
+start
+
+```java
+public void start() throws Exception {
+    //启动存储服务
+    //包括逻辑队列刷盘服务，就是把内存的msg刷入磁盘
+    //元数据刷盘服务
+    //存储层状态服务 比如 put_tps get_found_tps get_miss_tps get_transfered_tps
+    if (this.messageStore != null) {
+        this.messageStore.start();
+    }
+//启动 netty serverBootstrap 绑定端口 监听等
+    if (this.remotingServer != null) {
+        this.remotingServer.start();
+    }
+
+    if (this.fastRemotingServer != null) {
+        this.fastRemotingServer.start();
+    }
+//客户端netty启动
+    if (this.brokerOuterAPI != null) {
+        this.brokerOuterAPI.start();
+    }
+//启动请求Hold服务
+    if (this.pullRequestHoldService != null) {
+        this.pullRequestHoldService.start();
+    }
+//定期检测客户端连接
+    if (this.clientHousekeepingService != null) {
+        this.clientHousekeepingService.start();
+    }
+//过滤服务启动
+    if (this.filterServerManager != null) {
+        this.filterServerManager.start();
+    }
+//向namesrv注册broker
+    this.registerBrokerAll(true, false);
+
+    this.scheduledExecutorService.scheduleAtFixedRate(new Runnable() {
+        @Override
+        public void run() {
+            try {
+                BrokerController.this.registerBrokerAll(true, false);
+            } catch (Throwable e) {
+                log.error("registerBrokerAll Exception", e);
+            }
+        }
+    }, 1000 * 10, 1000 * 30, TimeUnit.MILLISECONDS);
+// broker状态管理启动
+    if (this.brokerStatsManager != null) {
+        this.brokerStatsManager.start();
+    }
+
+    if (this.brokerFastFailure != null) {
+        this.brokerFastFailure.start();
+    }
+}
+```
+
+registerBrokerAll
+
+```java
+public synchronized void registerBrokerAll(final boolean checkOrderConfig, boolean oneway) {
+    TopicConfigSerializeWrapper topicConfigWrapper = this.getTopicConfigManager().buildTopicConfigSerializeWrapper();
+ //同步 Broker 读写权限
+    if (!PermName.isWriteable(this.getBrokerConfig().getBrokerPermission())
+        || !PermName.isReadable(this.getBrokerConfig().getBrokerPermission())) {
+        ConcurrentHashMap<String, TopicConfig> topicConfigTable = new ConcurrentHashMap<String, TopicConfig>();
+        for (TopicConfig topicConfig : topicConfigWrapper.getTopicConfigTable().values()) {
+            TopicConfig tmp =
+                new TopicConfig(topicConfig.getTopicName(), topicConfig.getReadQueueNums(), topicConfig.getWriteQueueNums(),
+                    this.brokerConfig.getBrokerPermission());
+            topicConfigTable.put(topicConfig.getTopicName(), tmp);
+        }
+        topicConfigWrapper.setTopicConfigTable(topicConfigTable);
+    }
+
+    RegisterBrokerResult registerBrokerResult = this.brokerOuterAPI.registerBrokerAll(
+        this.brokerConfig.getBrokerClusterName(),
+        this.getBrokerAddr(),
+        this.brokerConfig.getBrokerName(),
+        this.brokerConfig.getBrokerId(),
+        this.getHAServerAddr(),
+        topicConfigWrapper,
+        this.filterServerManager.buildNewFilterServerList(),
+        oneway,
+        this.brokerConfig.getRegisterBrokerTimeoutMills());
+
+    if (registerBrokerResult != null) {
+        if (this.updateMasterHAServerAddrPeriodically && registerBrokerResult.getHaServerAddr() != null) {
+            this.messageStore.updateHaMasterAddress(registerBrokerResult.getHaServerAddr());
+        }
+
+        this.slaveSynchronize.setMasterAddr(registerBrokerResult.getMasterAddr());
+
+        if (checkOrderConfig) {
+            this.getTopicConfigManager().updateOrderTopicConfig(registerBrokerResult.getKvTable());
+        }
+    }
+}
 ```

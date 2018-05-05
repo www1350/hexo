@@ -17,9 +17,7 @@ NettyRemotingClient
         this.defaultEventExecutorGroup = new DefaultEventExecutorGroup(
             nettyClientConfig.getClientWorkerThreads(),
             new ThreadFactory() {
-
                 private AtomicInteger threadIndex = new AtomicInteger(0);
-
                 @Override
                 public Thread newThread(Runnable r) {
                     return new Thread(r, "NettyClientWorkerThread_" + this.threadIndex.incrementAndGet());
@@ -534,7 +532,7 @@ public void processResponseCommand(ChannelHandlerContext ctx, RemotingCommand cm
 
 
 部分重点代码：
-```
+```java
  private SendResult sendKernelImpl(final Message msg,
         final MessageQueue mq,
         final CommunicationMode communicationMode,
@@ -706,7 +704,7 @@ requestHeader.setDefaultTopicQueueNums(this.defaultMQProducer.getDefaultTopicQue
     }
 ```
 
-```
+```java
 //12
 request = RemotingCommand.createRequestCommand(RequestCode.SEND_MESSAGE, requestHeader);
 
@@ -738,7 +736,7 @@ request = RemotingCommand.createRequestCommand(RequestCode.SEND_MESSAGE, request
 
 
 源码：
-```
+```java
 public RemotingCommand invokeSync(String addr, final RemotingCommand request, long timeoutMillis)
         throws InterruptedException, RemotingConnectException, RemotingSendRequestException, RemotingTimeoutException {
 //根据地址获取channel
@@ -750,8 +748,7 @@ public RemotingCommand invokeSync(String addr, final RemotingCommand request, lo
                 }
 //
                 RemotingCommand response = this.invokeSyncImpl(channel, request, timeoutMillis);
-                if (this.rpcHook != null) {
-                    this.rpcHook.doAfterResponse(RemotingHelper.parseChannelRemoteAddr(channel), request, response);
+                if (this.rpcHook != null) {this.rpcHook.doAfterResponse(RemotingHelper.parseChannelRemoteAddr(channel), request, response);
                 }
                 return response;
             } catch (RemotingSendRequestException e) {
@@ -774,13 +771,12 @@ public RemotingCommand invokeSync(String addr, final RemotingCommand request, lo
 ```
 
 
-```
+```java
  public RemotingCommand invokeSyncImpl(final Channel channel, final RemotingCommand request,
         final long timeoutMillis)
         throws InterruptedException, RemotingSendRequestException, RemotingTimeoutException {
           //获取请求的序号
         final int opaque = request.getOpaque();
-
         try {
             final ResponseFuture responseFuture = new ResponseFuture(opaque, timeoutMillis, null, null);
           //根据opaque序号存入responseFuture
