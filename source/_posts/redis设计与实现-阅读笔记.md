@@ -1,17 +1,18 @@
 ---
+abbrlink: '0'
+---
 title: redis设计与实现 阅读笔记
 abbrlink: c6de90cc
 date: 2017-09-28 22:40:56
 tags: [redis,笔记]
 categories: 数据库
----
 
 1.redis数据结构
 
 # 简单字符串
 redis专门封装了一个叫SDS的数据结构
 
-```
+```c
 struct sdshdr {
     // 记录 buf 数组中已使用字节的数量
     // 等于 SDS 所保存字符串的长度

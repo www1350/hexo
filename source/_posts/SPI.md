@@ -19,7 +19,7 @@ SPI指的是Service Provider Interface，服务提供接口
 
 
 
-```
+```java
 package spi;  
 public interface Search {  
   public void search();  
@@ -79,7 +79,7 @@ Dubbo改进了JDK标准的SPI的以下问题：
 3.增加了对扩展点IoC和AOP的支持，一个扩展点可以直接setter注入其它扩展点。
 
 
-```
+```java
 public @interface SPI {  
     /**  
      * 缺省扩展点名。  
@@ -89,7 +89,7 @@ public @interface SPI {
 ```
 
 
-```
+```java
 @SPI("spring")   
 public interface Container {  
 }  
@@ -97,20 +97,17 @@ public interface Container {
 
 dubbo/dubbo-container/src/main/resources/META-INF/dubbo/internal
 
-```
+```properties
 jetty=com.alibaba.dubbo.container.jetty.JettyContainer
 log4j=com.alibaba.dubbo.container.log4j.Log4jContainer
 logback=com.alibaba.dubbo.container.logback.LogbackContainer
 spring=com.alibaba.dubbo.container.spring.SpringContainer
 ```
 
-
-`
-ExtensionLoader.getExtensionLoader(Container.class).getExtension(name)
-`
+`ExtensionLoader.getExtensionLoader(Container.class).getExtension(name)`
 
 ExtensionLoader
-```
+```java
     // 此方法已经getExtensionClasses方法同步过。
     private Map<String, Class<?>> loadExtensionClasses() {
         final SPI defaultAnnotation = type.getAnnotation(SPI.class);
@@ -138,7 +135,7 @@ ExtensionLoader
     private static final String SERVICES_DIRECTORY = "META-INF/services/";
 
     private static final String DUBBO_DIRECTORY = "META-INF/dubbo/";
-    
+
     private static final String DUBBO_INTERNAL_DIRECTORY = DUBBO_DIRECTORY + "internal/";
 ```
 
@@ -159,7 +156,7 @@ loadFile最后调用的是Class.forName(line, true, classLoader);
 
 然后injectExtension 注入
 
-```
+```java
     private T injectExtension(T instance) {
         try {
             if (objectFactory != null) {
@@ -189,7 +186,7 @@ loadFile最后调用的是Class.forName(line, true, classLoader);
 ```
 
 
-```
+```java
 public class SpiExtensionFactory implements ExtensionFactory {
 
     public <T> T getExtension(Class<T> type, String name) {
@@ -206,7 +203,7 @@ public class SpiExtensionFactory implements ExtensionFactory {
 ```
 
 
-```
+```java
 public class SpringExtensionFactory implements ExtensionFactory {
     
     private static final Set<ApplicationContext> contexts = new ConcurrentHashSet<ApplicationContext>();

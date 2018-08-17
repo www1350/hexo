@@ -12,7 +12,7 @@ date: 2016-07-06 22:26:20
 
 事务传播属性  
 
-```
+```java
     @Transactional(propagation=Propagation.REQUIRED) //如果有事务,那么加入事务,没有的话新建一个(不写的情况下)  **默认**
     @Transactional(propagation=Propagation.NOT_SUPPORTED) //容器不为这个方法开启事务  
     @Transactional(propagation=Propagation.REQUIRES_NEW) //不管是否存在事务,都创建一个新的事务,原来的挂起,新的执行完毕,继续执行老的事务  
@@ -27,7 +27,7 @@ date: 2016-07-06 22:26:20
 
 
 xml配置：
-```
+```xml
   <!-- hibernate事务管理器 -->  
     <bean id="transactionManager"
         class="org.springframework.orm.hibernate3.HibernateTransactionManager">
@@ -41,7 +41,7 @@ xml配置：
 ```
 
 1.直接配置
-```    
+```    xml
     <bean id="userDao"  
         class="org.springframework.transaction.interceptor.TransactionProxyFactoryBean">  
            <!-- 配置事务管理器 -->  
@@ -58,7 +58,7 @@ xml配置：
 ```
 
 2.共享一个代理基类
-```
+```xml
 <bean id="transactionBase"  
             class="org.springframework.transaction.interceptor.TransactionProxyFactoryBean"  
             lazy-init="true" abstract="true">  
@@ -80,7 +80,7 @@ xml配置：
 
 3.
 
- ```
+ ```xml
   <bean id="transactionInterceptor"  
         class="org.springframework.transaction.interceptor.TransactionInterceptor">  
         <property name="transactionManager" ref="transactionManager" />  
@@ -107,7 +107,7 @@ xml配置：
  ```
 
 4.使用tx标签配置的拦截器
- ```
+ ```xml
   <tx:advice id="txAdvice" transaction-manager="transactionManager">
         <tx:attributes>
             <tx:method name="*" propagation="REQUIRED" />
@@ -127,7 +127,7 @@ xml配置：
  ` <tx:annotation-driven transaction-manager="transactionManager"/>`
 
 6.编程：
-```
+```java
 DefaultTransactionDefinition def = new DefaultTransactionDefinition();
 def.setPropagationBehavior(TransactionDefinition.PROPAGATION_REQUIRED);
 
@@ -158,7 +158,7 @@ TransactionStatus
 ```
 
 PlatformTransactionManager
-```
+```java
 	TransactionStatus getTransaction(TransactionDefinition definition) throws TransactionException;
 
 	void commit(TransactionStatus status) throws TransactionException;
@@ -170,7 +170,7 @@ PlatformTransactionManager
 源码解析：
 从TxNamespaceHandler入手
 
-```
+```java
 	@Override
 	public void init() {
 		registerBeanDefinitionParser("advice", new TxAdviceBeanDefinitionParser());
@@ -386,7 +386,7 @@ protected TransactionInfo createTransactionIfNecessary(
 ```
 
 
-```
+```java
 private TransactionStatus handleExistingTransaction(
 			TransactionDefinition definition, Object transaction, boolean debugEnabled)
 			throws TransactionException {
@@ -486,7 +486,7 @@ private TransactionStatus handleExistingTransaction(
 	}
 ```
 
-```
+```java
 	@Override
 	protected void doBegin(Object transaction, TransactionDefinition definition) {
 		DataSourceTransactionObject txObject = (DataSourceTransactionObject) transaction;
@@ -535,7 +535,7 @@ private TransactionStatus handleExistingTransaction(
 	}
 ```
 
-```
+```java
 protected final SuspendedResourcesHolder suspend(Object transaction) throws TransactionException {
 //如果事务是激活的，且当前线程事务同步机制也是激活状态  
 		if (TransactionSynchronizationManager.isSynchronizationActive()) {
@@ -638,7 +638,7 @@ private List<TransactionSynchronization> doSuspendSynchronization() {
 ```
 ## 事务提交
 AbstractPlatformTransactionManager##commit
-```
+```java
 	@Override
 	public final void commit(TransactionStatus status) throws TransactionException {
 //如果事务状态是已完成，再次提交会抛出“Transaction is already completed - do not call commit or rollback more than once per transaction”

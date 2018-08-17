@@ -458,6 +458,20 @@ http://rocketmq.apache.org/docs/openmessaging-example/
 
 RocketMQ从3.0版本开始支持同步双写。
 
+
+
+## 架构
+
+![image](https://user-images.githubusercontent.com/7789698/42863450-d5f9e96e-8a95-11e8-9494-fe2030afa585.png)
+
+### **NameServer Cluster**
+
+命名服务器提供了轻量级服务发现和路由。每台命名服务器记录了完整的路由信息。提供了一致性读写服务，支持快速存储扩展。
+
+### **Broker Cluster**
+
+Brokers专注于消息存储，提供轻量级的TOPIC和QUEUE机制。支持“推”和“拉”模式,包含容错机制(2或3份副本)，并提供强大的峰值填充和按原始时间顺序累积数千亿条消息的能力。 此外，Brokers还提供灾难恢复，丰富的指标统计和警报机制。
+
 # 源码分析
 ## 代码分层
 ![image](https://user-images.githubusercontent.com/7789698/32880452-526d5280-ca73-11e7-8451-bd88c32a9fe6.png)
@@ -534,7 +548,12 @@ JAVA_OPT="${JAVA_OPT} -cp ${CLASSPATH}"
 $JAVA ${JAVA_OPT} $@
 ```
 
+脚本最后就是通过 java org.apache.rocketmq.namesrv.NamesrvStartup 运行nameserver
+
+$@指的脚本传入的参数
+
 ## NamesrvStartup
+
 ```java
 public class NamesrvStartup {
     public static Properties properties = null;
@@ -557,14 +576,14 @@ public class NamesrvStartup {
         }
 
         try {
-//见 https://my.oschina.net/cloudcoder/blog/363793
+     //命令行Apache Commons CLI 见 https://my.oschina.net/cloudcoder/blog/363793
             Options options = ServerUtil.buildCommandlineOptions(new Options());
             commandLine = ServerUtil.parseCmdLine("mqnamesrv", args, buildCommandlineOptions(options), new PosixParser());
             if (null == commandLine) {
                 System.exit(-1);
                 return null;
             }
-
+//
             final NamesrvConfig namesrvConfig = new NamesrvConfig();
             final NettyServerConfig nettyServerConfig = new NettyServerConfig();
             nettyServerConfig.setListenPort(9876);
@@ -594,7 +613,7 @@ public class NamesrvStartup {
                 System.out.printf("Please set the " + MixAll.ROCKETMQ_HOME_ENV + " variable in your environment to match the location of the RocketMQ installation%n");
                 System.exit(-2);
             }
-//见http://www.iteye.com/topic/345924
+//logback配置 见http://www.iteye.com/topic/345924
             LoggerContext lc = (LoggerContext) LoggerFactory.getILoggerFactory();
             JoranConfigurator configurator = new JoranConfigurator();
             configurator.setContext(lc);
@@ -643,6 +662,15 @@ public class NamesrvStartup {
 
 ## NamesrvController
 
+- namesrvConfig：nameServer的配置
+- nettyServerConfig：NameServer的netty配置
+- remotingServer：NameServer 的netty服务器
+- scheduledExecutorService：routeInfoManager和kvConfigManager使用的定时线程池
+- remotingExecutor：netty使用的线程池
+- brokerHosekeppingService：
+- kvConfigManager：kv配置管理
+- routeInfoManager：包含broker的ip和对应的队列信息，说明producer可以往哪一个broker发送消息，consumer从哪一个broker pull消息
+
 ```java
     public NamesrvController(NamesrvConfig namesrvConfig, NettyServerConfig nettyServerConfig) {
         this.namesrvConfig = namesrvConfig;
@@ -662,15 +690,16 @@ initialize
 
 ```java
  public boolean initialize() {
+     //从"user.home"+/namesrv/kvConfig.json   获取json配置解析到内存中->configTable
         this.kvConfigManager.load();
 //构造NettyRemotingServer
         this.remotingServer = new NettyRemotingServer(this.nettyServerConfig, this.brokerHousekeepingService);
 //默认8
         this.remotingExecutor =
             Executors.newFixedThreadPool(nettyServerConfig.getServerWorkerThreads(), new ThreadFactoryImpl("RemotingExecutorThread_"));
-
+//注册requestProcessor
         this.registerProcessor();
-//每10秒扫描下，如果broker超过2分钟，关闭channel，打印The broker channel expired,
+//“NSScheduledThread” 每10秒扫描下，如果broker超过2分钟，关闭channel，打印The broker channel expired,
         this.scheduledExecutorService.scheduleAtFixedRate(new Runnable() {
             @Override
             public void run() {
@@ -737,7 +766,7 @@ public NettyRemotingServer(final NettyServerConfig nettyServerConfig,
                 return new Thread(r, "NettyServerPublicExecutor_" + this.threadIndex.incrementAndGet());
             }
         });
-
+//boss线程组
         this.eventLoopGroupBoss = new NioEventLoopGroup(1, new ThreadFactory() {
             private AtomicInteger threadIndex = new AtomicInteger(0);
 
@@ -747,7 +776,9 @@ public NettyRemotingServer(final NettyServerConfig nettyServerConfig,
             }
         });
 
+    //1、是否是linux平台2、useEpollNativeSelector配置是否为true3、epoll是否可用
         if (useEpoll()) {
+            //serverSelectorThreads 默认为3
             this.eventLoopGroupSelector = new EpollEventLoopGroup(nettyServerConfig.getServerSelectorThreads(), new ThreadFactory() {
                 private AtomicInteger threadIndex = new AtomicInteger(0);
                 private int threadTotal = nettyServerConfig.getServerSelectorThreads();
@@ -769,4 +800,89 @@ public NettyRemotingServer(final NettyServerConfig nettyServerConfig,
             });
         }
     }
+```
+
+
+
+
+
+
+
+start
+
+```java
+@Override
+public void start() {
+    this.defaultEventExecutorGroup = new DefaultEventExecutorGroup(
+        //默认8
+        nettyServerConfig.getServerWorkerThreads(),
+        new ThreadFactory() {
+
+            private AtomicInteger threadIndex = new AtomicInteger(0);
+
+            @Override
+            public Thread newThread(Runnable r) {
+                return new Thread(r, "NettyServerCodecThread_" + this.threadIndex.incrementAndGet());
+            }
+        });
+
+    ServerBootstrap childHandler =
+        this.serverBootstrap.group(this.eventLoopGroupBoss, this.eventLoopGroupSelector)
+            .channel(useEpoll() ? EpollServerSocketChannel.class : NioServerSocketChannel.class)
+            .option(ChannelOption.SO_BACKLOG, 1024)
+            .option(ChannelOption.SO_REUSEADDR, true)
+        //
+            .option(ChannelOption.SO_KEEPALIVE, false)
+        //禁用了Nagle算法，允许小包的发送
+            .childOption(ChannelOption.TCP_NODELAY, true)
+        //发送缓冲区大小，默认65535
+            .childOption(ChannelOption.SO_SNDBUF, nettyServerConfig.getServerSocketSndBufSize())
+        //接收缓冲区大小，默认65535
+            .childOption(ChannelOption.SO_RCVBUF, nettyServerConfig.getServerSocketRcvBufSize())
+        //绑定端口，默认8888
+            .localAddress(new InetSocketAddress(this.nettyServerConfig.getListenPort()))
+            .childHandler(new ChannelInitializer<SocketChannel>() {
+                @Override
+                public void initChannel(SocketChannel ch) throws Exception {
+                    ch.pipeline()
+                        .addLast(defaultEventExecutorGroup, HANDSHAKE_HANDLER_NAME,
+                            new HandshakeHandler(TlsSystemConfig.tlsMode))
+                        .addLast(defaultEventExecutorGroup,
+                            new NettyEncoder(),
+                            new NettyDecoder(),
+                            new IdleStateHandler(0, 0, nettyServerConfig.getServerChannelMaxIdleTimeSeconds()),
+                            new NettyConnectManageHandler(),
+                            new NettyServerHandler()
+                        );
+                }
+            });
+
+    if (nettyServerConfig.isServerPooledByteBufAllocatorEnable()) {
+        childHandler.childOption(ChannelOption.ALLOCATOR, PooledByteBufAllocator.DEFAULT);
+    }
+
+    try {
+        ChannelFuture sync = this.serverBootstrap.bind().sync();
+        InetSocketAddress addr = (InetSocketAddress) sync.channel().localAddress();
+        this.port = addr.getPort();
+    } catch (InterruptedException e1) {
+        throw new RuntimeException("this.serverBootstrap.bind().sync() InterruptedException", e1);
+    }
+
+    if (this.channelEventListener != null) {
+        this.nettyEventExecutor.start();
+    }
+
+    this.timer.scheduleAtFixedRate(new TimerTask() {
+
+        @Override
+        public void run() {
+            try {
+                NettyRemotingServer.this.scanResponseTable();
+            } catch (Throwable e) {
+                log.error("scanResponseTable exception", e);
+            }
+        }
+    }, 1000 * 3, 1000);
+}
 ```

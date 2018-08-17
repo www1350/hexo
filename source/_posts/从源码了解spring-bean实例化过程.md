@@ -226,10 +226,12 @@ private boolean isDependent(String beanName, String dependentBeanName, Set<Strin
 
 - 8.无论哪种模式都会进入AbstractAutowireCapableBeanFactory的createBean(final String beanName, final RootBeanDefinition mbd, final Object[] args)
 
+  类会被包装成一个RootBeanDefinition
+
 ```java
                 ....
 				RootBeanDefinition mbdToUse = mbd;
-		// 解析beanDefinition，以确保bean定义中的class可以被正确解析
+		// 解析beanDefinition，以确保bean定义中的class可以被正确解析，这里拷贝一个是为了防止多线程修改
 		Class<?> resolvedClass = resolveBeanClass(mbd, beanName);
 		if (resolvedClass != null && !mbd.hasBeanClass() && mbd.getBeanClassName() != null) {
 			mbdToUse = new RootBeanDefinition(mbd);
@@ -268,12 +270,12 @@ private boolean isDependent(String beanName, String dependentBeanName, Set<Strin
 	Class<?> beanType = (instanceWrapper != null ? instanceWrapper.getWrappedClass() : null);
 	mbd.resolvedTargetType = beanType;
 
-	// Allow post-processors to modify the merged bean definition.
+	// 同步，
 	synchronized (mbd.postProcessingLock) {
 		if (!mbd.postProcessed) {
 			try {
                 //获取所有MergedBeanDefinitionPostProcessor，调用一遍postProcessMergedBeanDefinition
-                //这里将会调用@PostConstruct注解的方法
+                //找出所有的字段或者方法上的@Autowired @Value @Inject @PostConstruct注解加入到BeanDefinition
 				applyMergedBeanDefinitionPostProcessors(mbd, beanType, beanName);
 			}
 			catch (Throwable ex) {
@@ -547,18 +549,18 @@ destroy-method
 
 如果已经能拿到相应的bean则直接返回不进行下面的操作
 
-2. 拿到应用中所有实现了InstantiationAwareBeanPostProcessor调用postProcessAfterInstantiation
-   然后调用postProcessPropertyValues
-   
-3. 本bean如果
-   - 实现了BeanNameAware就调用setBeanName把bean名字放入
+2. **反射实例化bean**
+3. 拿到应用中所有实现了InstantiationAwareBeanPostProcessor调用postProcessAfterInstantiation，然后调用postProcessPropertyValues
 
-   - 实现了BeanClassLoaderAware就调用setBeanClassLoader把ClassLoader放入
+4. 本bean如果
 
-   - 实现了BeanFactoryAware调用setBeanFactory把BeanFactory放入
-3. 拿到应用中所有实现了BeanPostProcessor接口的类，调用postProcessBeforeInstantiation(Class<?> beanClass, String beanName)拿到bean
-4. **反射实例化bean**
-5. @PostConstruct注解的方法（获取所有MergedBeanDefinitionPostProcessor，调用一遍postProcessMergedBeanDefinition）
+- 实现了BeanNameAware就调用setBeanName把bean名字放入
+
+- 实现了BeanClassLoaderAware就调用setBeanClassLoader把ClassLoader放入
+
+- 实现了BeanFactoryAware调用setBeanFactory把BeanFactory放入
+
+5. 拿到应用中所有实现了BeanPostProcessor接口的类，调用postProcessBeforeInstantiation(Class<?> beanClass, String beanName)拿到bean (@PostConstruct注解的方法)
 6. 本bean如果实现了InitializingBean接口，则调用afterPropertiesSet
 7. 本bean如果在xml里面配置了init-method则调用
 8. 拿到应用中所有实现了BeanPostProcessor接口的类，调用postProcessAfterInitialization(Object bean, String beanName) 拿到bean返回，就是最终在容器里面的bean

@@ -30,7 +30,7 @@ Servlet接口 包括 `public void init(ServletConfig config) throws ServletExcep
 
 在DispatcherServlet父类FrameworkServlet
 
-```
+```java
 	@Override
 	protected void service(HttpServletRequest request, HttpServletResponse response)
 			throws ServletException, IOException {
@@ -46,7 +46,7 @@ Servlet接口 包括 `public void init(ServletConfig config) throws ServletExcep
 ```
 
 最后根据请求调用的又是FrameworkServlet的
-```
+```java
 	@Override
 	protected final void doGet(HttpServletRequest request, HttpServletResponse response)
 			throws ServletException, IOException {
@@ -55,7 +55,7 @@ Servlet接口 包括 `public void init(ServletConfig config) throws ServletExcep
 ```
 
 接下来
-```
+```java
 protected final void processRequest(HttpServletRequest request, HttpServletResponse response)
 			throws ServletException, IOException {
 
@@ -115,7 +115,7 @@ protected final void processRequest(HttpServletRequest request, HttpServletRespo
 ```
 
 DispatcherServlet
-```
+```java
 @Override
 	protected void doService(HttpServletRequest request, HttpServletResponse response) throws Exception {
 		if (logger.isDebugEnabled()) {
@@ -167,7 +167,7 @@ DispatcherServlet
 ```
 
 doDispatch
-```
+```java
 	protected void doDispatch(HttpServletRequest request, HttpServletResponse response) throws Exception {
 		HttpServletRequest processedRequest = request;
 		HandlerExecutionChain mappedHandler = null;
@@ -269,7 +269,7 @@ doDispatch
 
 
 getHandler
-```
+```java
 	protected HandlerExecutionChain getHandler(HttpServletRequest request) throws Exception {
 		for (HandlerMapping hm : this.handlerMappings) {
 			if (logger.isTraceEnabled()) {
@@ -286,7 +286,7 @@ getHandler
 ```
 
 getHandlerAdapter
-```
+```java
 	protected HandlerAdapter getHandlerAdapter(Object handler) throws ServletException {
 		for (HandlerAdapter ha : this.handlerAdapters) {
 			if (logger.isTraceEnabled()) {
@@ -303,7 +303,7 @@ getHandlerAdapter
 ```
 
 processDispatchResult
-```
+```java
 private void processDispatchResult(HttpServletRequest request, HttpServletResponse response,
 			HandlerExecutionChain mappedHandler, ModelAndView mv, Exception exception) throws Exception {
 
@@ -438,7 +438,7 @@ protected void render(ModelAndView mv, HttpServletRequest request, HttpServletRe
 ## HandlerExecutionChain
 1请求对应的控制器
 2拦截器
-```
+```java
 	boolean applyPreHandle(HttpServletRequest request, HttpServletResponse response) throws Exception {
 		HandlerInterceptor[] interceptors = getInterceptors();
 		if (!ObjectUtils.isEmpty(interceptors)) {
@@ -488,7 +488,7 @@ protected void render(ModelAndView mv, HttpServletRequest request, HttpServletRe
 ## HandlerAdapter
 初始化：
 
-```
+```java
 private void initHandlerAdapters(ApplicationContext context) {
 		this.handlerAdapters = null;
 
@@ -525,7 +525,7 @@ private void initHandlerAdapters(ApplicationContext context) {
 
 AbstractHandlerMethodAdapter#handle
 
-```
+```java
 	@Override
 	public final ModelAndView handle(HttpServletRequest request, HttpServletResponse response, Object handler)
 			throws Exception {
@@ -627,7 +627,7 @@ protected ModelAndView invokeHandlerMethod(HttpServletRequest request,
 
 ServletInvocableHandlerMethod
 
-```
+```java
 public void invokeAndHandle(ServletWebRequest webRequest,
 			ModelAndViewContainer mavContainer, Object... providedArgs) throws Exception {
 
@@ -711,7 +711,7 @@ protected Object doInvoke(Object... args) throws Exception {
 ## HandlerMapping
 题外，这个是如何初始化的：
 
-```
+```java
 private void initHandlerMappings(ApplicationContext context) {
 		this.handlerMappings = null;
 

@@ -10,6 +10,10 @@ registry层
 
 通过dubbo解析一我们分析了整个ServiceConfig，留下了RegistryProtocol这个没有分析，接下来我们来分析分析RegistryProtocol
 
+![reg333321](https://user-images.githubusercontent.com/7789698/42802903-e087d48c-89d6-11e8-820b-99af7de93450.jpg)
+
+在ServiceConfig的loadRegistries方法里面，当spring容器初始化，服务提供方（消费方也差不多）暴露过程，就会拼接生成registryURL
+
 registryURL:
 
 *registry://localhost:2181/com.alibaba.dubbo.registry.RegistryService?application=demo-provider&dubbo=2.0.0&pid=9966&qos.port=22222&registry=zookeeper&timestamp=1522650082230*
@@ -35,14 +39,14 @@ public <T> Exporter<T> export(final Invoker<T> originInvoker) throws RpcExceptio
     //zookeeper://localhost:2181/com.alibaba.dubbo.registry.RegistryService?application=demo-provider&dubbo=2.0.0&export=dubbo://172.17.8.254:20880/com.alibaba.dubbo.demo.DemoService?anyhost=true&application=demo-provider&bind.ip=172.17.8.254&bind.port=20880&dubbo=2.0.0&generic=false&interface=com.alibaba.dubbo.demo.DemoService&methods=sayHello&pid=10350&qos.port=22222&side=provider&timestamp=1522656496788&pid=10350&qos.port=22222&timestamp=1522656486762
     final URL registedProviderUrl = getRegistedProviderUrl(originInvoker);
 
-    //to judge to delay publish whether or not
+    //是否延迟发布
     boolean register = registedProviderUrl.getParameter("register", true);
 
     //"com.alibaba.dubbo.demo.DemoService" -> ConcurrentHashSet<ConsumerInvokerWrapper>
     ProviderConsumerRegTable.registerProvider(originInvoker, registryUrl, registedProviderUrl);
 
     if (register) {
-        //注册
+        //立马注册
         //ZookeeperRegistry(FailbackRegistry)
         // registry.register(registedProviderUrl);
         //registry.doRegister 下面讲
@@ -52,11 +56,13 @@ public <T> Exporter<T> export(final Invoker<T> originInvoker) throws RpcExceptio
 
     // Subscribe the override data
     // FIXME When the provider subscribes, it will affect the scene : a certain JVM exposes the service and call the same service. Because the subscribed is cached key with the name of the service, it causes the subscription information to cover.
+    //加category=configurators&check=false
     // provider://172.17.8.254:20880/com.alibaba.dubbo.demo.DemoService?anyhost=true&application=demo-provider&category=configurators&check=false&dubbo=2.0.0&generic=false&interface=com.alibaba.dubbo.demo.DemoService&methods=sayHello&pid=10350&side=provider&timestamp=1522656496788
     final URL overrideSubscribeUrl = getSubscribedOverrideUrl(registedProviderUrl);
     final OverrideListener overrideSubscribeListener = new OverrideListener(overrideSubscribeUrl, originInvoker);
     overrideListeners.put(overrideSubscribeUrl, overrideSubscribeListener);
     //订阅，最后调用overrideSubscribeListener#notify
+    //url和listener进行绑定订阅
     registry.subscribe(overrideSubscribeUrl, overrideSubscribeListener);
     //Ensure that a new exporter instance is returned every time export
     return new DestroyableExporter<T>(exporter, originInvoker, overrideSubscribeUrl, registedProviderUrl);
@@ -145,6 +151,7 @@ public ZookeeperRegistry(URL url, ZookeeperTransporter zookeeperTransporter) {
     if (!group.startsWith(Constants.PATH_SEPARATOR)) {
         group = Constants.PATH_SEPARATOR + group;
     }
+    //有group则root是/group 否则就是/dubbo
     this.root = group;
     zkClient = zookeeperTransporter.connect(url);
     zkClient.addStateListener(new StateListener() {
@@ -166,6 +173,7 @@ public ZookeeperRegistry(URL url, ZookeeperTransporter zookeeperTransporter) {
 ```java
 protected void doRegister(URL url) {
     try {
+        //根据路径创建结点，dynamic为true就是临时结点否则就是实体结点
         zkClient.create(toUrlPath(url), url.getParameter(Constants.DYNAMIC_KEY, true));
     } catch (Throwable e) {
         throw new RpcException("Failed to register " + url + " to zookeeper " + getUrl() + ", cause: " + e.getMessage(), e);
@@ -179,13 +187,21 @@ private String toUrlPath(URL url) {
 }
 ```
 
-订阅，subscribe调用了doSubscribe
+订阅，registry.subscribe(overrideSubscribeUrl, overrideSubscribeListener);，先缓存到
+
+```java
+ConcurrentMap<URL, Set<NotifyListener>> subscribed = new ConcurrentHashMap<URL, Set<NotifyListener>>();
+```
+
+里面最终调用了doSubscribe
 
 
 ```java
 protected void doSubscribe(final URL url, final NotifyListener listener) {
     try {
+        //如果要订阅的服务是 *
         if (Constants.ANY_VALUE.equals(url.getServiceInterface())) {
+            // 拿到root， /group 或/dubbo
             String root = toRootPath();
             ConcurrentMap<NotifyListener, ChildListener> listeners = zkListeners.get(url);
             if (listeners == null) {
@@ -194,6 +210,7 @@ protected void doSubscribe(final URL url, final NotifyListener listener) {
             }
             ChildListener zkListener = listeners.get(listener);
             if (zkListener == null) {
+                　　//添加监听子节点变化事件，变化则子节点调用订阅逻辑
                 listeners.putIfAbsent(listener, new ChildListener() {
                     public void childChanged(String parentPath, List<String> currentChilds) {
                         for (String child : currentChilds) {
@@ -208,7 +225,9 @@ protected void doSubscribe(final URL url, final NotifyListener listener) {
                 });
                 zkListener = listeners.get(listener);
             }
+            //创建root结点
             zkClient.create(root, false);
+            // 监听zk上root子节点变化事件，变化则返回子节点名，也就是services名
             List<String> services = zkClient.addChildListener(root, zkListener);
             if (services != null && !services.isEmpty()) {
                 for (String service : services) {
@@ -253,6 +272,35 @@ protected void doSubscribe(final URL url, final NotifyListener listener) {
 ```
 
 
+
+override协议：
+
+1. 禁用提供者：(通常用于临时踢除某台提供者机器，相似的，禁止消费者访问请使用路由规则)
+
+   ```
+   override://10.20.153.10/com.foo.BarService?category=configurators&dynamic=false&disbaled=true
+   ```
+
+2. 调整权重：(通常用于容量评估，缺省权重为 100)
+
+   ```
+   override://10.20.153.10/com.foo.BarService?category=configurators&dynamic=false&weight=200
+   ```
+
+3. 调整负载均衡策略：(缺省负载均衡策略为 random)
+
+   ```
+   override://10.20.153.10/com.foo.BarService?category=configurators&dynamic=false&loadbalance=leastactive
+   ```
+
+4. 服务降级：(通常用于临时屏蔽某个出错的非关键服务)
+
+   ```
+   override://0.0.0.0/com.foo.BarService?category=configurators&dynamic=false&application=foo&mock=force:return+null
+   ```
+
+0.0.0.0表示所有的host
+
 OverrideListener
 
 ```java
@@ -271,6 +319,8 @@ private class OverrideListener implements NotifyListener {
      */
     public synchronized void notify(List<URL> urls) {
         logger.debug("original override urls: " + urls);
+        //判断提供者消费者几个参数是否匹配，1、接口名 2、提供者消费者category是否一致 3、group 4、version 5、classifier 
+        //拿到所有匹配的提供者url
         List<URL> matchedUrls = getMatchedUrls(urls, subscribeUrl);
         logger.debug("subscribe url: " + subscribeUrl + ", override urls: " + matchedUrls);
         // No matching results
@@ -278,6 +328,7 @@ private class OverrideListener implements NotifyListener {
             return;
         }
 
+        // override协议
         List<Configurator> configurators = RegistryDirectory.toConfigurators(matchedUrls);
 
         final Invoker<?> invoker;
@@ -296,7 +347,7 @@ private class OverrideListener implements NotifyListener {
         }
         //The current, may have been merged many times
         URL currentUrl = exporter.getInvoker().getUrl();
-        //Merged with this configuration
+        //合并configuratorUrls 中的属性   合并override协议和absent协议，
         URL newUrl = getConfigedInvokerUrl(configurators, originUrl);
         //暴露者url变更
         if (!currentUrl.equals(newUrl)) {
@@ -305,6 +356,122 @@ private class OverrideListener implements NotifyListener {
         }
     }
 ```
+
+合并override协议和absent协议过程：
+
+List<Configurator> configurators = RegistryDirectory.toConfigurators(matchedUrls);    先获取到所有的Configurator
+
+```java
+public static List<Configurator> toConfigurators(List<URL> urls) {
+    if (urls == null || urls.isEmpty()) {
+        return Collections.emptyList();
+    }
+
+    List<Configurator> configurators = new ArrayList<Configurator>(urls.size());
+    for (URL url : urls) {
+        //包含empty协议，返回空
+        if (Constants.EMPTY_PROTOCOL.equals(url.getProtocol())) {
+            configurators.clear();
+            break;
+        }
+        Map<String, String> override = new HashMap<String, String>(url.getParameters());
+        // 去掉anyhost参数 override://ip:port...?anyhost=true
+        override.remove(Constants.ANYHOST_KEY);
+        if (override.size() == 0) {
+            configurators.clear();
+            continue;
+        }
+        //根据url协议生成 override->OverrideConfigurator absent->AbsentConfigurator
+        configurators.add(configuratorFactory.getConfigurator(url));
+    }
+    //按host、priority排序
+    Collections.sort(configurators);
+    return configurators;
+}
+```
+
+
+
+原始url和Configurators进行合并
+
+```java
+private URL getConfigedInvokerUrl(List<Configurator> configurators, URL url) {
+    for (Configurator configurator : configurators) {
+        url = configurator.configure(url);
+    }
+    return url;
+}
+```
+
+
+
+```java
+public URL configure(URL url) {
+//判空
+    if (configuratorUrl == null || configuratorUrl.getHost() == null
+            || url == null || url.getHost() == null) {
+        return url;
+    }
+    // 有端口号且相同configuratorUrl->url
+    if (configuratorUrl.getPort() != 0) {
+        if (url.getPort() == configuratorUrl.getPort()) {
+            return configureIfMatch(url.getHost(), url);
+        }
+    } else {
+        //如果是消费端
+        if (url.getParameter(Constants.SIDE_KEY, Constants.PROVIDER).equals(Constants.CONSUMER)) {
+            //本地host、url
+            return configureIfMatch(NetUtils.getLocalHost(), url);
+         //提供端
+        } else if (url.getParameter(Constants.SIDE_KEY, Constants.CONSUMER).equals(Constants.PROVIDER)) {
+            //0.0.0.0（影响所有提供端）、url
+            return configureIfMatch(Constants.ANYHOST_VALUE, url);
+        }
+    }
+    return url;
+}
+```
+
+
+
+```java
+private URL configureIfMatch(String host, URL url) {
+    //配置为0.0.0.0或者host相同，意味着要合并url
+    if (Constants.ANYHOST_VALUE.equals(configuratorUrl.getHost()) || host.equals(configuratorUrl.getHost())) {
+        //获取override里面的application
+        String configApplication = configuratorUrl.getParameter(Constants.APPLICATION_KEY,
+                configuratorUrl.getUsername());
+        //获取当前url的application
+        String currentApplication = url.getParameter(Constants.APPLICATION_KEY, url.getUsername());
+        //application一样
+        if (configApplication == null || Constants.ANY_VALUE.equals(configApplication)
+                || configApplication.equals(currentApplication)) {
+            Set<String> condtionKeys = new HashSet<String>();
+            //category、check、dynamic、enabled
+            condtionKeys.add(Constants.CATEGORY_KEY);
+            condtionKeys.add(Constants.CHECK_KEY);
+            condtionKeys.add(Constants.DYNAMIC_KEY);
+            condtionKeys.add(Constants.ENABLED_KEY);
+            for (Map.Entry<String, String> entry : configuratorUrl.getParameters().entrySet()) {
+                String key = entry.getKey();
+                String value = entry.getValue();
+                if (key.startsWith("~") || Constants.APPLICATION_KEY.equals(key) || Constants.SIDE_KEY.equals(key)) {
+                    condtionKeys.add(key);
+                    if (value != null && !Constants.ANY_VALUE.equals(value)
+                            && !value.equals(url.getParameter(key.startsWith("~") ? key.substring(1) : key))) {
+                        return url;
+                    }
+                }
+            }
+            //移除category、check、dynamic、enabled，如果是OverrideConfigurator就合并配置，AbsentConfigurator就只添加没有的配置
+            return doConfigure(url, configuratorUrl.removeParameters(condtionKeys));
+        }
+    }
+    return url;
+}
+```
+
+
 
 url变更了，doChangeLocalExport重新暴露
 
@@ -317,6 +484,99 @@ private <T> void doChangeLocalExport(final Invoker<T> originInvoker, URL newInvo
     } else {
         final Invoker<T> invokerDelegete = new InvokerDelegete<T>(originInvoker, newInvokerUrl);
         exporter.setExporter(protocol.export(invokerDelegete));
+    }
+}
+```
+
+/Users/wangwenwei/.dubbo/dubbo-registry-demo-provider-localhost:2181.cache
+
+当doSubscribe订阅失败的时候才会拿cache的内容
+
+```java
+private void saveProperties(URL url) {
+    if (file == null) {
+        return;
+    }
+
+    try {
+        StringBuilder buf = new StringBuilder();
+        Map<String, List<URL>> categoryNotified = notified.get(url);
+        if (categoryNotified != null) {
+            for (List<URL> us : categoryNotified.values()) {
+                for (URL u : us) {
+                    if (buf.length() > 0) {
+                        buf.append(URL_SEPARATOR);
+                    }
+                    buf.append(u.toFullString());
+                }
+            }
+        }
+        properties.setProperty(url.getServiceKey(), buf.toString());
+        long version = lastCacheChanged.incrementAndGet();
+        //同步写入
+        if (syncSaveFile) {
+            doSaveProperties(version);
+        } else {
+            registryCacheExecutor.execute(new SaveProperties(version));
+        }
+    } catch (Throwable t) {
+        logger.warn(t.getMessage(), t);
+    }
+}
+```
+
+
+
+```java
+public void doSaveProperties(long version) {
+    if (version < lastCacheChanged.get()) {
+        return;
+    }
+    if (file == null) {
+        return;
+    }
+    // Save
+    try {
+        //添加文件锁lock
+        File lockfile = new File(file.getAbsolutePath() + ".lock");
+        if (!lockfile.exists()) {
+            lockfile.createNewFile();
+        }
+        RandomAccessFile raf = new RandomAccessFile(lockfile, "rw");
+        try {
+            FileChannel channel = raf.getChannel();
+            try {
+                FileLock lock = channel.tryLock();
+                if (lock == null) {
+                    throw new IOException("Can not lock the registry cache file " + file.getAbsolutePath() + ", ignore and retry later, maybe multi java process use the file, please config: dubbo.registry.file=xxx.properties");
+                }
+                // Save
+                try {
+                    if (!file.exists()) {
+                        file.createNewFile();
+                    }
+                    FileOutputStream outputFile = new FileOutputStream(file);
+                    try {
+                        properties.store(outputFile, "Dubbo Registry Cache");
+                    } finally {
+                        outputFile.close();
+                    }
+                } finally {
+                    lock.release();
+                }
+            } finally {
+                channel.close();
+            }
+        } finally {
+            raf.close();
+        }
+    } catch (Throwable e) {
+        if (version < lastCacheChanged.get()) {
+            return;
+        } else {
+            registryCacheExecutor.execute(new SaveProperties(lastCacheChanged.incrementAndGet()));
+        }
+        logger.warn("Failed to save registry store file, cause: " + e.getMessage(), e);
     }
 }
 ```

@@ -353,13 +353,260 @@ Paxos 协议能够让 Proposer 发送的提议朝着能被大多数 Acceptor 接
 
 
 2. **复杂度问题**。base-paxos协议中还存在这样那样的问题，于是各种变种paxos出现了，比如为了解决活锁问题，出现了multi-paxos；为了解决通信次数较多的问题，出现了fast-paxos；为了尽量减少冲突，出现了epaxos。可以看到，工业级实现需要考虑更多的方面，诸如性能，异常等等。这也是为啥许多分布式的一致性框架并非真正基于paxos来实现的原因。
-
 3. **全序问题**。对于paxos算法来说，不能保证两次提交最终的顺序，而zookeeper需要做到这点
 
+信息流：
+
+```
+Client   Proposer      Acceptor     Learner
+   |         |          |  |  |       |  |
+   X-------->|          |  |  |       |  |  Request
+   |         X--------->|->|->|       |  |  Prepare(1)
+   |         |<---------X--X--X       |  |  Promise(1,{Va,Vb,Vc})
+   |         X--------->|->|->|       |  |  Accept!(1,Vn)
+   |         |<---------X--X--X------>|->|  Accepted(1,Vn)
+   |<---------------------------------X--X  Response
+   |         |          |  |  |       |  |
+```
+
+Vn = last of (Va,Vb,Vc)
+
+####  Acceptor接收失败的情况
+
+```
+Client   Proposer      Acceptor     Learner
+   |         |          |  |  |       |  |
+   X-------->|          |  |  |       |  |  Request
+   |         X--------->|->|->|       |  |  Prepare(1)
+   |         |          |  |  !       |  |  !! FAIL !!
+   |         |<---------X--X          |  |  Promise(1,{Va, Vb, null})
+   |         X--------->|->|          |  |  Accept!(1,V)
+   |         |<---------X--X--------->|->|  Accepted(1,V)
+   |<---------------------------------X--X  Response
+   |         |          |  |          |  |
+```
+
+#### Learner接收失败
+
+```
+Client   Proposer      Acceptor     Learner
+   |         |          |  |  |       |  |
+   X-------->|          |  |  |       |  |  Request
+   |         X--------->|->|->|       |  |  Prepare(1)
+   |         |<---------X--X--X       |  |  Promise(1,{null,null,null})
+   |         X--------->|->|->|       |  |  Accept!(1,V)
+   |         |<---------X--X--X------>|->|  Accepted(1,V)
+   |         |          |  |  |       |  !  !! FAIL !!
+   |<---------------------------------X     Response
+   |         |          |  |  |       |
+```
+
+
+
+####  Proposer宕机或发送失败
+
+```
+Client  Proposer        Acceptor     Learner
+   |      |             |  |  |       |  |
+   X----->|             |  |  |       |  |  Request
+   |      X------------>|->|->|       |  |  Prepare(1)
+   |      |<------------X--X--X       |  |  Promise(1,{null, null, null})
+   |      |             |  |  |       |  |
+   |      |             |  |  |       |  |  !! Leader fails during broadcast !!
+   |      X------------>|  |  |       |  |  Accept!(1,V)
+   |      !             |  |  |       |  |
+   |         |          |  |  |       |  |  !! NEW LEADER !!
+   |         X--------->|->|->|       |  |  Prepare(2)
+   |         |<---------X--X--X       |  |  Promise(2,{V, null, null})
+   |         X--------->|->|->|       |  |  Accept!(2,V)
+   |         |<---------X--X--X------>|->|  Accepted(2,V)
+   |<---------------------------------X--X  Response
+   |         |          |  |  |       |  |
+```
+
+#### Proposers竞争
+
+```
+Client   Leader         Acceptor     Learner
+   |      |             |  |  |       |  |
+   X----->|             |  |  |       |  |  Request
+   |      X------------>|->|->|       |  |  Prepare(1)
+   |      |<------------X--X--X       |  |  Promise(1,{null,null,null})
+   |      !             |  |  |       |  |  !! LEADER FAILS
+   |         |          |  |  |       |  |  !! NEW LEADER (knows last number was 1)
+   |         X--------->|->|->|       |  |  Prepare(2)
+   |         |<---------X--X--X       |  |  Promise(2,{null,null,null})
+   |      |  |          |  |  |       |  |  !! OLD LEADER recovers
+   |      |  |          |  |  |       |  |  !! OLD LEADER tries 2, denied
+   |      X------------>|->|->|       |  |  Prepare(2)
+   |      |<------------X--X--X       |  |  Nack(2)
+   |      |  |          |  |  |       |  |  !! OLD LEADER tries 3
+   |      X------------>|->|->|       |  |  Prepare(3)
+   |      |<------------X--X--X       |  |  Promise(3,{null,null,null})
+   |      |  |          |  |  |       |  |  !! NEW LEADER proposes, denied
+   |      |  X--------->|->|->|       |  |  Accept!(2,Va)
+   |      |  |<---------X--X--X       |  |  Nack(3)
+   |      |  |          |  |  |       |  |  !! NEW LEADER tries 4
+   |      |  X--------->|->|->|       |  |  Prepare(4)
+   |      |  |<---------X--X--X       |  |  Promise(4,{null,null,null})
+   |      |  |          |  |  |       |  |  !! OLD LEADER proposes, denied
+   |      X------------>|->|->|       |  |  Accept!(3,Vb)
+   |      |<------------X--X--X       |  |  Nack(4)
+   |      |  |          |  |  |       |  |  ... and so on ...
+```
 
 ### Multi-Paxos
 
+唯一的propser
 
+如果leader是相对稳定的，可以跳过第一个阶段。在同一个leader下，每一轮还会递增一个整数。
+
+Multi-Paxos减少了无故障消息延迟（proposal到learning），从4次延迟减少到2次延迟
+
+#### 开始阶段
+
+```
+Client   Proposer      Acceptor     Learner
+   |         |          |  |  |       |  | --- First Request ---
+   X-------->|          |  |  |       |  |  Request
+   |         X--------->|->|->|       |  |  Prepare(N)
+   |         |<---------X--X--X       |  |  Promise(N,I,{Va,Vb,Vc})
+   |         X--------->|->|->|       |  |  Accept!(N,I,Vm)
+   |         |<---------X--X--X------>|->|  Accepted(N,I,Vm)
+   |<---------------------------------X--X  Response
+   |         |          |  |  |       |  |
+```
+
+Vm = last of (Va, Vb, Vc)
+
+#### 稳定状态
+
+```
+Client   Proposer       Acceptor     Learner
+   |         |          |  |  |       |  |  --- Following Requests ---
+   X-------->|          |  |  |       |  |  Request
+   |         X--------->|->|->|       |  |  Accept!(N,I+1,W)
+   |         |<---------X--X--X------>|->|  Accepted(N,I+1,W)
+   |<---------------------------------X--X  Response
+   |         |          |  |  |       |  |
+```
+
+#### 简化角色
+
+#### 开始阶段
+
+```
+Client      Servers
+   |         |  |  | --- First Request ---
+   X-------->|  |  |  Request
+   |         X->|->|  Prepare(N)
+   |         |<-X--X  Promise(N,I,{Va,Vb})
+   |         X->|->|  Accept!(N,I,Vn)
+   |         X<>X<>X  Accepted(N,I)
+   |<--------X  |  |  Response
+   |         |  |  |
+```
+
+#### 稳定阶段
+
+```
+Client      Servers
+   X-------->|  |  |  Request
+   |         X->|->|  Accept!(N,I+1,W)
+   |         X<>X<>X  Accepted(N,I+1)
+   |<--------X  |  |  Response
+   |         |  |  |
+```
+
+### Fast-Paxos
+
+Basic Paxos里，客户端到Learner的请求有三个消息的延迟。Fast Paxos允许两个消息的延迟。但是要求1、系统由3f+1个acceptor构成，容许f个错误（取代2f+1个）；2、客户端发送请求到多个目的地
+
+如果leader没有值给Acceptor，Client可以直接给Acceptor发送一个Accept，接下来类似Basic Paxos，Acceptor会回复Leader一个Accepted信息，这样以来就只需要两个消息的延迟久就可以发送给Learner。
+
+如果leader检测到碰撞，leader将会重新发送消息来解决碰撞。这种协调恢复结束将会耗费4个消息延迟
+
+#### 非冲突
+
+```
+Client    Leader         Acceptor      Learner
+   |         |          |  |  |  |       |  |
+   |         X--------->|->|->|->|       |  |  Any(N,I,Recovery)
+   |         |          |  |  |  |       |  |
+   X------------------->|->|->|->|       |  |  Accept!(N,I,W)
+   |         |<---------X--X--X--X------>|->|  Accepted(N,I,W)
+   |<------------------------------------X--X  Response(W)
+   |         |          |  |  |  |       |  |
+```
+
+#### proposals冲突
+
+```
+Client   Leader      Acceptor     Learner
+ |  |      |        |  |  |  |      |  |
+ |  |      |        |  |  |  |      |  |
+ |  |      |        |  |  |  |      |  |  !! Concurrent conflicting proposals
+ |  |      |        |  |  |  |      |  |  !!   received in different order
+ |  |      |        |  |  |  |      |  |  !!   by the Acceptors
+ |  X--------------?|-?|-?|-?|      |  |  Accept!(N,I,V)
+ X-----------------?|-?|-?|-?|      |  |  Accept!(N,I,W)
+ |  |      |        |  |  |  |      |  |
+ |  |      |        |  |  |  |      |  |  !! Acceptors disagree on value
+ |  |      |<-------X--X->|->|----->|->|  Accepted(N,I,V)
+ |  |      |<-------|<-|<-X--X----->|->|  Accepted(N,I,W)
+ |  |      |        |  |  |  |      |  |
+ |  |      |        |  |  |  |      |  |  !! Detect collision & recover
+ |  |      X------->|->|->|->|      |  |  Accept!(N+1,I,W)
+ |  |      |<-------X--X--X--X----->|->|  Accepted(N+1,I,W)
+ |<---------------------------------X--X  Response(W)
+ |  |      |        |  |  |  |      |  |
+```
+
+proposals冲突，不协调恢复
+
+```
+Client   Leader      Acceptor     Learner
+ |  |      |        |  |  |  |      |  |
+ |  |      X------->|->|->|->|      |  |  Any(N,I,Recovery)
+ |  |      |        |  |  |  |      |  |
+ |  |      |        |  |  |  |      |  |  !! Concurrent conflicting proposals
+ |  |      |        |  |  |  |      |  |  !!   received in different order
+ |  |      |        |  |  |  |      |  |  !!   by the Acceptors
+ |  X--------------?|-?|-?|-?|      |  |  Accept!(N,I,V)
+ X-----------------?|-?|-?|-?|      |  |  Accept!(N,I,W)
+ |  |      |        |  |  |  |      |  |
+ |  |      |        |  |  |  |      |  |  !! Acceptors disagree on value
+ |  |      |<-------X--X->|->|----->|->|  Accepted(N,I,V)
+ |  |      |<-------|<-|<-X--X----->|->|  Accepted(N,I,W)
+ |  |      |        |  |  |  |      |  |
+ |  |      |        |  |  |  |      |  |  !! Detect collision & recover
+ |  |      |<-------X--X--X--X----->|->|  Accepted(N+1,I,W)
+ |<---------------------------------X--X  Response(W)
+ |  |      |        |  |  |  |      |  |
+```
+
+####  不协调恢复、减少角色
+
+```
+Client         Servers
+ |  |         |  |  |  |
+ |  |         X->|->|->|  Any(N,I,Recovery)
+ |  |         |  |  |  |
+ |  |         |  |  |  |  !! Concurrent conflicting proposals
+ |  |         |  |  |  |  !!   received in different order
+ |  |         |  |  |  |  !!   by the Servers
+ |  X--------?|-?|-?|-?|  Accept!(N,I,V)
+ X-----------?|-?|-?|-?|  Accept!(N,I,W)
+ |  |         |  |  |  |
+ |  |         |  |  |  |  !! Servers disagree on value
+ |  |         X<>X->|->|  Accepted(N,I,V)
+ |  |         |<-|<-X<>X  Accepted(N,I,W)
+ |  |         |  |  |  |
+ |  |         |  |  |  |  !! Detect collision & recover
+ |  |         X<>X<>X<>X  Accepted(N+1,I,W)
+ |<-----------X--X--X--X  Response(W)
+ |  |         |  |  |  |
+```
 
 ## Zab 原子广播协议
 
@@ -403,18 +650,20 @@ ZAB 中的节点有三种状态
 #### Phase 1: Discovery（发现阶段）
 
 在这个阶段，**followers 跟准leader进行通信**，**同步followers最近接收的事务提议**。这个一阶段的主要目的是发现当前大多数节点接收的最新提议，并且**准leader生成新的epoch**，让followers接受，更新它们的acceptedEpoch
-[![phase 1](http://7xjtfr.com1.z0.glb.clouddn.com/phase1.png)](http://7xjtfr.com1.z0.glb.clouddn.com/phase1.png)
+
+![image](https://user-images.githubusercontent.com/7789698/39752060-dc9269ee-52ec-11e8-8782-3287f2829583.png)
+
 **一个 follower 只会连接一个 leader**，如果有一个节点 f 认为另一个 follower p 是 leader，f 在尝试连接 p 时会被拒绝，f 被拒绝之后，就会进入 Phase 0。
 
 #### Phase 2: Synchronization（同步阶段）
 
 同步阶段主要是利用 leader 前一阶段获得的最新提议历史，同步集群中所有的副本。只有当 quorum 都同步完成，准 leader 才会成为真正的 leader。follower 只会接收 zxid 比自己的 lastZxid 大的提议。
-[![phase 2](http://7xjtfr.com1.z0.glb.clouddn.com/phase2.png)](http://7xjtfr.com1.z0.glb.clouddn.com/phase2.png)
+![image](https://user-images.githubusercontent.com/7789698/39752118-0e6473a4-52ed-11e8-81c9-242536d38d7f.png)
 
 #### Phase 3: Broadcast（广播阶段）
 
 到了这个阶段，Zookeeper 集群才能正式对外提供事务服务，并且 leader 可以进行消息广播。同时如果有新的节点加入，还需要对新节点进行同步。
-[![phase 3](http://7xjtfr.com1.z0.glb.clouddn.com/phase3.png)](http://7xjtfr.com1.z0.glb.clouddn.com/phase3.png)
+![image](https://user-images.githubusercontent.com/7789698/39752157-2888a2dc-52ed-11e8-929e-6887e95fefcc.png)
 值得注意的是，ZAB 提交事务并不像 2PC 一样需要全部follower都 ACK，只需要得到quorum（超过半数的节点）的 ACK 就可以了。
 
 ### 协议实现
@@ -439,7 +688,7 @@ ZAB 中的节点有三种状态
 
 ##### 选举过程
 
-![mage-20180416103037](/var/folders/cf/lq_f9wkn3gx_l9nghhvyt7240000gn/T/abnerworks.Typora/image-201804161030378.png)
+![image](https://user-images.githubusercontent.com/7789698/39752377-d84a49fa-52ed-11e8-83fb-b4ef3875f52a.png)
 
 ##### Recovery Phase （恢复阶段）
 
@@ -448,7 +697,7 @@ ZAB 中的节点有三种状态
 > history.lastCommittedZxid：最近被提交的提议的 zxid
 > history:oldThreshold：被认为已经太旧的已提交提议的 zxid
 
-![mage-20180416103102](/var/folders/cf/lq_f9wkn3gx_l9nghhvyt7240000gn/T/abnerworks.Typora/image-201804161031025.png)
+![image](https://user-images.githubusercontent.com/7789698/39752393-e46e974a-52ed-11e8-8c05-d0db59b82a9a.png)
 
 
 
@@ -482,43 +731,43 @@ Raft 协议强依赖 Leader 节点的可用性来确保集群数据的一致性�
 
 这个阶段 Leader 挂掉不影响一致性，不多说。
 
-![img](https://images2015.cnblogs.com/blog/815275/201603/815275-20160301175405705-1452838896.png)
+![image](https://user-images.githubusercontent.com/7789698/39752667-bb36f452-52ee-11e8-981e-6c7373837ad4.png)
 
 #### 2. 数据到达 Leader 节点，但未复制到 Follower 节点
 
 这个阶段 Leader 挂掉，数据属于未提交状态，Client 不会收到 Ack 会认为**超时失败**可安全发起重试。Follower 节点上没有该数据，**重新选主**后 Client **重试重新提交**可成功。原来的 Leader 节点恢复后作为 Follower 加入集群重新从当前任期的新 Leader 处同步数据，强制保持和 Leader 数据一致。
 
-![img](https://images2015.cnblogs.com/blog/815275/201603/815275-20160301175412580-649716029.png)
+![image](https://user-images.githubusercontent.com/7789698/39752699-ce243002-52ee-11e8-8fc2-2c17081470f0.png)
 
 #### 3. 数据到达 Leader 节点，成功复制到 Follower 所有节点，但还未向 Leader 响应接收
 
 这个阶段 Leader 挂掉，虽然数据在 Follower 节点处于未提交状态（Uncommitted）但保持一致，重新选出 Leader 后可完成数据提交，此时 Client 由于不知到底提交成功没有，可**重试提交**。针对这种情况 Raft 要求 RPC 请求实现幂等性，也就是要实现内部去重机制。
 
-![img](https://images2015.cnblogs.com/blog/815275/201603/815275-20160301175419501-326023047.png)
+![image](https://user-images.githubusercontent.com/7789698/39752713-dbf0420c-52ee-11e8-8c06-e801a03cd2a4.png)
 
 #### 4. 数据到达 Leader 节点，成功复制到 Follower 部分节点，但还未向 Leader 响应接收
 
 这个阶段 Leader 挂掉，数据在 Follower 节点处于未提交状态（Uncommitted）且不一致，Raft 协议要求投票只能投给拥有最新数据的节点。所以拥有最新数据的节点会被选为 Leader 再强制同步数据到 Follower，数据不会丢失并最终一致。
 
-![img](https://images2015.cnblogs.com/blog/815275/201603/815275-20160301175427314-1771762822.png)
+![image](https://user-images.githubusercontent.com/7789698/39752738-e92947d4-52ee-11e8-999c-f53e42de92ea.png)
 
 #### 5. 数据到达 Leader 节点，成功复制到 Follower 所有或多数节点，数据在 Leader 处于已提交状态，但在 Follower 处于未提交状态
 
 这个阶段 Leader 挂掉，重新选出新 Leader 后的处理流程和阶段 3 一样。
 
-![img](https://images2015.cnblogs.com/blog/815275/201603/815275-20160301175434189-317254838.png)
+![image](https://user-images.githubusercontent.com/7789698/39752753-f84889fa-52ee-11e8-9e3d-2a0fa6952882.png)
 
 #### 6. 数据到达 Leader 节点，成功复制到 Follower 所有或多数节点，数据在所有节点都处于已提交状态，但还未响应 Client
 
 这个阶段 Leader 挂掉，Cluster 内部数据其实已经是一致的，Client 重复重试基于幂等策略对一致性无影响。
 
-![img](https://images2015.cnblogs.com/blog/815275/201603/815275-20160301175628111-980324469.png)
+![image](https://user-images.githubusercontent.com/7789698/39752773-06c7f826-52ef-11e8-8e3c-a0815ab94efc.png)
 
 #### 7. 网络分区导致的脑裂情况，出现双 Leader
 
 网络分区将原先的 Leader 节点和 Follower 节点分隔开，Follower 收不到 Leader 的心跳将发起选举产生新的 Leader。这时就产生了双 Leader，原先的 Leader 独自在一个区，向它提交数据不可能复制到多数节点所以永远提交不成功。向新的 Leader 提交数据可以提交成功，网络恢复后旧的 Leader 发现集群中有更新任期（Term）的新 Leader 则自动降级为 Follower 并从新 Leader 处同步数据达成集群数据一致。
 
-![img](https://images2015.cnblogs.com/blog/815275/201603/815275-20160301175637220-1693295968.png)
+![image](https://user-images.githubusercontent.com/7789698/39753101-300ada22-52f0-11e8-95e5-d19fc3955ed6.png)
 
 ### 图解
 

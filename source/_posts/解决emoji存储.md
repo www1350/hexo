@@ -48,8 +48,7 @@ ALTER TABLE table_name MODIFY COLUMN column_name VARCHAR(191) CHARACTER SET utf8
 ```
 
 查看是否修改成功
-`SHOW VARIABLES WHERE Variable_name LIKE 'character\_set\_%' OR Variable_name LIKE 'collation%';  
-`
+`SHOW VARIABLES WHERE Variable_name LIKE 'character\_set\_%' OR Variable_name LIKE 'collation%';  `
 
 4.如果你用的是java服务器，升级或确保你的mysql connector版本高于5.1.13，否则仍然无法使用utf8mb4
 
@@ -63,7 +62,7 @@ ALTER TABLE table_name MODIFY COLUMN column_name VARCHAR(191) CHARACTER SET utf8
 
 7.解决不兼容问题
 
-```
+```java
 public class EmojiUtil {
 
     public static String[] ios5emoji ;

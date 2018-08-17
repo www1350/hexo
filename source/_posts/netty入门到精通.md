@@ -349,12 +349,11 @@ public abstract class SimpleChannelInboundHandler<I> extends ChannelInboundHandl
 > 15:03:36.886 [main] ERROR io.netty.util.ResourceLeakDetector - LEAK:
 > ByteBuf.release() was not called before it's garbage-collected.
 > Recent access records: 1
-> #1: io.netty.buffer.AdvancedLeakAwareByteBuf.toString(
-> AdvancedLeakAwareByteBuf.java:697)
-> io.netty.handler.codec.xml.XmlFrameDecoderTest.testDecodeWithXml(
-> XmlFrameDecoderTest.java:157)
-> io.netty.handler.codec.xml.XmlFrameDecoderTest.testDecodeWithTwoMessages(
-> XmlFrameDecoderTest.java:133)
+>
+> 1:io.netty.buffer.AdvancedLeakAwareByteBuf.toString(AdvancedLeakAwareByteBuf.java:697)
+>
+> io.netty.handler.codec.xml.XmlFrameDecoderTest.testDecodeWithXml(XmlFrameDecoderTest.java:157)
+> io.netty.handler.codec.xml.XmlFrameDecoderTest.testDecodeWithTwoMessages(XmlFrameDecoderTest.java:133)
 
 
 在你实现ChannelInboundHandler.channelRead()或者ChannelOutboundHandler.write()时，你怎样用这个诊断工具来防止内存泄露呢？让我们来看下ChannelRead()操作“消费(consume)”输入数据这个情况：就是说，当前handler没有通过ChannelContext.fireChannelRead()把消息传递到下一个ChannelInboundHandler。下面的代码说明了如何释放这条消息占用的内存。
@@ -500,8 +499,8 @@ ByteBuf byteBuf = byteBufAllocator.directBuffer();
 ![image](https://user-images.githubusercontent.com/7789698/33237903-c687db40-d2bb-11e7-99b5-6e232728da4d.png)
 ![image](https://user-images.githubusercontent.com/7789698/33237904-ca2bdbc0-d2bb-11e7-922a-04325053362e.png)
 
-UnpooledByteBufAllocator:池化了ByteBuf并最大限度减少内存碎片。使用jemalloc(https://www.cnblogs.com/gaoxing/p/4253833.html)
-PooledByteBufAllocator:不池化，每次调用返回新实例
+UnpooledByteBufAllocator:不池化，每次调用返回新实例 
+PooledByteBufAllocator:池化了ByteBuf并最大限度减少内存碎片。使用jemalloc(https://www.cnblogs.com/gaoxing/p/4253833.html)
 
 
 # Unpooled
@@ -513,5 +512,4 @@ PooledByteBufAllocator:不池化，每次调用返回新实例
 
 [Netty系列之Netty高性能之道](http://www.infoq.com/cn/articles/netty-high-performance/)
 
-[Netty系列之Netty线程模型
-](http://www.infoq.com/cn/articles/netty-threading-model#mainLogin)
+[Netty系列之Netty线程模型](http://www.infoq.com/cn/articles/netty-threading-model#mainLogin)

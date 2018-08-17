@@ -1317,4 +1317,4 @@ Invoker<?> getInvoker(Channel channel, Invocation inv) throws RemotingException 
 
 
 
-总结下消费者被调用的路线：1.接收消息转化成DecodeableRpcInvocation 2.根据DecodeableRpcInvocation的端口、路径、版本号、组别信息生成serviceKey 3.根据serviceKey从缓存的exporterMap获取DubboExporter 4.调用invoke（内部使用DelegateProviderMetaDataInvoker的invoke）最终调用被代理的service
+总结下提供者被调用的路线：1.接收消息转化成DecodeableRpcInvocation 2.根据DecodeableRpcInvocation的端口、路径、版本号、组别信息生成serviceKey 3.根据serviceKey从缓存的exporterMap获取DubboExporter 4.调用invoke（内部使用DelegateProviderMetaDataInvoker的invoke）最终调用被代理的service

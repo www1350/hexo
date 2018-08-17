@@ -558,6 +558,7 @@ protected synchronized void doExport() {
   //  dubbo://172.17.8.254:20880/com.alibaba.dubbo.demo.DemoService?anyhost=true&application=demo-provider&bind.ip=172.17.8.254&bind.port=20880&channel.readonly.sent=true&codec=dubbo&dubbo=2.0.0&generic=false&heartbeat=60000&interface=com.alibaba.dubbo.demo.DemoService&methods=sayHello&pid=6755&qos.port=22222&side=provider&timestamp=1522308929779
     //host由this.findConfigedHosts(protocolConfig, registryURLs, map); 取 dubbo:protocol host，没有的话取本地ip 并且设置到bind.ip
      // port由this.findConfigedPorts(protocolConfig, name, map);取 dubbo:protocol port，没有的话取本地ip 并且设置到bind.port
+    //拼接registry:协议，registryURLs
     doExportUrls();
     //转化成ProviderModel注册
     ProviderModel providerModel = new ProviderModel(getUniqueServiceName(), this, ref);
@@ -586,7 +587,7 @@ doExportUrlsFor1Protocol部分重要源码
         Invoker<?> invoker = proxyFactory.getInvoker(ref, (Class) interfaceClass, registryURL.addParameterAndEncoded(Constants.EXPORT_KEY, url.toFullString()));
         DelegateProviderMetaDataInvoker wrapperInvoker = new DelegateProviderMetaDataInvoker(invoker, this);
 //private static final Protocol protocol = ExtensionLoader.getExtensionLoader(Protocol.class).getAdaptiveExtension();
-        //实际是DubboProtocol
+        //ProtocolListenerWrapper->ProtocolFilterWrapper->RegistryProtocol，实际最后是DubboProtocol，这里是因为SPI，SPI比较复杂，后面阐述
         Exporter<?> exporter = protocol.export(wrapperInvoker);
         exporters.add(exporter);
     }
@@ -873,5 +874,7 @@ public interface Node {
 
 }
 ```
+
+下图阐述了这个过程，但是并不是直接调用DubboProtocol，而是RegistryProtocol，这个后面阐述。
 
 ![sequencediagram133](https://user-images.githubusercontent.com/7789698/38093235-e75677b8-339c-11e8-9165-58b6380f68bf.png)

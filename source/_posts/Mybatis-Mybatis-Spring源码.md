@@ -8,13 +8,13 @@ categories: [ORM,源码]
 
 # 1.SqlSessionTemplate解析
 我们要使用的时候通常
-```
+```xml
   <bean id="sqlSessionTemplate" class="org.mybatis.spring.SqlSessionTemplate">
     <constructor-arg ref="sqlSessionFactory" />
   </bean>
 ```
 
-```
+```java
   public SqlSessionTemplate(SqlSessionFactory sqlSessionFactory) {
     this(sqlSessionFactory, sqlSessionFactory.getConfiguration().getDefaultExecutorType());
   }
@@ -34,6 +34,7 @@ public SqlSessionTemplate(SqlSessionFactory sqlSessionFactory, ExecutorType exec
     this.sqlSessionFactory = sqlSessionFactory;
     this.executorType = executorType;
     this.exceptionTranslator = exceptionTranslator;
+    //动态代理
     this.sqlSessionProxy = (SqlSession) newProxyInstance(
         SqlSessionFactory.class.getClassLoader(),
         new Class[] { SqlSession.class },
@@ -44,7 +45,7 @@ public SqlSessionTemplate(SqlSessionFactory sqlSessionFactory, ExecutorType exec
 
 我们可以注意到这里是使用代理模式，SqlSessionInterceptor实现了InvocationHandler
 
-```
+```java
 private class SqlSessionInterceptor implements InvocationHandler {
     @Override
     public Object invoke(Object proxy, Method method, Object[] args) throws Throwable {
@@ -113,7 +114,7 @@ public static SqlSession getSqlSession(SqlSessionFactory sessionFactory, Executo
 SqlSessionManager如何保证线程安全？
 
 他的构造方法是私有的，只能通过newInstance构造
- ```
+ ```java
  private SqlSessionManager(SqlSessionFactory sqlSessionFactory) {
     this.sqlSessionFactory = sqlSessionFactory;
     this.sqlSessionProxy = (SqlSession) Proxy.newProxyInstance(
@@ -124,7 +125,7 @@ SqlSessionManager如何保证线程安全？
  ```
 
 这里又用了代理
-```
+```java
 private class SqlSessionInterceptor implements InvocationHandler {
     public SqlSessionInterceptor() {
         // Prevent Synthetic Access
@@ -194,7 +195,7 @@ private class SqlSessionInterceptor implements InvocationHandler {
 
 我们知道SqlSessionTemplate是通过DefaultSqlSessionFactory的openSession获取SqlSession
 
-```
+```java
   @Override
   public SqlSession openSession() {
     return openSessionFromDataSource(configuration.getDefaultExecutorType(), null, false);
@@ -218,7 +219,7 @@ private class SqlSessionInterceptor implements InvocationHandler {
   }
 ```
 
-```
+```xml
 <settings>
   <setting name="cacheEnabled" value="true"/>
   <setting name="lazyLoadingEnabled" value="true"/>
@@ -239,7 +240,7 @@ private class SqlSessionInterceptor implements InvocationHandler {
 </settings>
 ```
 Configuration的defaultExecutorType配置，我们回顾下：1.SIMPLE是普通的执行器2.REUSE执行器会重用预处理语句3.BATCH会重用预处理并执行批量更新，我们来看下是如何实现的
-```
+```java
   public Executor newExecutor(Transaction transaction, ExecutorType executorType) {
     executorType = executorType == null ? defaultExecutorType : executorType;
     executorType = executorType == null ? ExecutorType.SIMPLE : executorType;
@@ -266,7 +267,7 @@ public enum ExecutorType {
 
 
 看下SqlSessionTemplate在执行update的时候
-```
+```java
   @Override
   public int update(String statement, Object parameter) {
     return this.sqlSessionProxy.update(statement, parameter);
@@ -299,7 +300,7 @@ public enum ExecutorType {
 
 先看下BATCH，对应BatchExecutor
 
-```
+```java
   @Override
   public int update(MappedStatement ms, Object parameter) throws SQLException {
     ErrorContext.instance().resource(ms.getResource()).activity("executing an update").object(ms.getId());
@@ -647,7 +648,7 @@ public Object execute(SqlSession sqlSession, Object[] args) {
 
 让我们回顾下http://www1350.github.io/#post/88 的插件写法
 
- ```
+ ```xml
    <plugins>
         <plugin interceptor="com.xxx.DynamicPlugin">
         </plugin>
@@ -655,7 +656,7 @@ public Object execute(SqlSession sqlSession, Object[] args) {
  ```
 
 源码如下
-```
+```java
 //编程api方式加入
 public void setPlugins(Interceptor[] plugins) {
     this.plugins = plugins;
@@ -692,7 +693,7 @@ pluginElement(root.evalNode("plugins"));
 ```
 
 //责任链模式
-```
+```java
 public interface Interceptor {
 
   Object intercept(Invocation invocation) throws Throwable;
@@ -729,7 +730,7 @@ public class InterceptorChain {
 ```
 
 
-```
+```java
 
 public class Invocation {
 
@@ -846,7 +847,7 @@ public class Plugin implements InvocationHandler {
 
 最后我们知道，入口都在pluginAll，我们看下哪里调用了
 
-```
+```java
   public ParameterHandler newParameterHandler(MappedStatement mappedStatement, Object parameterObject, BoundSql boundSql) {
     ParameterHandler parameterHandler = mappedStatement.getLang().createParameterHandler(mappedStatement, parameterObject, boundSql);
     parameterHandler = (ParameterHandler) interceptorChain.pluginAll(parameterHandler);
@@ -871,7 +872,7 @@ public class Plugin implements InvocationHandler {
 而newStatementHandler等方法则用在执行器上，所以一路就通了。
 SimpleExecutor
 
- ```
+ ```java
  @Override
   public int doUpdate(MappedStatement ms, Object parameter) throws SQLException {
     Statement stmt = null;
@@ -909,7 +910,7 @@ SimpleExecutor
 
 `<setting name="localCacheScope" value="SESSION"/>`
 
-```
+```java
 //BaseExecutor 的query 构建CacheKey
 CacheKey key = createCacheKey(ms, parameter, rowBounds, boundSql);
 

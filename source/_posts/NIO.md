@@ -110,7 +110,7 @@ Buffer 类型有:
 
 1. ByteBuffer 包括HeapByteBuffer和DirectByteBuffer两种。
   ByteBuffer
-```
+```java
     public static ByteBuffer allocate(int capacity) {
         if (capacity < 0)
             throw new IllegalArgumentException();
@@ -119,7 +119,7 @@ Buffer 类型有:
 ```
 
 HeapByteBuffer 通过初始化字节数组hd，在虚拟机堆上申请内存空间。
- ```
+ ```java
    HeapByteBuffer(int cap, int lim) {            // package-private
 
         super(-1, 0, lim, cap, new byte[cap], 0);
@@ -141,7 +141,7 @@ HeapByteBuffer 通过初始化字节数组hd，在虚拟机堆上申请内存空
 final byte[] hb;
  ```
 
-```
+```java
     public static ByteBuffer allocateDirect(int capacity) {
         return new DirectByteBuffer(capacity);
     }
@@ -150,10 +150,12 @@ final byte[] hb;
 
 DirectByteBuffer 通过unsafe.allocateMemory在物理内存中申请地址空间（非jvm堆内存），并在ByteBuffer的address变量中维护指向该内存的地址。
 unsafe.setMemory(base, size, (byte) 0)方法把新申请的内存数据清零。
- ```
+ ```java
    DirectByteBuffer(int cap) {                   // package-private
         super(-1, 0, cap, cap);
+       //-Dsun.nio.PageAlignDirectMemory=true 判断是否开启按页分配对齐
         boolean pa = VM.isDirectMemoryPageAligned();
+       //默认4k
         int ps = Bits.pageSize();
         long size = Math.max(1L, (long)cap + (pa ? ps : 0));
         Bits.reserveMemory(size, cap);
@@ -167,7 +169,10 @@ unsafe.setMemory(base, size, (byte) 0)方法把新申请的内存数据清零。
         }
         unsafe.setMemory(base, size, (byte) 0);
         if (pa && (base % ps != 0)) {
-            // Round up to page boundary
+            // 如果是按页分配对齐的，对齐到地址的页首，为什么要使用页首呢？
+            //CPU不会一次读取或写入一个字节。相反，CPU一次访问2、4、8、16或32字节块中的内存。这样做的原因是性能 —在4字节或16字节边界上访问地址要比在1字节边界上访问地址快得多。
+            //如果数据没有对齐为4字节的边界，CPU必须执行额外的工作来访问数据：加载2个数据块，转移不需要的字节，然后将它们组合在一起。这个过程肯定会降低性能，浪费CPU周期，只是为了从内存中获得正确的数据。
+            //http://www.songho.ca/misc/alignment/dataalign.html
             address = base + ps - (base & (ps - 1));
         } else {
             address = base;

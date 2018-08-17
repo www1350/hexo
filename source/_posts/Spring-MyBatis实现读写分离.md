@@ -1051,7 +1051,7 @@ Spring路由选择+MyBatis拦截器实现
 如果你的后台结构是spring+mybatis，可以通过spring的AbstractRoutingDataSource和mybatis Plugin拦截器实现非常友好的读写分离，原有代码不需要任何改变。推荐第四种方案
 
 
-```
+```java
 package com.autohome.api.dealer.util.rwdb;
 
 import org.springframework.jdbc.datasource.lookup.AbstractRoutingDataSource;
@@ -1117,7 +1117,7 @@ public class DynamicDataSource extends AbstractRoutingDataSource {
 }
 ```
 
-```
+```java
 package com.autohome.api.dealer.util.rwdb; 
 /** 
 * Created by IDEA 
@@ -1199,7 +1199,7 @@ public class DynamicDataSourceTransactionManager extends DataSourceTransactionMa
 }
 ```
 
-```
+```java
 package com.autohome.api.dealer.util.rwdb;
 
 import org.apache.commons.lang3.StringUtils;
@@ -1276,7 +1276,7 @@ import java.util.concurrent.ConcurrentHashMap;
 }
 ```
 
-```
+```xml
 <?xml version="1.0" encoding="UTF-8"?>
 <beans xmlns="http://www.springframework.org/schema/beans"
        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
@@ -1356,7 +1356,7 @@ import java.util.concurrent.ConcurrentHashMap;
 
 ```
 
-```
+```xml
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE configuration PUBLIC "-//mybatis.org//DTD SQL Map Config 3.0//EN"
         "http://mybatis.org/dtd/mybatis-3-config.dtd">

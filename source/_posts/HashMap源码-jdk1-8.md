@@ -14,6 +14,14 @@ categories: 源码
 
 ![image](https://cloud.githubusercontent.com/assets/7789698/18426598/702f1838-78f5-11e6-80ff-47cba88423ed.png)
 
+解释下比较重要的几个变量：
+
+loadFactor： 加载因子，默认是0.75
+
+threshold：临界值，元素数量大于这个就resize。第一次resize的时候默认16*0.75截取int，其他时候每次扩容都扩大一倍，超过2^32取2^32。
+
+table: 存储实体数组，类型是Node<K,V>
+
 ```java
 public class HashMap<K,V> extends AbstractMap<K,V>
     implements Map<K,V>, Cloneable, Serializable{
@@ -157,8 +165,20 @@ Node类似一个单链表
             }
             return false;
         }
+        
+       static final int hash(Object key) {
+        	int h;
+        	return (key == null) ? 0 : (h = key.hashCode()) ^ (h >>> 16);
+    	}
     }
 ```
+
+(h = key.hashCode()) ^ (h >>> 16)
+
+![image](https://user-images.githubusercontent.com/7789698/39800028-0b5f960a-5399-11e8-9923-aaf6cff8d72f.png)
+
+当计算到hash值的时候可以轻松计算出位置
+
 
 ```java
     final V putVal(int hash, K key, V value, boolean onlyIfAbsent,
@@ -220,10 +240,7 @@ Node类似一个单链表
         afterNodeInsertion(evict);
         return null;
     }
-
 ```
-
-
 
 resize
 ![image](https://cloud.githubusercontent.com/assets/7789698/18426619/8fa7f77a-78f5-11e6-91cd-bc0dca0a3bbd.png)
@@ -234,8 +251,9 @@ resize
         Node<K,V>[] oldTab = table;
         //原数组大小
         int oldCap = (oldTab == null) ? 0 : oldTab.length;
-        //临界值，默认16
+        //临界值，默认0
         int oldThr = threshold;
+        //newCap新的数组大小，newThr新的临界值
         int newCap, newThr = 0;
 //原数组不为空
         if (oldCap > 0) {
@@ -247,14 +265,15 @@ resize
                      oldCap >= DEFAULT_INITIAL_CAPACITY)
                 newThr = oldThr << 1; // 两倍
         }
- // 桶数组为空，第一次分配，结合不同构造器的情况细节稍有不同：
+ // 桶数组为空，首次分配，结合不同构造器的情况细节稍有不同：
+        //构造器带初始大小的参数的，为比初始参数大的往2^n靠的数
         else if (oldThr > 0)
             newCap = oldThr;
-        else {               //为空，且不是第一次分配了
+        else {               //默认构造器构造的，使用默认值,newCap:16,newThr:12
             newCap = DEFAULT_INITIAL_CAPACITY;
             newThr = (int)(DEFAULT_LOAD_FACTOR * DEFAULT_INITIAL_CAPACITY);
         }
-		//无元素
+		//无元素，带参数构造首次分配的时候，新的临界值设置成newCap * loadFactor取整
         if (newThr == 0) {
             float ft = (float)newCap * loadFactor;
             newThr = (newCap < MAXIMUM_CAPACITY && ft < (float)MAXIMUM_CAPACITY ?
@@ -287,27 +306,35 @@ resize
                         Node<K,V> next;
                         do {
                             next = e.next;
+                            //原索引
                             if ((e.hash & oldCap) == 0) {
+                                //第一次, loTail一定为空，则loHead 和 loTail 都指向了e
                                 if (loTail == null)
                                     loHead = e;
                                 else
+                                    //loTail不断指向新元素来达到添加的作用
                                     loTail.next = e;
                                 loTail = e;
                             }
+                            //原索引+oldCap
                             else {
+                                //第一次, hiTail一定为空，hiTail 和 hiHead 都指向了e
                                 if (hiTail == null)
                                     hiHead = e;
                                 else
+                                     //hiTail不断指向新元素来达到添加的作用
                                     hiTail.next = e;
                                 hiTail = e;
                             }
                         } while ((e = next) != null);
                         if (loTail != null) {
                             loTail.next = null;
+                            //放入原来那个坑
                             newTab[j] = loHead;
                         }
                         if (hiTail != null) {
                             hiTail.next = null;
+                            //放到 原索引+oldCap的坑
                             newTab[j + oldCap] = hiHead;
                         }
                     }
@@ -317,6 +344,26 @@ resize
         return newTab;
     }
 ```
+
+其中：
+
+1.每次扩容都是按2倍扩容
+
+2.假如原来元素在5的位置，原来容量为16，临界值为12，扩容后容量为32。
+
+​	（1）e.hash & (newCap - 1)   = e.hash % (newCap)
+
+![image](https://user-images.githubusercontent.com/7789698/39800107-574e5cae-5399-11e8-9afb-f4d02e6dd506.png)
+
+(a) 指原来的  (b)指扩容后的
+
+可以明显看到可能出现的两种结果，一种和原来保持一致，一种就到新的位置上去了，因为扩容两倍，原来在0101现在就在10101了。
+
+​	（2）e.hash & oldCap = e.hash % (oldCap -1)
+
+![image](https://user-images.githubusercontent.com/7789698/39800402-2c02219c-539a-11e8-8f0b-e0550c5f9d98.png)
+
+这样的原因是原来使用e.hash & (oldCap - 1)   已经把低位给hash过了，现在只要区分高位的数据是0还是1，放置的时候也只要 newTab[原索引 + oldCap] 
 
 LinkedHashMap里面的Entry很神奇的（如何实现有序的hashmap，其实就是在hashmap的Entry加入前后指针）。
 
@@ -334,10 +381,12 @@ LinkedHashMap里面的Entry很神奇的（如何实现有序的hashmap，其实�
     final Node<K,V> getNode(int hash, Object key) {
         Node<K,V>[] tab; Node<K,V> first, e; int n; K k;
         if ((tab = table) != null && (n = tab.length) > 0 &&
+            //拿到桶中对应位置的首节点
             (first = tab[(n - 1) & hash]) != null) {
             if (first.hash == hash && // always check first node
                 ((k = first.key) == key || (key != null && key.equals(k))))
                 return first;
+            //不是首节点，往下取
             if ((e = first.next) != null) {
                 if (first instanceof TreeNode)
                     return ((TreeNode<K,V>)first).getTreeNode(hash, key);
