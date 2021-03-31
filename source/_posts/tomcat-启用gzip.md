@@ -9,8 +9,7 @@ abbrlink: 26f8b378
 编辑conf/server.xml文件
 
 ``` xml
-<Connector
-port="8080"               maxHttpHeaderSize="8192"
+<Connector port="8080"               maxHttpHeaderSize="8192"
                maxThreads="150" minSpareThreads="25" maxSpareThreads="75"
                enableLookups="false" redirectPort="8443" acceptCount="100"
                connectionTimeout="20000" disableUploadTimeout="true"

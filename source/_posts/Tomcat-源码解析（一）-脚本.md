@@ -8,7 +8,7 @@ categories: 源码
 
 我们来看下startup.sh
 
-```
+```shell
 
 #!/bin/sh
 # Better OS/400 detection: see Bugzilla 31132

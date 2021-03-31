@@ -35,6 +35,8 @@ jstack发现了一丝异样
 
 关于线程状态：
 
+![image](https://user-images.githubusercontent.com/7789698/44249880-86ddb800-a224-11e8-9e28-084e8bfebbb9.png)
+
 **新建（New）**
 
 创建后尚未启动。
@@ -83,7 +85,7 @@ jstack发现了一丝异样
 
 可以是线程结束任务之后自己结束，或者产生了异常而结束。
 
-![image](https://user-images.githubusercontent.com/7789698/44249880-86ddb800-a224-11e8-9e28-084e8bfebbb9.png)
+
 
 
 

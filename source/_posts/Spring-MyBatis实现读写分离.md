@@ -77,13 +77,13 @@ categories:
 * 缺点：需要在DAO每个方法上配置注解，人工管理，容易出错
 * 实现方式
 
-```
+```java
 //定义枚举类型，读写 
 public enum DynamicDataSourceGlobal { 
     READ, WRITE; 
 }
 ```
-```
+```java
 import java.lang.annotation.ElementType; 
 import java.lang.annotation.Retention; 
 import java.lang.annotation.RetentionPolicy; 
@@ -119,7 +119,7 @@ public class DynamicDataSourceHolder {
     }
 }
 ```
-```
+```java
 import org.springframework.jdbc.datasource.lookup.AbstractRoutingDataSource; 
 import java.util.HashMap; import java.util.List; import java.util.Map; 
 import java.util.concurrent.ThreadLocalRandom; 
@@ -202,7 +202,7 @@ import java.util.concurrent.locks.ReentrantLock;
 
 ```
 
-```
+```java
 import org.apache.log4j.Logger; 
 import org.aspectj.lang.JoinPoint; 
 import org.aspectj.lang.reflect.MethodSignature; 
@@ -239,7 +239,7 @@ import java.lang.reflect.Method;
         }
     }
 ```
-```
+```xml
  <?xml version="1.0" encoding="UTF-8"?>
 <beans xmlns="http://www.springframework.org/schema/beans"
        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
@@ -355,13 +355,13 @@ import java.lang.reflect.Method;
 </beans>
 ```
 
-##方案3
+## 方案3
 通过Mybatis的Plugin在业务层实现数据库读写分离，借鉴了LazyConnectionDataSourceProxy的connection Proxy实现方式， 在MyBatis创建Statement对象前通过拦截器选择真正的数据源，在拦截器中根据方法名称不同（select、update、insert、delete）选择数据源。
 * 优点：原有代码不变，支持多读，易扩展
 * 缺点：
 * 实现方式
 
-```
+```java
 /** 
 * Created by IDEA 
 * Desc: 创建Connection代理接口 
@@ -376,7 +376,7 @@ public interface ConnectionProxy extends Connection {
 }
 ```
 
-```
+```java
 import java.lang.reflect.InvocationHandler;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
@@ -684,7 +684,7 @@ public abstract class AbstractDynamicDataSourceProxy extends AbstractDataSource 
 }
 ```
 
-```
+```java
 import javax.sql.DataSource;
 import java.util.concurrent.ThreadLocalRandom;
 import java.util.concurrent.atomic.AtomicLong;
@@ -725,7 +725,7 @@ public class DynamicRoutingDataSourceProxy extends AbstractDynamicDataSourceProx
 }
 ```
 
-```
+```java
 import org.apache.ibatis.executor.statement.RoutingStatementHandler;
 import org.apache.ibatis.executor.statement.StatementHandler;
 import org.apache.ibatis.mapping.MappedStatement;
@@ -780,7 +780,7 @@ public class DynamicPlugin implements Interceptor {
 }
 ```
 
-```
+```java
 import org.apache.ibatis.logging.Log;
 import org.apache.ibatis.logging.LogFactory;
 
@@ -929,7 +929,7 @@ public class ReflectionUtils {
 }
 ```
 
-```
+```xml
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE configuration PUBLIC "-//mybatis.org//DTD SQL Map Config 3.0//EN" "http://mybatis.org/dtd/mybatis-3-config.dtd">
 <configuration>
@@ -939,7 +939,7 @@ public class ReflectionUtils {
 </configuration>
 ```
 
-```
+```xml
 <?xml version="1.0" encoding="UTF-8"?>
 <beans xmlns="http://www.springframework.org/schema/beans"
        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
@@ -1128,7 +1128,7 @@ public enum DynamicDataSourceGlobal {
 }
 ```
 
-```
+```java
 package com.autohome.api.dealer.util.rwdb;
 
 /**
@@ -1160,7 +1160,7 @@ public final class DynamicDataSourceHolder {
 }
 ```
 
-```
+```java
 package com.autohome.api.dealer.util.rwdb;
 
 import org.springframework.jdbc.datasource.DataSourceTransactionManager;
