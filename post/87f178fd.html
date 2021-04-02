@@ -1,0 +1,1289 @@
+<!DOCTYPE html>
+
+
+
+  
+
+
+<html class="theme-next mist use-motion" lang="zh-Hans">
+<head><meta name="generator" content="Hexo 3.9.0">
+  <meta charset="UTF-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+<meta name="theme-color" content="#222">
+
+
+
+
+
+
+
+
+
+<meta http-equiv="Cache-Control" content="no-transform">
+<meta http-equiv="Cache-Control" content="no-siteapp">
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+  <link href="/hexo/lib/fancybox/source/jquery.fancybox.css?v=2.1.5" rel="stylesheet" type="text/css">
+
+
+
+
+
+
+
+<link href="/hexo/lib/font-awesome/css/font-awesome.min.css?v=4.6.2" rel="stylesheet" type="text/css">
+
+<link href="/hexo/css/main.css?v=5.1.4" rel="stylesheet" type="text/css">
+
+
+  <link rel="apple-touch-icon" sizes="180x180" href="/hexo/images/apple-touch-icon-next.png?v=5.1.4">
+
+
+  <link rel="icon" type="image/png" sizes="32x32" href="/hexo/images/favicon-32x32-next.png?v=5.1.4">
+
+
+  <link rel="icon" type="image/png" sizes="16x16" href="/hexo/images/favicon-16x16-next.png?v=5.1.4">
+
+
+  <link rel="mask-icon" href="/hexo/images/logo.svg?v=5.1.4" color="#222">
+
+
+
+
+
+  <meta name="keywords" content="sharding-jdbc,">
+
+
+
+
+
+  <link rel="alternate" href="/hexo/atom.xml" title="Absurd博客" type="application/atom+xml">
+
+
+
+
+
+
+<meta name="description" content="基本概念先普及几个词汇 Lexer： 词法分析器。Lexical analyzer，简称Lexer Literals ：字面量 Symbol： 词法符号 Dictionary： 字典 tokenize： 标记化 lexeme： 词素。词素是组成编程语言的最小的有意义的单元实体。生成的词素最后会组成一个token列表，每一个token都包含一个lexeme Token: 标记。一个字符串，是构成源代">
+<meta name="keywords" content="sharding-jdbc">
+<meta property="og:type" content="article">
+<meta property="og:title" content="sharding-jdbc源码解析-词法分析（三）">
+<meta property="og:url" content="https://www1350.github.io/hexo/post/87f178fd.html">
+<meta property="og:site_name" content="Absurd博客">
+<meta property="og:description" content="基本概念先普及几个词汇 Lexer： 词法分析器。Lexical analyzer，简称Lexer Literals ：字面量 Symbol： 词法符号 Dictionary： 字典 tokenize： 标记化 lexeme： 词素。词素是组成编程语言的最小的有意义的单元实体。生成的词素最后会组成一个token列表，每一个token都包含一个lexeme Token: 标记。一个字符串，是构成源代">
+<meta property="og:locale" content="zh-Hans">
+<meta property="og:image" content="https://user-images.githubusercontent.com/7789698/39862320-081c0a18-5476-11e8-8d52-2477519c9dd7.png">
+<meta property="og:image" content="https://user-images.githubusercontent.com/7789698/39878798-d15fb552-54ab-11e8-9111-6bd07a66fcbc.png">
+<meta property="og:updated_time" content="2018-05-28T16:48:20.000Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="sharding-jdbc源码解析-词法分析（三）">
+<meta name="twitter:description" content="基本概念先普及几个词汇 Lexer： 词法分析器。Lexical analyzer，简称Lexer Literals ：字面量 Symbol： 词法符号 Dictionary： 字典 tokenize： 标记化 lexeme： 词素。词素是组成编程语言的最小的有意义的单元实体。生成的词素最后会组成一个token列表，每一个token都包含一个lexeme Token: 标记。一个字符串，是构成源代">
+<meta name="twitter:image" content="https://user-images.githubusercontent.com/7789698/39862320-081c0a18-5476-11e8-8d52-2477519c9dd7.png">
+
+
+
+<script type="text/javascript" id="hexo.configurations">
+  var NexT = window.NexT || {};
+  var CONFIG = {
+    root: '/hexo/',
+    scheme: 'Mist',
+    version: '5.1.4',
+    sidebar: {"position":"left","display":"post","offset":12,"b2t":false,"scrollpercent":false,"onmobile":false},
+    fancybox: true,
+    tabs: true,
+    motion: {"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},
+    duoshuo: {
+      userId: '0',
+      author: '博主'
+    },
+    algolia: {
+      applicationID: '',
+      apiKey: '',
+      indexName: '',
+      hits: {"per_page":10},
+      labels: {"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}
+    }
+  };
+</script>
+
+
+
+  <link rel="canonical" href="https://www1350.github.io/hexo/post/87f178fd.html">
+
+
+
+
+
+  <title>sharding-jdbc源码解析-词法分析（三） | Absurd博客</title>
+  
+
+
+
+
+
+
+
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage" lang="zh-Hans">
+
+  
+  
+    
+  
+
+  <div class="container sidebar-position-left page-post-detail">
+    <div class="headband"></div>
+
+    <header id="header" class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-wrapper">
+  <div class="site-meta ">
+    
+
+    <div class="custom-logo-site-title">
+      <a href="/hexo/" class="brand" rel="start">
+        <span class="logo-line-before"><i></i></span>
+        <span class="site-title">Absurd博客</span>
+        <span class="logo-line-after"><i></i></span>
+      </a>
+    </div>
+      
+        <p class="site-subtitle"></p>
+      
+  </div>
+
+  <div class="site-nav-toggle">
+    <button>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+    </button>
+  </div>
+</div>
+
+<nav class="site-nav">
+  
+
+  
+    <ul id="menu" class="menu">
+      
+        
+        <li class="menu-item menu-item-home">
+          <a href="/hexo/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-home"></i> <br>
+            
+            首页
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-about">
+          <a href="/hexo/about/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-user"></i> <br>
+            
+            关于
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-tags">
+          <a href="/hexo/tags/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-tags"></i> <br>
+            
+            标签
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-categories">
+          <a href="/hexo/categories/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-th"></i> <br>
+            
+            分类
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-archives">
+          <a href="/hexo/archives/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-archive"></i> <br>
+            
+            归档
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-bookmarks">
+          <a href="/hexo/bookmarks/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-archive"></i> <br>
+            
+            bookmarks
+          </a>
+        </li>
+      
+
+      
+        <li class="menu-item menu-item-search">
+          
+            <a href="javascript:;" class="popup-trigger">
+          
+            
+              <i class="menu-item-icon fa fa-search fa-fw"></i> <br>
+            
+            搜索
+          </a>
+        </li>
+      
+    </ul>
+  
+
+  
+    <div class="site-search">
+      
+  <div class="popup search-popup local-search-popup">
+  <div class="local-search-header clearfix">
+    <span class="search-icon">
+      <i class="fa fa-search"></i>
+    </span>
+    <span class="popup-btn-close">
+      <i class="fa fa-times-circle"></i>
+    </span>
+    <div class="local-search-input-wrapper">
+      <input autocomplete="off" placeholder="搜索..." spellcheck="false" type="text" id="local-search-input">
+    </div>
+  </div>
+  <div id="local-search-result"></div>
+</div>
+
+
+
+    </div>
+  
+</nav>
+
+
+
+ </div>
+    </header>
+
+    <main id="main" class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          <div id="content" class="content">
+            
+
+  <div id="posts" class="posts-expand">
+    
+
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal" itemscope itemtype="http://schema.org/Article">
+  
+  
+  
+  <div class="post-block">
+    <link itemprop="mainEntityOfPage" href="https://www1350.github.io/hexo/hexo/post/87f178fd.html">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="Absurd">
+      <meta itemprop="description" content>
+      <meta itemprop="image" content="/hexo/images/avatar.gif">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Absurd博客">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">sharding-jdbc源码解析-词法分析（三）</h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">发表于</span>
+              
+              <time title="创建于" itemprop="dateCreated datePublished" datetime="2018-05-10T00:16:35+08:00">
+                2018-05-10
+              </time>
+            
+
+            
+
+            
+          </span>
+
+          
+            <span class="post-category">
+            
+              <span class="post-meta-divider">|</span>
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">分类于</span>
+              
+              
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/hexo/categories/中间件/" itemprop="url" rel="index">
+                    <span itemprop="name">中间件</span>
+                  </a>
+                </span>
+
+                
+                
+                  ， 
+                
+              
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/hexo/categories/中间件/数据库/" itemprop="url" rel="index">
+                    <span itemprop="name">数据库</span>
+                  </a>
+                </span>
+
+                
+                
+              
+            </span>
+          
+
+          
+            
+              <span class="post-comments-count">
+                <span class="post-meta-divider">|</span>
+                <span class="post-meta-item-icon">
+                  <i class="fa fa-comment-o"></i>
+                </span>
+                <a href="/hexo/post/87f178fd.html#comments" itemprop="discussionUrl">
+                  <span class="post-comments-count gitment-comments-count" data-xid="/hexo/post/87f178fd.html" itemprop="commentsCount"></span>
+                </a>
+              </span>
+            
+          
+
+          
+          
+
+          
+            <span class="post-meta-divider">|</span>
+            <span class="page-pv"><i class="fa fa-file-o"></i>
+            <span class="busuanzi-value" id="busuanzi_value_page_pv"></span>
+            </span>
+          
+
+          
+
+          
+
+        </div>
+      </header>
+    
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        <h2 id="基本概念"><a href="#基本概念" class="headerlink" title="基本概念"></a>基本概念</h2><p>先普及几个词汇</p>
+<p>Lexer： 词法分析器。Lexical analyzer，简称Lexer</p>
+<p>Literals ：字面量</p>
+<p>Symbol： 词法符号</p>
+<p>Dictionary： 字典</p>
+<p>tokenize： 标记化</p>
+<p>lexeme： 词素。词素是组成编程语言的最小的有意义的单元实体。生成的词素最后会组成一个token列表，每一个token都包含一个lexeme</p>
+<p>Token: 标记。一个字符串，是构成<a href="https://zh.wikipedia.org/wiki/%E6%BA%90%E4%BB%A3%E7%A0%81" target="_blank" rel="noopener">源代码</a>的最小单位。从输入字符流中生成标记的过程叫作<strong>标记化</strong>（tokenization），在这个过程中，词法分析器还会对标记进行分类。</p>
+<h3 id="LexerEngine"><a href="#LexerEngine" class="headerlink" title="LexerEngine"></a>LexerEngine</h3><p>词法分析引擎</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br><span class="line">65</span><br><span class="line">66</span><br><span class="line">67</span><br><span class="line">68</span><br><span class="line">69</span><br><span class="line">70</span><br><span class="line">71</span><br><span class="line">72</span><br><span class="line">73</span><br><span class="line">74</span><br><span class="line">75</span><br><span class="line">76</span><br><span class="line">77</span><br><span class="line">78</span><br><span class="line">79</span><br><span class="line">80</span><br><span class="line">81</span><br><span class="line">82</span><br><span class="line">83</span><br><span class="line">84</span><br><span class="line">85</span><br><span class="line">86</span><br><span class="line">87</span><br><span class="line">88</span><br><span class="line">89</span><br><span class="line">90</span><br><span class="line">91</span><br><span class="line">92</span><br><span class="line">93</span><br><span class="line">94</span><br><span class="line">95</span><br><span class="line">96</span><br><span class="line">97</span><br><span class="line">98</span><br><span class="line">99</span><br><span class="line">100</span><br><span class="line">101</span><br><span class="line">102</span><br><span class="line">103</span><br><span class="line">104</span><br><span class="line">105</span><br><span class="line">106</span><br><span class="line">107</span><br><span class="line">108</span><br><span class="line">109</span><br><span class="line">110</span><br><span class="line">111</span><br><span class="line">112</span><br><span class="line">113</span><br><span class="line">114</span><br><span class="line">115</span><br><span class="line">116</span><br><span class="line">117</span><br><span class="line">118</span><br><span class="line">119</span><br><span class="line">120</span><br><span class="line">121</span><br><span class="line">122</span><br><span class="line">123</span><br><span class="line">124</span><br><span class="line">125</span><br><span class="line">126</span><br><span class="line">127</span><br><span class="line">128</span><br><span class="line">129</span><br><span class="line">130</span><br><span class="line">131</span><br><span class="line">132</span><br><span class="line">133</span><br><span class="line">134</span><br><span class="line">135</span><br><span class="line">136</span><br><span class="line">137</span><br><span class="line">138</span><br><span class="line">139</span><br><span class="line">140</span><br><span class="line">141</span><br><span class="line">142</span><br><span class="line">143</span><br><span class="line">144</span><br><span class="line">145</span><br><span class="line">146</span><br><span class="line">147</span><br><span class="line">148</span><br><span class="line">149</span><br><span class="line">150</span><br><span class="line">151</span><br><span class="line">152</span><br><span class="line">153</span><br><span class="line">154</span><br><span class="line">155</span><br><span class="line">156</span><br><span class="line">157</span><br><span class="line">158</span><br><span class="line">159</span><br><span class="line">160</span><br><span class="line">161</span><br><span class="line">162</span><br><span class="line">163</span><br><span class="line">164</span><br><span class="line">165</span><br><span class="line">166</span><br><span class="line">167</span><br><span class="line">168</span><br><span class="line">169</span><br><span class="line">170</span><br><span class="line">171</span><br><span class="line">172</span><br><span class="line">173</span><br><span class="line">174</span><br><span class="line">175</span><br><span class="line">176</span><br><span class="line">177</span><br><span class="line">178</span><br><span class="line">179</span><br><span class="line">180</span><br><span class="line">181</span><br><span class="line">182</span><br><span class="line">183</span><br><span class="line">184</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">@RequiredArgsConstructor</span></span><br><span class="line"><span class="keyword">public</span> <span class="keyword">final</span> <span class="class"><span class="keyword">class</span> <span class="title">LexerEngine</span> </span>&#123;</span><br><span class="line">    </span><br><span class="line">    <span class="keyword">private</span> <span class="keyword">final</span> Lexer lexer;</span><br><span class="line">    </span><br><span class="line">    <span class="comment">/**</span></span><br><span class="line"><span class="comment">     * Get input string.</span></span><br><span class="line"><span class="comment">     * </span></span><br><span class="line"><span class="comment">     * <span class="doctag">@return</span> inputted string</span></span><br><span class="line"><span class="comment">     */</span></span><br><span class="line">    <span class="function"><span class="keyword">public</span> String <span class="title">getInput</span><span class="params">()</span> </span>&#123;</span><br><span class="line">        <span class="keyword">return</span> lexer.getInput();</span><br><span class="line">    &#125;</span><br><span class="line">    </span><br><span class="line">    <span class="comment">/**</span></span><br><span class="line"><span class="comment">     * Analyse next token.</span></span><br><span class="line"><span class="comment">     */</span></span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">nextToken</span><span class="params">()</span> </span>&#123;</span><br><span class="line">        lexer.nextToken();</span><br><span class="line">    &#125;</span><br><span class="line">    </span><br><span class="line">    <span class="comment">/**</span></span><br><span class="line"><span class="comment">     * Get current token.</span></span><br><span class="line"><span class="comment">     * </span></span><br><span class="line"><span class="comment">     * <span class="doctag">@return</span> current token</span></span><br><span class="line"><span class="comment">     */</span></span><br><span class="line">    <span class="function"><span class="keyword">public</span> Token <span class="title">getCurrentToken</span><span class="params">()</span> </span>&#123;</span><br><span class="line">        <span class="keyword">return</span> lexer.getCurrentToken();</span><br><span class="line">    &#125;</span><br><span class="line">    </span><br><span class="line">    <span class="comment">/**</span></span><br><span class="line"><span class="comment">     * 跳过括号内所有令牌,并返回括号内内容</span></span><br><span class="line"><span class="comment">     *</span></span><br><span class="line"><span class="comment">     * <span class="doctag">@param</span> sqlStatement SQL statement</span></span><br><span class="line"><span class="comment">     * <span class="doctag">@return</span> skipped string</span></span><br><span class="line"><span class="comment">     */</span></span><br><span class="line">    <span class="function"><span class="keyword">public</span> String <span class="title">skipParentheses</span><span class="params">(<span class="keyword">final</span> SQLStatement sqlStatement)</span> </span>&#123;</span><br><span class="line">        StringBuilder result = <span class="keyword">new</span> StringBuilder(<span class="string">""</span>);</span><br><span class="line">        <span class="keyword">int</span> count = <span class="number">0</span>;</span><br><span class="line">        <span class="comment">//'('开头</span></span><br><span class="line">        <span class="keyword">if</span> (Symbol.LEFT_PAREN == lexer.getCurrentToken().getType()) &#123;</span><br><span class="line">            <span class="comment">//括号后的下标</span></span><br><span class="line">            <span class="keyword">final</span> <span class="keyword">int</span> beginPosition = lexer.getCurrentToken().getEndPosition();</span><br><span class="line">            <span class="comment">//'('</span></span><br><span class="line">            result.append(Symbol.LEFT_PAREN.getLiterals());</span><br><span class="line">            <span class="comment">//接着读取</span></span><br><span class="line">            lexer.nextToken();</span><br><span class="line">            <span class="keyword">while</span> (<span class="keyword">true</span>) &#123;</span><br><span class="line">                <span class="comment">//如果是'?'</span></span><br><span class="line">                <span class="keyword">if</span> (equalAny(Symbol.QUESTION)) &#123;</span><br><span class="line">                    <span class="comment">//参数下标加1</span></span><br><span class="line">                    sqlStatement.increaseParametersIndex();</span><br><span class="line">                &#125;</span><br><span class="line">                <span class="comment">//结束或者')'跳出</span></span><br><span class="line">                <span class="keyword">if</span> (Assist.END == lexer.getCurrentToken().getType() || (Symbol.RIGHT_PAREN == lexer.getCurrentToken().getType() &amp;&amp; <span class="number">0</span> == count)) &#123;</span><br><span class="line">                    <span class="keyword">break</span>;</span><br><span class="line">                &#125;</span><br><span class="line">                <span class="comment">//还是'('记下层数</span></span><br><span class="line">                <span class="keyword">if</span> (Symbol.LEFT_PAREN == lexer.getCurrentToken().getType()) &#123;</span><br><span class="line">                    count++;</span><br><span class="line">                <span class="comment">//')'</span></span><br><span class="line">                &#125; <span class="keyword">else</span> <span class="keyword">if</span> (Symbol.RIGHT_PAREN == lexer.getCurrentToken().getType()) &#123;</span><br><span class="line">                    count--;</span><br><span class="line">                &#125;</span><br><span class="line">                <span class="comment">//接着读取</span></span><br><span class="line">                lexer.nextToken();</span><br><span class="line">            &#125;</span><br><span class="line">            <span class="comment">//括号里的都加进去</span></span><br><span class="line">            result.append(lexer.getInput().substring(beginPosition, lexer.getCurrentToken().getEndPosition()));</span><br><span class="line">            <span class="comment">//跳过')'</span></span><br><span class="line">            lexer.nextToken();</span><br><span class="line">        &#125;</span><br><span class="line">        <span class="keyword">return</span> result.toString();</span><br><span class="line">    &#125;</span><br><span class="line">    </span><br><span class="line">    <span class="comment">/**</span></span><br><span class="line"><span class="comment">     * Assert current token type should equals input token and go to next token type.</span></span><br><span class="line"><span class="comment">     *</span></span><br><span class="line"><span class="comment">     * <span class="doctag">@param</span> tokenType token type</span></span><br><span class="line"><span class="comment">     */</span></span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">accept</span><span class="params">(<span class="keyword">final</span> TokenType tokenType)</span> </span>&#123;</span><br><span class="line">        <span class="keyword">if</span> (lexer.getCurrentToken().getType() != tokenType) &#123;</span><br><span class="line">            <span class="keyword">throw</span> <span class="keyword">new</span> SQLParsingException(lexer, tokenType);</span><br><span class="line">        &#125;</span><br><span class="line">        lexer.nextToken();</span><br><span class="line">    &#125;</span><br><span class="line">    </span><br><span class="line">    <span class="comment">/**</span></span><br><span class="line"><span class="comment">     * Adjust current token equals one of input tokens or not.</span></span><br><span class="line"><span class="comment">     *</span></span><br><span class="line"><span class="comment">     * <span class="doctag">@param</span> tokenTypes to be adjusted token types</span></span><br><span class="line"><span class="comment">     * <span class="doctag">@return</span> current token equals one of input tokens or not</span></span><br><span class="line"><span class="comment">     */</span></span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">boolean</span> <span class="title">equalAny</span><span class="params">(<span class="keyword">final</span> TokenType... tokenTypes)</span> </span>&#123;</span><br><span class="line">        <span class="keyword">for</span> (TokenType each : tokenTypes) &#123;</span><br><span class="line">            <span class="keyword">if</span> (each == lexer.getCurrentToken().getType()) &#123;</span><br><span class="line">                <span class="keyword">return</span> <span class="keyword">true</span>;</span><br><span class="line">            &#125;</span><br><span class="line">        &#125;</span><br><span class="line">        <span class="keyword">return</span> <span class="keyword">false</span>;</span><br><span class="line">    &#125;</span><br><span class="line">    </span><br><span class="line">    <span class="comment">/**</span></span><br><span class="line"><span class="comment">     * Skip current token if equals one of input tokens.</span></span><br><span class="line"><span class="comment">     *</span></span><br><span class="line"><span class="comment">     * <span class="doctag">@param</span> tokenTypes to be adjusted token types</span></span><br><span class="line"><span class="comment">     * <span class="doctag">@return</span> skipped current token or not</span></span><br><span class="line"><span class="comment">     */</span></span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">boolean</span> <span class="title">skipIfEqual</span><span class="params">(<span class="keyword">final</span> TokenType... tokenTypes)</span> </span>&#123;</span><br><span class="line">        <span class="keyword">if</span> (equalAny(tokenTypes)) &#123;</span><br><span class="line">            lexer.nextToken();</span><br><span class="line">            <span class="keyword">return</span> <span class="keyword">true</span>;</span><br><span class="line">        &#125;</span><br><span class="line">        <span class="keyword">return</span> <span class="keyword">false</span>;</span><br><span class="line">    &#125;</span><br><span class="line">    </span><br><span class="line">    <span class="comment">/**</span></span><br><span class="line"><span class="comment">     * Skip all input tokens.</span></span><br><span class="line"><span class="comment">     *</span></span><br><span class="line"><span class="comment">     * <span class="doctag">@param</span> tokenTypes to be skipped token types</span></span><br><span class="line"><span class="comment">     */</span></span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">skipAll</span><span class="params">(<span class="keyword">final</span> TokenType... tokenTypes)</span> </span>&#123;</span><br><span class="line">        Set&lt;TokenType&gt; tokenTypeSet = Sets.newHashSet(tokenTypes);</span><br><span class="line">        <span class="keyword">while</span> (tokenTypeSet.contains(lexer.getCurrentToken().getType())) &#123;</span><br><span class="line">            lexer.nextToken();</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line">    </span><br><span class="line">    <span class="comment">/**</span></span><br><span class="line"><span class="comment">     * Skip until one of input tokens.</span></span><br><span class="line"><span class="comment">     *</span></span><br><span class="line"><span class="comment">     * <span class="doctag">@param</span> tokenTypes to be skipped untiled token types</span></span><br><span class="line"><span class="comment">     */</span></span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">skipUntil</span><span class="params">(<span class="keyword">final</span> TokenType... tokenTypes)</span> </span>&#123;</span><br><span class="line">        Set&lt;TokenType&gt; tokenTypeSet = Sets.newHashSet(tokenTypes);</span><br><span class="line">        tokenTypeSet.add(Assist.END);</span><br><span class="line">        <span class="keyword">while</span> (!tokenTypeSet.contains(lexer.getCurrentToken().getType())) &#123;</span><br><span class="line">            lexer.nextToken();</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line">    </span><br><span class="line">    <span class="comment">/**</span></span><br><span class="line"><span class="comment">     * Throw unsupported exception if current token equals one of input tokens.</span></span><br><span class="line"><span class="comment">     * </span></span><br><span class="line"><span class="comment">     * <span class="doctag">@param</span> tokenTypes to be adjusted token types</span></span><br><span class="line"><span class="comment">     */</span></span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">unsupportedIfEqual</span><span class="params">(<span class="keyword">final</span> TokenType... tokenTypes)</span> </span>&#123;</span><br><span class="line">        <span class="keyword">if</span> (equalAny(tokenTypes)) &#123;</span><br><span class="line">            <span class="keyword">throw</span> <span class="keyword">new</span> SQLParsingUnsupportedException(lexer.getCurrentToken().getType());</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line">    </span><br><span class="line">    <span class="comment">/**</span></span><br><span class="line"><span class="comment">     * Throw unsupported exception if current token not equals one of input tokens.</span></span><br><span class="line"><span class="comment">     *</span></span><br><span class="line"><span class="comment">     * <span class="doctag">@param</span> tokenTypes to be adjusted token types</span></span><br><span class="line"><span class="comment">     */</span></span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">unsupportedIfNotSkip</span><span class="params">(<span class="keyword">final</span> TokenType... tokenTypes)</span> </span>&#123;</span><br><span class="line">        <span class="keyword">if</span> (!skipIfEqual(tokenTypes)) &#123;</span><br><span class="line">            <span class="keyword">throw</span> <span class="keyword">new</span> SQLParsingUnsupportedException(lexer.getCurrentToken().getType());</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line">    </span><br><span class="line">    <span class="comment">/**</span></span><br><span class="line"><span class="comment">     * Get database type.</span></span><br><span class="line"><span class="comment">     * </span></span><br><span class="line"><span class="comment">     * <span class="doctag">@return</span> database type</span></span><br><span class="line"><span class="comment">     */</span></span><br><span class="line">    <span class="function"><span class="keyword">public</span> DatabaseType <span class="title">getDatabaseType</span><span class="params">()</span> </span>&#123;</span><br><span class="line">        <span class="keyword">if</span> (lexer <span class="keyword">instanceof</span> MySQLLexer) &#123;</span><br><span class="line">            <span class="keyword">return</span> DatabaseType.MySQL;</span><br><span class="line">        &#125;</span><br><span class="line">        <span class="keyword">if</span> (lexer <span class="keyword">instanceof</span> OracleLexer) &#123;</span><br><span class="line">            <span class="keyword">return</span> DatabaseType.Oracle;</span><br><span class="line">        &#125;</span><br><span class="line">        <span class="keyword">if</span> (lexer <span class="keyword">instanceof</span> SQLServerLexer) &#123;</span><br><span class="line">            <span class="keyword">return</span> DatabaseType.SQLServer;</span><br><span class="line">        &#125;</span><br><span class="line">        <span class="keyword">if</span> (lexer <span class="keyword">instanceof</span> PostgreSQLLexer) &#123;</span><br><span class="line">            <span class="keyword">return</span> DatabaseType.PostgreSQL;</span><br><span class="line">        &#125;</span><br><span class="line">        <span class="keyword">throw</span> <span class="keyword">new</span> UnsupportedOperationException(String.format(<span class="string">"Cannot support lexer class: %s"</span>, lexer.getClass().getCanonicalName()));</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<h3 id="Lexer"><a href="#Lexer" class="headerlink" title="Lexer"></a>Lexer</h3><p><img src="https://user-images.githubusercontent.com/7789698/39862320-081c0a18-5476-11e8-8d52-2477519c9dd7.png" alt="image"></p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">@RequiredArgsConstructor</span></span><br><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">Lexer</span> </span>&#123;</span><br><span class="line">    <span class="comment">//sql</span></span><br><span class="line">    <span class="meta">@Getter</span></span><br><span class="line">    <span class="keyword">private</span> <span class="keyword">final</span> String input;</span><br><span class="line">    <span class="comment">//</span></span><br><span class="line">    <span class="keyword">private</span> <span class="keyword">final</span> Dictionary dictionary;</span><br><span class="line">    <span class="comment">//偏移量，从0开始</span></span><br><span class="line">    <span class="keyword">private</span> <span class="keyword">int</span> offset;</span><br><span class="line">    </span><br><span class="line">    <span class="meta">@Getter</span></span><br><span class="line">    <span class="keyword">private</span> Token currentToken;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">/**</span></span><br><span class="line"><span class="comment">   * Analyse next token.</span></span><br><span class="line"><span class="comment">   */</span></span><br><span class="line">  <span class="function"><span class="keyword">public</span> <span class="keyword">final</span> <span class="keyword">void</span> <span class="title">nextToken</span><span class="params">()</span> </span>&#123;</span><br><span class="line">      <span class="comment">//跳过空白字符、注释</span></span><br><span class="line">      skipIgnoredToken();</span><br><span class="line">      <span class="comment">// </span></span><br><span class="line">      <span class="comment">//判断变量，MySQLLexer是'@'开头</span></span><br><span class="line">      <span class="keyword">if</span> (isVariableBegin()) &#123;</span><br><span class="line">          <span class="comment">//扫描变量</span></span><br><span class="line">          currentToken = <span class="keyword">new</span> Tokenizer(input, dictionary, offset).scanVariable();</span><br><span class="line">          <span class="comment">//mysql没有Nchar。sqlserver有。不详细展开，就是扫描nchar的</span></span><br><span class="line">      &#125; <span class="keyword">else</span> <span class="keyword">if</span> (isNCharBegin()) &#123;</span><br><span class="line">          currentToken = <span class="keyword">new</span> Tokenizer(input, dictionary, ++offset).scanChars();</span><br><span class="line">          <span class="comment">//字母、'`'、'_'、'$' 开头的</span></span><br><span class="line">      &#125; <span class="keyword">else</span> <span class="keyword">if</span> (isIdentifierBegin()) &#123;</span><br><span class="line">          currentToken = <span class="keyword">new</span> Tokenizer(input, dictionary, offset).scanIdentifier();</span><br><span class="line">          <span class="comment">//'0x'开头，十六进制</span></span><br><span class="line">      &#125; <span class="keyword">else</span> <span class="keyword">if</span> (isHexDecimalBegin()) &#123;</span><br><span class="line">          <span class="comment">//扫描十六进制</span></span><br><span class="line">          currentToken = <span class="keyword">new</span> Tokenizer(input, dictionary, offset).scanHexDecimal();</span><br><span class="line">         <span class="comment">//数字开头、非标识符+'.'+数字、"-."、'-'+数字</span></span><br><span class="line">      &#125; <span class="keyword">else</span> <span class="keyword">if</span> (isNumberBegin()) &#123;</span><br><span class="line">          <span class="comment">//扫描数字</span></span><br><span class="line">          currentToken = <span class="keyword">new</span> Tokenizer(input, dictionary, offset).scanNumber();</span><br><span class="line">          <span class="comment">//符号'(' 、')' 、'[' 、 ']'、'&#123;'、'&#125;'、 '+' 、 '-' 、 '*' 、 '/' 、'%' 、 '^' 、'='、 '&gt;' 、'&lt;' 、 '~' 、'!'、 '?'、 '&amp;' 、'|' 、'.'、':' 、 '#'、 ',' 、 ';' </span></span><br><span class="line">      &#125; <span class="keyword">else</span> <span class="keyword">if</span> (isSymbolBegin()) &#123;</span><br><span class="line">          <span class="comment">//扫描符号</span></span><br><span class="line">          currentToken = <span class="keyword">new</span> Tokenizer(input, dictionary, offset).scanSymbol();</span><br><span class="line">         <span class="comment">//  '\'' 或'\"'开头的字符</span></span><br><span class="line">      &#125; <span class="keyword">else</span> <span class="keyword">if</span> (isCharsBegin()) &#123;</span><br><span class="line">          <span class="comment">//扫描单引号'或双引号"括起来的东西</span></span><br><span class="line">          currentToken = <span class="keyword">new</span> Tokenizer(input, dictionary, offset).scanChars();</span><br><span class="line">          <span class="comment">//读完了</span></span><br><span class="line">      &#125; <span class="keyword">else</span> <span class="keyword">if</span> (isEnd()) &#123;</span><br><span class="line">          currentToken = <span class="keyword">new</span> Token(Assist.END, <span class="string">""</span>, offset);</span><br><span class="line">      &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">          <span class="keyword">throw</span> <span class="keyword">new</span> SQLParsingException(<span class="keyword">this</span>, Assist.ERROR);</span><br><span class="line">      &#125;</span><br><span class="line">      offset = currentToken.getEndPosition();</span><br><span class="line">  &#125;</span><br></pre></td></tr></table></figure>
+<p>标识符开头：字母、’`’、’_’、’$’ 开头的</p>
+<h4 id="skipIgnoredToken"><a href="#skipIgnoredToken" class="headerlink" title="skipIgnoredToken"></a>skipIgnoredToken</h4><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">private</span> <span class="keyword">void</span> <span class="title">skipIgnoredToken</span><span class="params">()</span> </span>&#123;</span><br><span class="line">      <span class="comment">//跳过空白符</span></span><br><span class="line">      offset = <span class="keyword">new</span> Tokenizer(input, dictionary, offset).skipWhitespace();</span><br><span class="line">      <span class="comment">//MySQLLexer是  '/' == getCurrentChar(0) &amp;&amp; '*' == getCurrentChar(1) &amp;&amp; '!' == getCurrentChar(2)</span></span><br><span class="line">      <span class="comment">//注释开头</span></span><br><span class="line">      <span class="keyword">while</span> (isHintBegin()) &#123;</span><br><span class="line">          <span class="comment">//算到注释结束</span></span><br><span class="line">          offset = <span class="keyword">new</span> Tokenizer(input, dictionary, offset).skipHint();</span><br><span class="line">          <span class="comment">//跳过空白符</span></span><br><span class="line">          offset = <span class="keyword">new</span> Tokenizer(input, dictionary, offset).skipWhitespace();</span><br><span class="line">      &#125;</span><br><span class="line">    <span class="comment">//跳过单行注释、多行注释</span></span><br><span class="line">    	<span class="comment">// '//'或'--'或'/*'开头</span></span><br><span class="line">      <span class="keyword">while</span> (isCommentBegin()) &#123;</span><br><span class="line">          offset = <span class="keyword">new</span> Tokenizer(input, dictionary, offset).skipComment();</span><br><span class="line">          <span class="comment">//跳过空白符</span></span><br><span class="line">          offset = <span class="keyword">new</span> Tokenizer(input, dictionary, offset).skipWhitespace();</span><br><span class="line">      &#125;</span><br><span class="line">  &#125;</span><br></pre></td></tr></table></figure>
+<h4 id="skipHint"><a href="#skipHint" class="headerlink" title="skipHint"></a>skipHint</h4><p>处理开头*/结束的东西</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">public</span> <span class="keyword">int</span> <span class="title">skipHint</span><span class="params">()</span> </span>&#123;</span><br><span class="line">    <span class="comment">//   HINT_BEGIN_SYMBOL_LENGTH = 3</span></span><br><span class="line">    <span class="keyword">return</span> untilCommentAndHintTerminateSign(HINT_BEGIN_SYMBOL_LENGTH);</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">private</span> <span class="keyword">int</span> <span class="title">untilCommentAndHintTerminateSign</span><span class="params">(<span class="keyword">final</span> <span class="keyword">int</span> beginSymbolLength)</span> </span>&#123;</span><br><span class="line">        <span class="keyword">int</span> length = beginSymbolLength;</span><br><span class="line">    <span class="comment">//非 */</span></span><br><span class="line">        <span class="keyword">while</span> (!isMultipleLineCommentEnd(charAt(offset + length), charAt(offset + length + <span class="number">1</span>))) &#123;</span><br><span class="line">            <span class="comment">//如果是EOI = '0x1A'</span></span><br><span class="line">            <span class="keyword">if</span> (CharType.isEndOfInput(charAt(offset + length))) &#123;</span><br><span class="line">                <span class="keyword">throw</span> <span class="keyword">new</span> UnterminatedCharException(<span class="string">"*/"</span>);</span><br><span class="line">            &#125;</span><br><span class="line">            length++;</span><br><span class="line">        &#125;</span><br><span class="line">    <span class="comment">//offset加中间字符加*/的长度，COMMENT_AND_HINT_END_SYMBOL_LENGTH = 2</span></span><br><span class="line">        <span class="keyword">return</span> offset + length + COMMENT_AND_HINT_END_SYMBOL_LENGTH;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">private</span> <span class="keyword">boolean</span> <span class="title">isMultipleLineCommentEnd</span><span class="params">(<span class="keyword">final</span> <span class="keyword">char</span> ch, <span class="keyword">final</span> <span class="keyword">char</span> next)</span> </span>&#123;</span><br><span class="line">        <span class="keyword">return</span> <span class="string">'*'</span> == ch &amp;&amp; <span class="string">'/'</span> == next;</span><br><span class="line">    &#125;</span><br></pre></td></tr></table></figure>
+<h4 id="skipComment"><a href="#skipComment" class="headerlink" title="skipComment"></a>skipComment</h4><p>处理注释</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">public</span> <span class="keyword">int</span> <span class="title">skipComment</span><span class="params">()</span> </span>&#123;</span><br><span class="line">    <span class="comment">//当前字符</span></span><br><span class="line">    <span class="keyword">char</span> current = charAt(offset);</span><br><span class="line">    <span class="comment">//下一个</span></span><br><span class="line">    <span class="keyword">char</span> next = charAt(offset + <span class="number">1</span>);</span><br><span class="line">    <span class="comment">// 单行注释  '//' 或者'--'</span></span><br><span class="line">    <span class="keyword">if</span> (isSingleLineCommentBegin(current, next)) &#123;</span><br><span class="line">        <span class="comment">//跳过这行</span></span><br><span class="line">        <span class="keyword">return</span> skipSingleLineComment(COMMENT_BEGIN_SYMBOL_LENGTH);</span><br><span class="line">        <span class="comment">//一个'#' </span></span><br><span class="line">    &#125; <span class="keyword">else</span> <span class="keyword">if</span> (<span class="string">'#'</span> == current) &#123;</span><br><span class="line">        <span class="comment">//跳过这行</span></span><br><span class="line">        <span class="keyword">return</span> skipSingleLineComment(MYSQL_SPECIAL_COMMENT_BEGIN_SYMBOL_LENGTH);</span><br><span class="line">        <span class="comment">//跳过多行注释</span></span><br><span class="line">    &#125; <span class="keyword">else</span> <span class="keyword">if</span> (isMultipleLineCommentBegin(current, next)) &#123;</span><br><span class="line">        <span class="keyword">return</span> skipMultiLineComment();</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="keyword">return</span> offset;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"></span><br><span class="line">   <span class="function"><span class="keyword">private</span> <span class="keyword">boolean</span> <span class="title">isSingleLineCommentBegin</span><span class="params">(<span class="keyword">final</span> <span class="keyword">char</span> ch, <span class="keyword">final</span> <span class="keyword">char</span> next)</span> </span>&#123;</span><br><span class="line">        <span class="keyword">return</span> <span class="string">'/'</span> == ch &amp;&amp; <span class="string">'/'</span> == next || <span class="string">'-'</span> == ch &amp;&amp; <span class="string">'-'</span> == next;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">private</span> <span class="keyword">int</span> <span class="title">skipSingleLineComment</span><span class="params">(<span class="keyword">final</span> <span class="keyword">int</span> commentSymbolLength)</span> </span>&#123;</span><br><span class="line">        <span class="keyword">int</span> length = commentSymbolLength;</span><br><span class="line">        <span class="comment">//非 EOI  = '0x1A'或'\n'换行</span></span><br><span class="line">        <span class="keyword">while</span> (!CharType.isEndOfInput(charAt(offset + length)) &amp;&amp; <span class="string">'\n'</span> != charAt(offset + length)) &#123;</span><br><span class="line">            length++;</span><br><span class="line">        &#125;</span><br><span class="line">        <span class="keyword">return</span> offset + length + <span class="number">1</span>;</span><br><span class="line">    &#125;</span><br></pre></td></tr></table></figure>
+<h4 id="scanVariable"><a href="#scanVariable" class="headerlink" title="scanVariable"></a>scanVariable</h4><p>处理变量</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">public</span> Token <span class="title">scanVariable</span><span class="params">()</span> </span>&#123;</span><br><span class="line">    <span class="keyword">int</span> length = <span class="number">1</span>;</span><br><span class="line">    <span class="comment">// 第二个也是'@'  就是局部变量@@</span></span><br><span class="line">    <span class="keyword">if</span> (<span class="string">'@'</span> == charAt(offset + <span class="number">1</span>)) &#123;</span><br><span class="line">        length++;</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="comment">//变量的符号</span></span><br><span class="line">    <span class="keyword">while</span> (isVariableChar(charAt(offset + length))) &#123;</span><br><span class="line">        length++;</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="comment">//变量</span></span><br><span class="line">    <span class="keyword">return</span> <span class="keyword">new</span> Token(Literals.VARIABLE, input.substring(offset, offset + length), offset + length);</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">  <span class="function"><span class="keyword">private</span> <span class="keyword">boolean</span> <span class="title">isVariableChar</span><span class="params">(<span class="keyword">final</span> <span class="keyword">char</span> ch)</span> </span>&#123;</span><br><span class="line">      <span class="comment">//变量标识符或者'.'</span></span><br><span class="line">        <span class="keyword">return</span> isIdentifierChar(ch) || <span class="string">'.'</span> == ch;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">   <span class="function"><span class="keyword">private</span> <span class="keyword">boolean</span> <span class="title">isIdentifierChar</span><span class="params">(<span class="keyword">final</span> <span class="keyword">char</span> ch)</span> </span>&#123;</span><br><span class="line">       <span class="comment">//字母、数字、'_'、'$'、'#'</span></span><br><span class="line">        <span class="keyword">return</span> CharType.isAlphabet(ch) || CharType.isDigital(ch) || <span class="string">'_'</span> == ch || <span class="string">'$'</span> == ch || <span class="string">'#'</span> == ch;</span><br><span class="line">    &#125;</span><br></pre></td></tr></table></figure>
+<h4 id="scanIdentifier"><a href="#scanIdentifier" class="headerlink" title="scanIdentifier"></a>scanIdentifier</h4><p>处理标识符</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">public</span> Token <span class="title">scanIdentifier</span><span class="params">()</span> </span>&#123;</span><br><span class="line">    <span class="comment">// 第一个字符是'`'</span></span><br><span class="line">    <span class="keyword">if</span> (<span class="string">'`'</span> == charAt(offset)) &#123;</span><br><span class="line">        <span class="comment">//比如  "`a`" 就长度3</span></span><br><span class="line">        <span class="keyword">int</span> length = getLengthUntilTerminatedChar(<span class="string">'`'</span>);</span><br><span class="line">        <span class="keyword">return</span> <span class="keyword">new</span> Token(Literals.IDENTIFIER, input.substring(offset, offset + length), offset + length);</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="keyword">int</span> length = <span class="number">0</span>;</span><br><span class="line">    <span class="comment">//字母、数字、'_'、'$'、'#'</span></span><br><span class="line">    <span class="keyword">while</span> (isIdentifierChar(charAt(offset + length))) &#123;</span><br><span class="line">        length++;</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="comment">//取出标识符</span></span><br><span class="line">    String literals = input.substring(offset, offset + length);</span><br><span class="line">    <span class="comment">//Order 或者 Group</span></span><br><span class="line">    <span class="keyword">if</span> (isAmbiguousIdentifier(literals)) &#123;</span><br><span class="line">        <span class="keyword">return</span> <span class="keyword">new</span> Token(processAmbiguousIdentifier(offset + length, literals), literals, offset + length);</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="comment">// 识别关键字，返回类型，不是关键字则使用IDENTIFIER类型</span></span><br><span class="line">    <span class="keyword">return</span> <span class="keyword">new</span> Token(dictionary.findTokenType(literals, Literals.IDENTIFIER), literals, offset + length);</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"></span><br><span class="line"> <span class="function"><span class="keyword">private</span> <span class="keyword">int</span> <span class="title">getLengthUntilTerminatedChar</span><span class="params">(<span class="keyword">final</span> <span class="keyword">char</span> terminatedChar)</span> </span>&#123;</span><br><span class="line">        <span class="keyword">int</span> length = <span class="number">1</span>;</span><br><span class="line">     <span class="comment">// 接下来不是 '`'或者连续两个'`'</span></span><br><span class="line">        <span class="keyword">while</span> (terminatedChar != charAt(offset + length) || hasEscapeChar(terminatedChar, offset + length)) &#123;</span><br><span class="line">            <span class="comment">//一直匹配不到结束，写的sql有问题</span></span><br><span class="line">            <span class="keyword">if</span> (offset + length &gt;= input.length()) &#123;</span><br><span class="line">                <span class="keyword">throw</span> <span class="keyword">new</span> UnterminatedCharException(terminatedChar);</span><br><span class="line">            &#125;</span><br><span class="line">            <span class="comment">//连续两个'`'的，往后再多走一位。走两位</span></span><br><span class="line">            <span class="keyword">if</span> (hasEscapeChar(terminatedChar, offset + length)) &#123;</span><br><span class="line">                length++;</span><br><span class="line">            &#125;</span><br><span class="line">            length++;</span><br><span class="line">        &#125;</span><br><span class="line">        <span class="keyword">return</span> length + <span class="number">1</span>;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">	</span><br><span class="line">    <span class="function"><span class="keyword">private</span> <span class="keyword">boolean</span> <span class="title">hasEscapeChar</span><span class="params">(<span class="keyword">final</span> <span class="keyword">char</span> charIdentifier, <span class="keyword">final</span> <span class="keyword">int</span> offset)</span> </span>&#123;</span><br><span class="line">        <span class="keyword">return</span> charIdentifier == charAt(offset) &amp;&amp; charIdentifier == charAt(offset + <span class="number">1</span>);</span><br><span class="line">    &#125;</span><br><span class="line">   </span><br><span class="line"></span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">private</span> TokenType <span class="title">processAmbiguousIdentifier</span><span class="params">(<span class="keyword">final</span> <span class="keyword">int</span> offset, <span class="keyword">final</span> String literals)</span> </span>&#123;</span><br><span class="line">        <span class="keyword">int</span> i = <span class="number">0</span>;</span><br><span class="line">        <span class="keyword">while</span> (CharType.isWhitespace(charAt(offset + i))) &#123;</span><br><span class="line">            i++;</span><br><span class="line">        &#125;</span><br><span class="line">        <span class="keyword">if</span> (DefaultKeyword.BY.name().equalsIgnoreCase(String.valueOf(<span class="keyword">new</span> <span class="keyword">char</span>[] &#123;charAt(offset + i), charAt(offset + i + <span class="number">1</span>)&#125;))) &#123;</span><br><span class="line">            <span class="comment">//查找关键字类型GROUP或者Order</span></span><br><span class="line">            <span class="keyword">return</span> dictionary.findTokenType(literals);</span><br><span class="line">        &#125;</span><br><span class="line">        <span class="keyword">return</span> Literals.IDENTIFIER;</span><br><span class="line">    &#125;</span><br></pre></td></tr></table></figure>
+<h4 id="scanHexDecimal"><a href="#scanHexDecimal" class="headerlink" title="scanHexDecimal"></a>scanHexDecimal</h4><p>处理十六进制</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">public</span> Token <span class="title">scanHexDecimal</span><span class="params">()</span> </span>&#123;</span><br><span class="line">    <span class="keyword">int</span> length = HEX_BEGIN_SYMBOL_LENGTH;</span><br><span class="line">    <span class="comment">//负数</span></span><br><span class="line">    <span class="keyword">if</span> (<span class="string">'-'</span> == charAt(offset + length)) &#123;</span><br><span class="line">        length++;</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="keyword">while</span> (isHex(charAt(offset + length))) &#123;</span><br><span class="line">        length++;</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="keyword">return</span> <span class="keyword">new</span> Token(Literals.HEX, input.substring(offset, offset + length), offset + length);</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">private</span> <span class="keyword">boolean</span> <span class="title">isHex</span><span class="params">(<span class="keyword">final</span> <span class="keyword">char</span> ch)</span> </span>&#123;</span><br><span class="line">    <span class="keyword">return</span> ch &gt;= <span class="string">'A'</span> &amp;&amp; ch &lt;= <span class="string">'F'</span> || ch &gt;= <span class="string">'a'</span> &amp;&amp; ch &lt;= <span class="string">'f'</span> || CharType.isDigital(ch);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<h4 id="scanNumber"><a href="#scanNumber" class="headerlink" title="scanNumber"></a>scanNumber</h4><p>处理数字</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">public</span> Token <span class="title">scanNumber</span><span class="params">()</span> </span>&#123;</span><br><span class="line">    <span class="keyword">int</span> length = <span class="number">0</span>;</span><br><span class="line">    <span class="comment">//负数</span></span><br><span class="line">    <span class="keyword">if</span> (<span class="string">'-'</span> == charAt(offset + length)) &#123;</span><br><span class="line">        length++;</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="comment">//数字长度</span></span><br><span class="line">    length += getDigitalLength(offset + length);</span><br><span class="line">    <span class="keyword">boolean</span> isFloat = <span class="keyword">false</span>;</span><br><span class="line">    <span class="comment">//小数部分</span></span><br><span class="line">    <span class="keyword">if</span> (<span class="string">'.'</span> == charAt(offset + length)) &#123;</span><br><span class="line">        isFloat = <span class="keyword">true</span>;</span><br><span class="line">        length++;</span><br><span class="line">        length += getDigitalLength(offset + length);</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="comment">//科学技术法 'e'或'E'</span></span><br><span class="line">    <span class="keyword">if</span> (isScientificNotation(offset + length)) &#123;</span><br><span class="line">        isFloat = <span class="keyword">true</span>;</span><br><span class="line">        length++;</span><br><span class="line">        <span class="keyword">if</span> (<span class="string">'+'</span> == charAt(offset + length) || <span class="string">'-'</span> == charAt(offset + length)) &#123;</span><br><span class="line">            length++;</span><br><span class="line">        &#125;</span><br><span class="line">        length += getDigitalLength(offset + length);</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="comment">//'f'、'F'、'd'、'D'</span></span><br><span class="line">    <span class="keyword">if</span> (isBinaryNumber(offset + length)) &#123;</span><br><span class="line">        isFloat = <span class="keyword">true</span>;</span><br><span class="line">        length++;</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="keyword">return</span> <span class="keyword">new</span> Token(isFloat ? Literals.FLOAT : Literals.INT, input.substring(offset, offset + length), offset + length);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<h4 id="scanSymbol"><a href="#scanSymbol" class="headerlink" title="scanSymbol"></a>scanSymbol</h4><p>处理符号包起来的</p>
+<p>其中Symbol后面讲述</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">public</span> Token <span class="title">scanSymbol</span><span class="params">()</span> </span>&#123;</span><br><span class="line">    <span class="keyword">int</span> length = <span class="number">0</span>;</span><br><span class="line">    <span class="comment">//跳过符号</span></span><br><span class="line">    <span class="keyword">while</span> (CharType.isSymbol(charAt(offset + length))) &#123;</span><br><span class="line">        length++;</span><br><span class="line">    &#125;</span><br><span class="line">    String literals = input.substring(offset, offset + length);</span><br><span class="line">    Symbol symbol;</span><br><span class="line">    <span class="comment">//通过字面量查找词法符号.</span></span><br><span class="line">    <span class="keyword">while</span> (<span class="keyword">null</span> == (symbol = Symbol.literalsOf(literals))) &#123;</span><br><span class="line">        literals = input.substring(offset, offset + --length);</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="keyword">return</span> <span class="keyword">new</span> Token(symbol, literals, offset + length);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<h4 id="scanChars"><a href="#scanChars" class="headerlink" title="scanChars"></a>scanChars</h4><p>处理单引号或双引号扩起来的</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">public</span> Token <span class="title">scanChars</span><span class="params">()</span> </span>&#123;</span><br><span class="line">    <span class="keyword">return</span> scanChars(charAt(offset));</span><br><span class="line">&#125;</span><br><span class="line"><span class="comment">//如'avv'、"abb"</span></span><br><span class="line"><span class="function"><span class="keyword">private</span> Token <span class="title">scanChars</span><span class="params">(<span class="keyword">final</span> <span class="keyword">char</span> terminatedChar)</span> </span>&#123;</span><br><span class="line">    <span class="keyword">int</span> length = getLengthUntilTerminatedChar(terminatedChar);</span><br><span class="line">    <span class="keyword">return</span> <span class="keyword">new</span> Token(Literals.CHARS, input.substring(offset + <span class="number">1</span>, offset + length - <span class="number">1</span>), offset + length);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<h3 id="Token"><a href="#Token" class="headerlink" title="Token"></a>Token</h3><p>Token有三个参数：</p>
+<ul>
+<li>type(TokenType): INT, FLOAT, HEX, CHARS, IDENTIFIER, VARIABLE</li>
+<li>literals(String): 字面量</li>
+<li>endPosition(int): 字符结束的位置</li>
+</ul>
+<h3 id="Dictionary"><a href="#Dictionary" class="headerlink" title="Dictionary"></a>Dictionary</h3><p>字典</p>
+<p>  包含一个map，包含每个关键字，Keyword的实现类都是一些枚举常量</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"> <span class="comment">//所有关键字</span></span><br><span class="line"><span class="keyword">private</span> <span class="keyword">final</span> Map&lt;String, Keyword&gt; tokens = <span class="keyword">new</span> HashMap&lt;&gt;(<span class="number">1024</span>);</span><br></pre></td></tr></table></figure>
+<p>比如MySQLLexer 实现的时候就是使用MySQLKeyword.values()作为构造参数，构造后填充tokens</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br></pre></td><td class="code"><pre><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="title">Dictionary</span><span class="params">(<span class="keyword">final</span> Keyword... dialectKeywords)</span> </span>&#123;</span><br><span class="line">        fill(dialectKeywords);</span><br><span class="line">    &#125;</span><br><span class="line">    </span><br><span class="line">    <span class="function"><span class="keyword">private</span> <span class="keyword">void</span> <span class="title">fill</span><span class="params">(<span class="keyword">final</span> Keyword... dialectKeywords)</span> </span>&#123;</span><br><span class="line">        <span class="keyword">for</span> (DefaultKeyword each : DefaultKeyword.values()) &#123;</span><br><span class="line">            tokens.put(each.name(), each);</span><br><span class="line">        &#125;</span><br><span class="line">        <span class="keyword">for</span> (Keyword each : dialectKeywords) &#123;</span><br><span class="line">            tokens.put(each.toString(), each);</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p><img src="https://user-images.githubusercontent.com/7789698/39878798-d15fb552-54ab-11e8-9111-6bd07a66fcbc.png" alt="image"></p>
+<p>下面这两个方法用来进行词法分析的时候根据字典识别出类型。</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line"><span class="function">TokenType <span class="title">findTokenType</span><span class="params">(<span class="keyword">final</span> String literals, <span class="keyword">final</span> TokenType defaultTokenType)</span> </span>&#123;</span><br><span class="line">    String key = <span class="keyword">null</span> == literals ? <span class="keyword">null</span> : literals.toUpperCase();</span><br><span class="line">    <span class="keyword">return</span> tokens.containsKey(key) ? tokens.get(key) : defaultTokenType;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="function">TokenType <span class="title">findTokenType</span><span class="params">(<span class="keyword">final</span> String literals)</span> </span>&#123;</span><br><span class="line">    String key = <span class="keyword">null</span> == literals ? <span class="keyword">null</span> : literals.toUpperCase();</span><br><span class="line">    <span class="keyword">if</span> (tokens.containsKey(key)) &#123;</span><br><span class="line">        <span class="keyword">return</span> tokens.get(key);</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="keyword">throw</span> <span class="keyword">new</span> IllegalArgumentException();</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<h3 id="Symbol"><a href="#Symbol" class="headerlink" title="Symbol"></a>Symbol</h3><p>词法符号</p>
+<p>包含一个map，包含每个符号，Symbol的都是一些枚举常量</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">private</span> <span class="keyword">static</span> Map&lt;String, Symbol&gt; symbols = <span class="keyword">new</span> HashMap&lt;&gt;(<span class="number">128</span>);</span><br></pre></td></tr></table></figure>
+<p>获取符号具体类型</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">public</span> <span class="keyword">static</span> Symbol <span class="title">literalsOf</span><span class="params">(<span class="keyword">final</span> String literals)</span> </span>&#123;</span><br><span class="line">    <span class="keyword">return</span> symbols.get(literals);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+      
+    </div>
+    
+    
+    
+
+    
+
+    
+      <div>
+        <div style="padding: 10px 0; margin: 20px auto; width: 90%; text-align: center;">
+  <div>Donate comment here</div>
+  <button id="rewardButton" disable="enable" onclick="var qr = document.getElementById('QR'); if (qr.style.display === 'none') {qr.style.display='block';} else {qr.style.display='none'}">
+    <span>打赏</span>
+  </button>
+  <div id="QR" style="display: none;">
+
+    
+      <div id="wechat" style="display: inline-block">
+        <img id="wechat_qr" src="/hexo/images/wechatpay.jpg" alt="Absurd 微信支付">
+        <p>微信支付</p>
+      </div>
+    
+
+    
+
+    
+
+  </div>
+</div>
+
+      </div>
+    
+
+    
+
+    <footer class="post-footer">
+      
+        <div class="post-tags">
+          
+            <a href="/hexo/tags/sharding-jdbc/" rel="tag"># sharding-jdbc</a>
+          
+        </div>
+      
+
+      
+      
+      
+
+      
+        <div class="post-nav">
+          <div class="post-nav-next post-nav-item">
+            
+              <a href="/hexo/post/5cbcca12.html" rel="next" title="sharding-jdbc源码解析-读写分离（二）">
+                <i class="fa fa-chevron-left"></i> sharding-jdbc源码解析-读写分离（二）
+              </a>
+            
+          </div>
+
+          <span class="post-nav-divider"></span>
+
+          <div class="post-nav-prev post-nav-item">
+            
+              <a href="/hexo/post/38641c2c.html" rel="prev" title="sharding-jdbc源码解析-分库分表（四）">
+                sharding-jdbc源码解析-分库分表（四） <i class="fa fa-chevron-right"></i>
+              </a>
+            
+          </div>
+        </div>
+      
+
+      
+      
+    </footer>
+  </div>
+  
+  
+  
+  </article>
+
+
+
+    <div class="post-spread">
+      
+    </div>
+  </div>
+
+
+          </div>
+          
+
+
+          
+
+  
+    <div class="comments" id="comments">
+      
+        <div id="gitment-container"></div>
+      
+    </div>
+
+  
+
+
+
+        </div>
+        
+          
+  
+  <div class="sidebar-toggle">
+    <div class="sidebar-toggle-line-wrap">
+      <span class="sidebar-toggle-line sidebar-toggle-line-first"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-middle"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-last"></span>
+    </div>
+  </div>
+
+  <aside id="sidebar" class="sidebar">
+    
+    <div class="sidebar-inner">
+
+      
+
+      
+        <ul class="sidebar-nav motion-element">
+          <li class="sidebar-nav-toc sidebar-nav-active" data-target="post-toc-wrap">
+            文章目录
+          </li>
+          <li class="sidebar-nav-overview" data-target="site-overview-wrap">
+            站点概览
+          </li>
+        </ul>
+      
+
+      <section class="site-overview-wrap sidebar-panel">
+        <div class="site-overview">
+          <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+            
+              <img class="site-author-image" itemprop="image" src="/hexo/images/avatar.gif" alt="Absurd">
+            
+              <p class="site-author-name" itemprop="name">Absurd</p>
+              <p class="site-description motion-element" itemprop="description"></p>
+          </div>
+
+          <nav class="site-state motion-element">
+
+            
+              <div class="site-state-item site-state-posts">
+              
+                <a href="/hexo/archives/">
+              
+                  <span class="site-state-item-count">74</span>
+                  <span class="site-state-item-name">日志</span>
+                </a>
+              </div>
+            
+
+            
+              
+              
+              <div class="site-state-item site-state-categories">
+                <a href="/hexo/categories/index.html">
+                  <span class="site-state-item-count">17</span>
+                  <span class="site-state-item-name">分类</span>
+                </a>
+              </div>
+            
+
+            
+              
+              
+              <div class="site-state-item site-state-tags">
+                <a href="/hexo/tags/index.html">
+                  <span class="site-state-item-count">46</span>
+                  <span class="site-state-item-name">标签</span>
+                </a>
+              </div>
+            
+
+          </nav>
+
+          
+            <div class="feed-link motion-element">
+              <a href="/hexo/atom.xml" rel="alternate">
+                <i class="fa fa-rss"></i>
+                RSS
+              </a>
+            </div>
+          
+
+          
+            <div class="links-of-author motion-element">
+                
+                  <span class="links-of-author-item">
+                    <a href="https://github.com/www1350" target="_blank" title="GitHub">
+                      
+                        <i class="fa fa-fw fa-github"></i>GitHub</a>
+                  </span>
+                
+                  <span class="links-of-author-item">
+                    <a href="mailto:www_1350@163.com" target="_blank" title="E-Mail">
+                      
+                        <i class="fa fa-fw fa-envelope"></i>E-Mail</a>
+                  </span>
+                
+            </div>
+          
+
+          
+          
+
+          
+          
+
+          
+
+        </div>
+      </section>
+
+      
+      <!--noindex-->
+        <section class="post-toc-wrap motion-element sidebar-panel sidebar-panel-active">
+          <div class="post-toc">
+
+            
+              
+            
+
+            
+              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#基本概念"><span class="nav-number">1.</span> <span class="nav-text">基本概念</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#LexerEngine"><span class="nav-number">1.1.</span> <span class="nav-text">LexerEngine</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#Lexer"><span class="nav-number">1.2.</span> <span class="nav-text">Lexer</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#skipIgnoredToken"><span class="nav-number">1.2.1.</span> <span class="nav-text">skipIgnoredToken</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#skipHint"><span class="nav-number">1.2.2.</span> <span class="nav-text">skipHint</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#skipComment"><span class="nav-number">1.2.3.</span> <span class="nav-text">skipComment</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#scanVariable"><span class="nav-number">1.2.4.</span> <span class="nav-text">scanVariable</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#scanIdentifier"><span class="nav-number">1.2.5.</span> <span class="nav-text">scanIdentifier</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#scanHexDecimal"><span class="nav-number">1.2.6.</span> <span class="nav-text">scanHexDecimal</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#scanNumber"><span class="nav-number">1.2.7.</span> <span class="nav-text">scanNumber</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#scanSymbol"><span class="nav-number">1.2.8.</span> <span class="nav-text">scanSymbol</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#scanChars"><span class="nav-number">1.2.9.</span> <span class="nav-text">scanChars</span></a></li></ol></li><li class="nav-item nav-level-3"><a class="nav-link" href="#Token"><span class="nav-number">1.3.</span> <span class="nav-text">Token</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#Dictionary"><span class="nav-number">1.4.</span> <span class="nav-text">Dictionary</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#Symbol"><span class="nav-number">1.5.</span> <span class="nav-text">Symbol</span></a></li></ol></li></ol></div>
+            
+
+          </div>
+        </section>
+      <!--/noindex-->
+      
+
+      
+
+    </div>
+  </aside>
+
+
+        
+      </div>
+    </main>
+
+    <footer id="footer" class="footer">
+      <div class="footer-inner">
+        <div class="copyright">&copy; <span itemprop="copyrightYear">2021</span>
+  <span class="with-love">
+    <i class="fa fa-user"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">Absurd</span>
+
+  
+</div>
+
+
+  <div class="powered-by">由 <a class="theme-link" target="_blank" href="https://hexo.io">Hexo</a> 强力驱动</div>
+
+
+
+  <span class="post-meta-divider">|</span>
+
+
+
+  <div class="theme-info">主题 &mdash; <a class="theme-link" target="_blank" href="https://github.com/iissnan/hexo-theme-next">NexT.Mist</a> v5.1.4</div>
+
+
+
+
+        
+<div class="busuanzi-count">
+  <script async src="https://dn-lbstatics.qbox.me/busuanzi/2.3/busuanzi.pure.mini.js"></script>
+
+  
+    <span class="site-uv">
+      <i class="fa fa-user"></i>
+      <span class="busuanzi-value" id="busuanzi_value_site_uv"></span>
+      
+    </span>
+  
+
+  
+    <span class="site-pv">
+      <i class="fa fa-eye"></i>
+      <span class="busuanzi-value" id="busuanzi_value_site_pv"></span>
+      
+    </span>
+  
+</div>
+
+
+
+
+
+
+
+
+        
+      </div>
+    </footer>
+
+    
+      <div class="back-to-top">
+        <i class="fa fa-arrow-up"></i>
+        
+      </div>
+    
+
+    
+
+  </div>
+
+  
+
+<script type="text/javascript">
+  if (Object.prototype.toString.call(window.Promise) !== '[object Function]') {
+    window.Promise = null;
+  }
+</script>
+
+
+
+
+
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+    <script type="text/javascript" src="/hexo/lib/jquery/index.js?v=2.1.3"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/hexo/lib/fastclick/lib/fastclick.min.js?v=1.0.6"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/hexo/lib/jquery_lazyload/jquery.lazyload.js?v=1.9.7"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/hexo/lib/velocity/velocity.min.js?v=1.2.1"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/hexo/lib/velocity/velocity.ui.min.js?v=1.2.1"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/hexo/lib/fancybox/source/jquery.fancybox.pack.js?v=2.1.5"></script>
+  
+
+
+  
+
+
+  <script type="text/javascript" src="/hexo/js/src/utils.js?v=5.1.4"></script>
+
+  <script type="text/javascript" src="/hexo/js/src/motion.js?v=5.1.4"></script>
+
+
+
+  
+  
+
+  
+  <script type="text/javascript" src="/hexo/js/src/scrollspy.js?v=5.1.4"></script>
+<script type="text/javascript" src="/hexo/js/src/post-details.js?v=5.1.4"></script>
+
+
+
+  
+
+
+  <script type="text/javascript" src="/hexo/js/src/bootstrap.js?v=5.1.4"></script>
+
+
+
+  
+
+
+  
+
+
+
+
+	
+
+
+
+
+
+  
+
+
+
+
+
+  
+
+
+
+
+
+
+
+<!-- LOCAL: You can save these files to your site and update links -->
+    
+        
+        <link rel="stylesheet" href="https://aimingoo.github.io/gitmint/style/default.css">
+        <script src="https://aimingoo.github.io/gitmint/dist/gitmint.browser.js"></script>
+    
+<!-- END LOCAL -->
+
+    
+
+    
+      <script type="text/javascript">
+      function renderGitment(){
+        var gitment = new Gitmint({
+            id: window.location.pathname, 
+            owner: 'www1350',
+            repo: 'hexo',
+            
+            lang: "" || navigator.language || navigator.systemLanguage || navigator.userLanguage,
+            
+            oauth: {
+            
+            
+                client_secret: '471214f79bbafcfc2101577ba8b4e2439e6aab72',
+            
+                client_id: 'deb8b8a893a7e72bbf7c'
+            }});
+        gitment.render('gitment-container');
+      }
+
+      
+      renderGitment();
+      
+      </script>
+    
+
+
+
+
+
+
+
+  
+
+  <script type="text/javascript">
+    // Popup Window;
+    var isfetched = false;
+    var isXml = true;
+    // Search DB path;
+    var search_path = "search.xml";
+    if (search_path.length === 0) {
+      search_path = "search.xml";
+    } else if (/json$/i.test(search_path)) {
+      isXml = false;
+    }
+    var path = "/hexo/" + search_path;
+    // monitor main search box;
+
+    var onPopupClose = function (e) {
+      $('.popup').hide();
+      $('#local-search-input').val('');
+      $('.search-result-list').remove();
+      $('#no-result').remove();
+      $(".local-search-pop-overlay").remove();
+      $('body').css('overflow', '');
+    }
+
+    function proceedsearch() {
+      $("body")
+        .append('<div class="search-popup-overlay local-search-pop-overlay"></div>')
+        .css('overflow', 'hidden');
+      $('.search-popup-overlay').click(onPopupClose);
+      $('.popup').toggle();
+      var $localSearchInput = $('#local-search-input');
+      $localSearchInput.attr("autocapitalize", "none");
+      $localSearchInput.attr("autocorrect", "off");
+      $localSearchInput.focus();
+    }
+
+    // search function;
+    var searchFunc = function(path, search_id, content_id) {
+      'use strict';
+
+      // start loading animation
+      $("body")
+        .append('<div class="search-popup-overlay local-search-pop-overlay">' +
+          '<div id="search-loading-icon">' +
+          '<i class="fa fa-spinner fa-pulse fa-5x fa-fw"></i>' +
+          '</div>' +
+          '</div>')
+        .css('overflow', 'hidden');
+      $("#search-loading-icon").css('margin', '20% auto 0 auto').css('text-align', 'center');
+
+      $.ajax({
+        url: path,
+        dataType: isXml ? "xml" : "json",
+        async: true,
+        success: function(res) {
+          // get the contents from search data
+          isfetched = true;
+          $('.popup').detach().appendTo('.header-inner');
+          var datas = isXml ? $("entry", res).map(function() {
+            return {
+              title: $("title", this).text(),
+              content: $("content",this).text(),
+              url: $("url" , this).text()
+            };
+          }).get() : res;
+          var input = document.getElementById(search_id);
+          var resultContent = document.getElementById(content_id);
+          var inputEventFunction = function() {
+            var searchText = input.value.trim().toLowerCase();
+            var keywords = searchText.split(/[\s\-]+/);
+            if (keywords.length > 1) {
+              keywords.push(searchText);
+            }
+            var resultItems = [];
+            if (searchText.length > 0) {
+              // perform local searching
+              datas.forEach(function(data) {
+                var isMatch = false;
+                var hitCount = 0;
+                var searchTextCount = 0;
+                var title = data.title.trim();
+                var titleInLowerCase = title.toLowerCase();
+                var content = data.content.trim().replace(/<[^>]+>/g,"");
+                var contentInLowerCase = content.toLowerCase();
+                var articleUrl = decodeURIComponent(data.url);
+                var indexOfTitle = [];
+                var indexOfContent = [];
+                // only match articles with not empty titles
+                if(title != '') {
+                  keywords.forEach(function(keyword) {
+                    function getIndexByWord(word, text, caseSensitive) {
+                      var wordLen = word.length;
+                      if (wordLen === 0) {
+                        return [];
+                      }
+                      var startPosition = 0, position = [], index = [];
+                      if (!caseSensitive) {
+                        text = text.toLowerCase();
+                        word = word.toLowerCase();
+                      }
+                      while ((position = text.indexOf(word, startPosition)) > -1) {
+                        index.push({position: position, word: word});
+                        startPosition = position + wordLen;
+                      }
+                      return index;
+                    }
+
+                    indexOfTitle = indexOfTitle.concat(getIndexByWord(keyword, titleInLowerCase, false));
+                    indexOfContent = indexOfContent.concat(getIndexByWord(keyword, contentInLowerCase, false));
+                  });
+                  if (indexOfTitle.length > 0 || indexOfContent.length > 0) {
+                    isMatch = true;
+                    hitCount = indexOfTitle.length + indexOfContent.length;
+                  }
+                }
+
+                // show search results
+
+                if (isMatch) {
+                  // sort index by position of keyword
+
+                  [indexOfTitle, indexOfContent].forEach(function (index) {
+                    index.sort(function (itemLeft, itemRight) {
+                      if (itemRight.position !== itemLeft.position) {
+                        return itemRight.position - itemLeft.position;
+                      } else {
+                        return itemLeft.word.length - itemRight.word.length;
+                      }
+                    });
+                  });
+
+                  // merge hits into slices
+
+                  function mergeIntoSlice(text, start, end, index) {
+                    var item = index[index.length - 1];
+                    var position = item.position;
+                    var word = item.word;
+                    var hits = [];
+                    var searchTextCountInSlice = 0;
+                    while (position + word.length <= end && index.length != 0) {
+                      if (word === searchText) {
+                        searchTextCountInSlice++;
+                      }
+                      hits.push({position: position, length: word.length});
+                      var wordEnd = position + word.length;
+
+                      // move to next position of hit
+
+                      index.pop();
+                      while (index.length != 0) {
+                        item = index[index.length - 1];
+                        position = item.position;
+                        word = item.word;
+                        if (wordEnd > position) {
+                          index.pop();
+                        } else {
+                          break;
+                        }
+                      }
+                    }
+                    searchTextCount += searchTextCountInSlice;
+                    return {
+                      hits: hits,
+                      start: start,
+                      end: end,
+                      searchTextCount: searchTextCountInSlice
+                    };
+                  }
+
+                  var slicesOfTitle = [];
+                  if (indexOfTitle.length != 0) {
+                    slicesOfTitle.push(mergeIntoSlice(title, 0, title.length, indexOfTitle));
+                  }
+
+                  var slicesOfContent = [];
+                  while (indexOfContent.length != 0) {
+                    var item = indexOfContent[indexOfContent.length - 1];
+                    var position = item.position;
+                    var word = item.word;
+                    // cut out 100 characters
+                    var start = position - 20;
+                    var end = position + 80;
+                    if(start < 0){
+                      start = 0;
+                    }
+                    if (end < position + word.length) {
+                      end = position + word.length;
+                    }
+                    if(end > content.length){
+                      end = content.length;
+                    }
+                    slicesOfContent.push(mergeIntoSlice(content, start, end, indexOfContent));
+                  }
+
+                  // sort slices in content by search text's count and hits' count
+
+                  slicesOfContent.sort(function (sliceLeft, sliceRight) {
+                    if (sliceLeft.searchTextCount !== sliceRight.searchTextCount) {
+                      return sliceRight.searchTextCount - sliceLeft.searchTextCount;
+                    } else if (sliceLeft.hits.length !== sliceRight.hits.length) {
+                      return sliceRight.hits.length - sliceLeft.hits.length;
+                    } else {
+                      return sliceLeft.start - sliceRight.start;
+                    }
+                  });
+
+                  // select top N slices in content
+
+                  var upperBound = parseInt('1');
+                  if (upperBound >= 0) {
+                    slicesOfContent = slicesOfContent.slice(0, upperBound);
+                  }
+
+                  // highlight title and content
+
+                  function highlightKeyword(text, slice) {
+                    var result = '';
+                    var prevEnd = slice.start;
+                    slice.hits.forEach(function (hit) {
+                      result += text.substring(prevEnd, hit.position);
+                      var end = hit.position + hit.length;
+                      result += '<b class="search-keyword">' + text.substring(hit.position, end) + '</b>';
+                      prevEnd = end;
+                    });
+                    result += text.substring(prevEnd, slice.end);
+                    return result;
+                  }
+
+                  var resultItem = '';
+
+                  if (slicesOfTitle.length != 0) {
+                    resultItem += "<li><a href='" + articleUrl + "' class='search-result-title'>" + highlightKeyword(title, slicesOfTitle[0]) + "</a>";
+                  } else {
+                    resultItem += "<li><a href='" + articleUrl + "' class='search-result-title'>" + title + "</a>";
+                  }
+
+                  slicesOfContent.forEach(function (slice) {
+                    resultItem += "<a href='" + articleUrl + "'>" +
+                      "<p class=\"search-result\">" + highlightKeyword(content, slice) +
+                      "...</p>" + "</a>";
+                  });
+
+                  resultItem += "</li>";
+                  resultItems.push({
+                    item: resultItem,
+                    searchTextCount: searchTextCount,
+                    hitCount: hitCount,
+                    id: resultItems.length
+                  });
+                }
+              })
+            };
+            if (keywords.length === 1 && keywords[0] === "") {
+              resultContent.innerHTML = '<div id="no-result"><i class="fa fa-search fa-5x" /></div>'
+            } else if (resultItems.length === 0) {
+              resultContent.innerHTML = '<div id="no-result"><i class="fa fa-frown-o fa-5x" /></div>'
+            } else {
+              resultItems.sort(function (resultLeft, resultRight) {
+                if (resultLeft.searchTextCount !== resultRight.searchTextCount) {
+                  return resultRight.searchTextCount - resultLeft.searchTextCount;
+                } else if (resultLeft.hitCount !== resultRight.hitCount) {
+                  return resultRight.hitCount - resultLeft.hitCount;
+                } else {
+                  return resultRight.id - resultLeft.id;
+                }
+              });
+              var searchResultList = '<ul class=\"search-result-list\">';
+              resultItems.forEach(function (result) {
+                searchResultList += result.item;
+              })
+              searchResultList += "</ul>";
+              resultContent.innerHTML = searchResultList;
+            }
+          }
+
+          if ('auto' === 'auto') {
+            input.addEventListener('input', inputEventFunction);
+          } else {
+            $('.search-icon').click(inputEventFunction);
+            input.addEventListener('keypress', function (event) {
+              if (event.keyCode === 13) {
+                inputEventFunction();
+              }
+            });
+          }
+
+          // remove loading animation
+          $(".local-search-pop-overlay").remove();
+          $('body').css('overflow', '');
+
+          proceedsearch();
+        }
+      });
+    }
+
+    // handle and trigger popup window;
+    $('.popup-trigger').click(function(e) {
+      e.stopPropagation();
+      if (isfetched === false) {
+        searchFunc(path, 'local-search-input', 'local-search-result');
+      } else {
+        proceedsearch();
+      };
+    });
+
+    $('.popup-btn-close').click(onPopupClose);
+    $('.popup').click(function(e){
+      e.stopPropagation();
+    });
+    $(document).on('keyup', function (event) {
+      var shouldDismissSearchPopup = event.which === 27 &&
+        $('.search-popup').is(':visible');
+      if (shouldDismissSearchPopup) {
+        onPopupClose();
+      }
+    });
+  </script>
+
+
+
+
+
+  
+
+  
+
+  
+
+  
+  
+
+  
+
+  
+
+  
+
+</body>
+</html>

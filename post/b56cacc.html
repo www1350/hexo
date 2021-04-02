@@ -1,0 +1,1216 @@
+<!DOCTYPE html>
+
+
+
+  
+
+
+<html class="theme-next mist use-motion" lang="zh-Hans">
+<head><meta name="generator" content="Hexo 3.9.0">
+  <meta charset="UTF-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+<meta name="theme-color" content="#222">
+
+
+
+
+
+
+
+
+
+<meta http-equiv="Cache-Control" content="no-transform">
+<meta http-equiv="Cache-Control" content="no-siteapp">
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+  <link href="/hexo/lib/fancybox/source/jquery.fancybox.css?v=2.1.5" rel="stylesheet" type="text/css">
+
+
+
+
+
+
+
+<link href="/hexo/lib/font-awesome/css/font-awesome.min.css?v=4.6.2" rel="stylesheet" type="text/css">
+
+<link href="/hexo/css/main.css?v=5.1.4" rel="stylesheet" type="text/css">
+
+
+  <link rel="apple-touch-icon" sizes="180x180" href="/hexo/images/apple-touch-icon-next.png?v=5.1.4">
+
+
+  <link rel="icon" type="image/png" sizes="32x32" href="/hexo/images/favicon-32x32-next.png?v=5.1.4">
+
+
+  <link rel="icon" type="image/png" sizes="16x16" href="/hexo/images/favicon-16x16-next.png?v=5.1.4">
+
+
+  <link rel="mask-icon" href="/hexo/images/logo.svg?v=5.1.4" color="#222">
+
+
+
+
+
+  <meta name="keywords" content="Thread,JVM,">
+
+
+
+
+
+  <link rel="alternate" href="/hexo/atom.xml" title="Absurd博客" type="application/atom+xml">
+
+
+
+
+
+
+<meta name="description" content="new Thread()不会启动一个新线程，而是调用init的这个方法设置一些东西，比如设置线程组，栈大小，拿到线程名，tid。创建一个ThreadLocalMap。而start方法才会启动一个线程。 其实start方法的核心就是调用了1private native void start0(); start0 -&amp;gt; JVM_StartThread 虾面是openjdk 的jvm源码http:">
+<meta name="keywords" content="Thread,JVM">
+<meta property="og:type" content="article">
+<meta property="og:title" content="JVM源码－Thread">
+<meta property="og:url" content="https://www1350.github.io/hexo/post/b56cacc.html">
+<meta property="og:site_name" content="Absurd博客">
+<meta property="og:description" content="new Thread()不会启动一个新线程，而是调用init的这个方法设置一些东西，比如设置线程组，栈大小，拿到线程名，tid。创建一个ThreadLocalMap。而start方法才会启动一个线程。 其实start方法的核心就是调用了1private native void start0(); start0 -&amp;gt; JVM_StartThread 虾面是openjdk 的jvm源码http:">
+<meta property="og:locale" content="zh-Hans">
+<meta property="og:updated_time" content="2018-04-16T07:45:14.000Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="JVM源码－Thread">
+<meta name="twitter:description" content="new Thread()不会启动一个新线程，而是调用init的这个方法设置一些东西，比如设置线程组，栈大小，拿到线程名，tid。创建一个ThreadLocalMap。而start方法才会启动一个线程。 其实start方法的核心就是调用了1private native void start0(); start0 -&amp;gt; JVM_StartThread 虾面是openjdk 的jvm源码http:">
+
+
+
+<script type="text/javascript" id="hexo.configurations">
+  var NexT = window.NexT || {};
+  var CONFIG = {
+    root: '/hexo/',
+    scheme: 'Mist',
+    version: '5.1.4',
+    sidebar: {"position":"left","display":"post","offset":12,"b2t":false,"scrollpercent":false,"onmobile":false},
+    fancybox: true,
+    tabs: true,
+    motion: {"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},
+    duoshuo: {
+      userId: '0',
+      author: '博主'
+    },
+    algolia: {
+      applicationID: '',
+      apiKey: '',
+      indexName: '',
+      hits: {"per_page":10},
+      labels: {"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}
+    }
+  };
+</script>
+
+
+
+  <link rel="canonical" href="https://www1350.github.io/hexo/post/b56cacc.html">
+
+
+
+
+
+  <title>JVM源码－Thread | Absurd博客</title>
+  
+
+
+
+
+
+
+
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage" lang="zh-Hans">
+
+  
+  
+    
+  
+
+  <div class="container sidebar-position-left page-post-detail">
+    <div class="headband"></div>
+
+    <header id="header" class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-wrapper">
+  <div class="site-meta ">
+    
+
+    <div class="custom-logo-site-title">
+      <a href="/hexo/" class="brand" rel="start">
+        <span class="logo-line-before"><i></i></span>
+        <span class="site-title">Absurd博客</span>
+        <span class="logo-line-after"><i></i></span>
+      </a>
+    </div>
+      
+        <p class="site-subtitle"></p>
+      
+  </div>
+
+  <div class="site-nav-toggle">
+    <button>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+    </button>
+  </div>
+</div>
+
+<nav class="site-nav">
+  
+
+  
+    <ul id="menu" class="menu">
+      
+        
+        <li class="menu-item menu-item-home">
+          <a href="/hexo/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-home"></i> <br>
+            
+            首页
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-about">
+          <a href="/hexo/about/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-user"></i> <br>
+            
+            关于
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-tags">
+          <a href="/hexo/tags/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-tags"></i> <br>
+            
+            标签
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-categories">
+          <a href="/hexo/categories/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-th"></i> <br>
+            
+            分类
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-archives">
+          <a href="/hexo/archives/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-archive"></i> <br>
+            
+            归档
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-bookmarks">
+          <a href="/hexo/bookmarks/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-archive"></i> <br>
+            
+            bookmarks
+          </a>
+        </li>
+      
+
+      
+        <li class="menu-item menu-item-search">
+          
+            <a href="javascript:;" class="popup-trigger">
+          
+            
+              <i class="menu-item-icon fa fa-search fa-fw"></i> <br>
+            
+            搜索
+          </a>
+        </li>
+      
+    </ul>
+  
+
+  
+    <div class="site-search">
+      
+  <div class="popup search-popup local-search-popup">
+  <div class="local-search-header clearfix">
+    <span class="search-icon">
+      <i class="fa fa-search"></i>
+    </span>
+    <span class="popup-btn-close">
+      <i class="fa fa-times-circle"></i>
+    </span>
+    <div class="local-search-input-wrapper">
+      <input autocomplete="off" placeholder="搜索..." spellcheck="false" type="text" id="local-search-input">
+    </div>
+  </div>
+  <div id="local-search-result"></div>
+</div>
+
+
+
+    </div>
+  
+</nav>
+
+
+
+ </div>
+    </header>
+
+    <main id="main" class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          <div id="content" class="content">
+            
+
+  <div id="posts" class="posts-expand">
+    
+
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal" itemscope itemtype="http://schema.org/Article">
+  
+  
+  
+  <div class="post-block">
+    <link itemprop="mainEntityOfPage" href="https://www1350.github.io/hexo/hexo/post/b56cacc.html">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="Absurd">
+      <meta itemprop="description" content>
+      <meta itemprop="image" content="/hexo/images/avatar.gif">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Absurd博客">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">JVM源码－Thread</h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">发表于</span>
+              
+              <time title="创建于" itemprop="dateCreated datePublished" datetime="2018-04-03T23:35:43+08:00">
+                2018-04-03
+              </time>
+            
+
+            
+
+            
+          </span>
+
+          
+            <span class="post-category">
+            
+              <span class="post-meta-divider">|</span>
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">分类于</span>
+              
+              
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/hexo/categories/源码/" itemprop="url" rel="index">
+                    <span itemprop="name">源码</span>
+                  </a>
+                </span>
+
+                
+                
+              
+            </span>
+          
+
+          
+            
+              <span class="post-comments-count">
+                <span class="post-meta-divider">|</span>
+                <span class="post-meta-item-icon">
+                  <i class="fa fa-comment-o"></i>
+                </span>
+                <a href="/hexo/post/b56cacc.html#comments" itemprop="discussionUrl">
+                  <span class="post-comments-count gitment-comments-count" data-xid="/hexo/post/b56cacc.html" itemprop="commentsCount"></span>
+                </a>
+              </span>
+            
+          
+
+          
+          
+
+          
+            <span class="post-meta-divider">|</span>
+            <span class="page-pv"><i class="fa fa-file-o"></i>
+            <span class="busuanzi-value" id="busuanzi_value_page_pv"></span>
+            </span>
+          
+
+          
+
+          
+
+        </div>
+      </header>
+    
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        <p>new Thread()不会启动一个新线程，而是调用init的这个方法设置一些东西，比如设置线程组，栈大小，拿到线程名，tid。创建一个ThreadLocalMap。<br>而start方法才会启动一个线程。</p>
+<p>其实start方法的核心就是调用了<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">private native void start0();</span><br></pre></td></tr></table></figure></p>
+<p>start0 -&gt; JVM_StartThread</p>
+<p>虾面是openjdk 的jvm源码<a href="http://hg.openjdk.java.net/jdk8u/jdk8u/hotspot/file/75d40493551f/src/share/vm/prims/jvm.cpp" target="_blank" rel="noopener">http://hg.openjdk.java.net/jdk8u/jdk8u/hotspot/file/75d40493551f/src/share/vm/prims/jvm.cpp</a></p>
+<a id="more"></a>
+<figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br><span class="line">65</span><br><span class="line">66</span><br><span class="line">67</span><br><span class="line">68</span><br><span class="line">69</span><br><span class="line">70</span><br><span class="line">71</span><br></pre></td><td class="code"><pre><span class="line">JVM_ENTRY(<span class="keyword">void</span>, JVM_StartThread(JNIEnv* env, jobject jthread))</span><br><span class="line">  JVMWrapper(<span class="string">"JVM_StartThread"</span>);</span><br><span class="line">  JavaThread *native_thread = <span class="literal">NULL</span>;</span><br><span class="line"></span><br><span class="line">  <span class="comment">// We cannot hold the Threads_lock when we throw an exception,</span></span><br><span class="line">  <span class="comment">// due to rank ordering issues. Example:  we might need to grab the</span></span><br><span class="line">  <span class="comment">// Heap_lock while we construct the exception.</span></span><br><span class="line">  <span class="keyword">bool</span> throw_illegal_thread_state = <span class="literal">false</span>;</span><br><span class="line"></span><br><span class="line">  <span class="comment">// We must release the Threads_lock before we can post a jvmti event</span></span><br><span class="line">  <span class="comment">// in Thread::start.</span></span><br><span class="line">  &#123;</span><br><span class="line">    <span class="comment">// Ensure that the C++ Thread and OSThread structures aren't freed before</span></span><br><span class="line">    <span class="comment">// we operate.</span></span><br><span class="line">    <span class="function">MutexLocker <span class="title">mu</span><span class="params">(Threads_lock)</span></span>;</span><br><span class="line"></span><br><span class="line">    <span class="comment">// Since JDK 5 the java.lang.Thread threadStatus is used to prevent</span></span><br><span class="line">    <span class="comment">// re-starting an already started thread, so we should usually find</span></span><br><span class="line">    <span class="comment">// that the JavaThread is null. However for a JNI attached thread</span></span><br><span class="line">    <span class="comment">// there is a small window between the Thread object being created</span></span><br><span class="line">    <span class="comment">// (with its JavaThread set) and the update to its threadStatus, so we</span></span><br><span class="line">    <span class="comment">// have to check for this</span></span><br><span class="line">    <span class="keyword">if</span> (java_lang_Thread::thread(JNIHandles::resolve_non_null(jthread)) != <span class="literal">NULL</span>) &#123;</span><br><span class="line">      throw_illegal_thread_state = <span class="literal">true</span>;</span><br><span class="line">    &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">      <span class="comment">// We could also check the stillborn flag to see if this thread was already stopped, but</span></span><br><span class="line">      <span class="comment">// for historical reasons we let the thread detect that itself when it starts running</span></span><br><span class="line"></span><br><span class="line">      jlong size =</span><br><span class="line">             java_lang_Thread::stackSize(JNIHandles::resolve_non_null(jthread));</span><br><span class="line">      <span class="comment">// Allocate the C++ Thread structure and create the native thread.  The</span></span><br><span class="line">      <span class="comment">// stack size retrieved from java is signed, but the constructor takes</span></span><br><span class="line">      <span class="comment">// size_t (an unsigned type), so avoid passing negative values which would</span></span><br><span class="line">      <span class="comment">// result in really large stacks.</span></span><br><span class="line">      <span class="keyword">size_t</span> sz = size &gt; <span class="number">0</span> ? (<span class="keyword">size_t</span>) size : <span class="number">0</span>;</span><br><span class="line">      native_thread = <span class="keyword">new</span> JavaThread(&amp;thread_entry, sz);</span><br><span class="line"></span><br><span class="line">      <span class="comment">// At this point it may be possible that no osthread was created for the</span></span><br><span class="line">      <span class="comment">// JavaThread due to lack of memory. Check for this situation and throw</span></span><br><span class="line">      <span class="comment">// an exception if necessary. Eventually we may want to change this so</span></span><br><span class="line">      <span class="comment">// that we only grab the lock if the thread was created successfully -</span></span><br><span class="line">      <span class="comment">// then we can also do this check and throw the exception in the</span></span><br><span class="line">      <span class="comment">// JavaThread constructor.</span></span><br><span class="line">      <span class="keyword">if</span> (native_thread-&gt;osthread() != <span class="literal">NULL</span>) &#123;</span><br><span class="line">        <span class="comment">// Note: the current thread is not being used within "prepare".</span></span><br><span class="line">        native_thread-&gt;prepare(jthread);</span><br><span class="line">      &#125;</span><br><span class="line">    &#125;</span><br><span class="line">  &#125;</span><br><span class="line"></span><br><span class="line">  <span class="keyword">if</span> (throw_illegal_thread_state) &#123;</span><br><span class="line">    THROW(vmSymbols::java_lang_IllegalThreadStateException());</span><br><span class="line">  &#125;</span><br><span class="line"></span><br><span class="line">  assert(native_thread != <span class="literal">NULL</span>, <span class="string">"Starting null thread?"</span>);</span><br><span class="line"></span><br><span class="line">  <span class="keyword">if</span> (native_thread-&gt;osthread() == <span class="literal">NULL</span>) &#123;</span><br><span class="line">    <span class="comment">// No one should hold a reference to the 'native_thread'.</span></span><br><span class="line">    <span class="keyword">delete</span> native_thread;</span><br><span class="line">    <span class="keyword">if</span> (JvmtiExport::should_post_resource_exhausted()) &#123;</span><br><span class="line">      JvmtiExport::post_resource_exhausted(</span><br><span class="line">        JVMTI_RESOURCE_EXHAUSTED_OOM_ERROR | JVMTI_RESOURCE_EXHAUSTED_THREADS,</span><br><span class="line">        <span class="string">"unable to create new native thread"</span>);</span><br><span class="line">    &#125;</span><br><span class="line">    THROW_MSG(vmSymbols::java_lang_OutOfMemoryError(),</span><br><span class="line">              <span class="string">"unable to create new native thread"</span>);</span><br><span class="line">  &#125;</span><br><span class="line"></span><br><span class="line">  Thread::start(native_thread);</span><br><span class="line"></span><br><span class="line">JVM_END</span><br></pre></td></tr></table></figure>
+<p>可以注意到有native_thread-&gt;osthread() == NULL<br>这个判断，如果osthread为空了会抛出OutOfMemoryError<br>核心点在于native_thread = new JavaThread(&amp;thread_entry, sz); 创建了一个新的线程</p>
+<p><a href="http://hg.openjdk.java.net/jdk8u/jdk8u/hotspot/file/75d40493551f/src/share/vm/runtime/thread.cpp" target="_blank" rel="noopener">http://hg.openjdk.java.net/jdk8u/jdk8u/hotspot/file/75d40493551f/src/share/vm/runtime/thread.cpp</a></p>
+<figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br></pre></td><td class="code"><pre><span class="line">JavaThread::JavaThread(ThreadFunction entry_point, <span class="keyword">size_t</span> stack_sz) :</span><br><span class="line">  Thread()</span><br><span class="line"><span class="meta">#<span class="meta-keyword">if</span> INCLUDE_ALL_GCS</span></span><br><span class="line">  , _satb_mark_queue(&amp;_satb_mark_queue_set),</span><br><span class="line">  _dirty_card_queue(&amp;_dirty_card_queue_set)</span><br><span class="line"><span class="meta">#<span class="meta-keyword">endif</span> <span class="comment">// INCLUDE_ALL_GCS</span></span></span><br><span class="line">&#123;</span><br><span class="line">  <span class="keyword">if</span> (TraceThreadEvents) &#123;</span><br><span class="line">    tty-&gt;print_cr(<span class="string">"creating thread %p"</span>, <span class="keyword">this</span>);</span><br><span class="line">  &#125;</span><br><span class="line">  initialize();</span><br><span class="line">  _jni_attach_state = _not_attaching_via_jni;</span><br><span class="line">  set_entry_point(entry_point);</span><br><span class="line">  <span class="comment">// Create the native thread itself.</span></span><br><span class="line">  <span class="comment">// %note runtime_23</span></span><br><span class="line">  os::ThreadType thr_type = os::java_thread;</span><br><span class="line">  thr_type = entry_point == &amp;compiler_thread_entry ? os::compiler_thread :</span><br><span class="line">                                                     os::java_thread;</span><br><span class="line">  os::create_thread(<span class="keyword">this</span>, thr_type, stack_sz);</span><br><span class="line">  <span class="comment">// The _osthread may be NULL here because we ran out of memory (too many threads active).</span></span><br><span class="line">  <span class="comment">// We need to throw and OutOfMemoryError - however we cannot do this here because the caller</span></span><br><span class="line">  <span class="comment">// may hold a lock and all locks must be unlocked before throwing the exception (throwing</span></span><br><span class="line">  <span class="comment">// the exception consists of creating the exception object &amp; initializing it, initialization</span></span><br><span class="line">  <span class="comment">// will leave the VM via a JavaCall and then all locks must be unlocked).</span></span><br><span class="line">  <span class="comment">//</span></span><br><span class="line">  <span class="comment">// The thread is still suspended when we reach here. Thread must be explicit started</span></span><br><span class="line">  <span class="comment">// by creator! Furthermore, the thread must also explicitly be added to the Threads list</span></span><br><span class="line">  <span class="comment">// by calling Threads:add. The reason why this is not done here, is because the thread</span></span><br><span class="line">  <span class="comment">// object must be fully initialized (take a look at JVM_Start)</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>initialize()初始化了一堆字段，重点还是os::create_thread(this, thr_type, stack_sz);</p>
+<p>参考下linux下的创建方法<br><a href="http://hg.openjdk.java.net/jdk8u/jdk8u/hotspot/file/75d40493551f/src/os/linux/vm/os_linux.cpp" target="_blank" rel="noopener">http://hg.openjdk.java.net/jdk8u/jdk8u/hotspot/file/75d40493551f/src/os/linux/vm/os_linux.cpp</a></p>
+<figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br><span class="line">65</span><br><span class="line">66</span><br><span class="line">67</span><br><span class="line">68</span><br><span class="line">69</span><br><span class="line">70</span><br><span class="line">71</span><br><span class="line">72</span><br><span class="line">73</span><br><span class="line">74</span><br><span class="line">75</span><br><span class="line">76</span><br><span class="line">77</span><br><span class="line">78</span><br><span class="line">79</span><br><span class="line">80</span><br><span class="line">81</span><br><span class="line">82</span><br><span class="line">83</span><br><span class="line">84</span><br><span class="line">85</span><br><span class="line">86</span><br><span class="line">87</span><br><span class="line">88</span><br><span class="line">89</span><br><span class="line">90</span><br><span class="line">91</span><br><span class="line">92</span><br><span class="line">93</span><br><span class="line">94</span><br><span class="line">95</span><br><span class="line">96</span><br><span class="line">97</span><br><span class="line">98</span><br><span class="line">99</span><br><span class="line">100</span><br><span class="line">101</span><br><span class="line">102</span><br><span class="line">103</span><br><span class="line">104</span><br><span class="line">105</span><br><span class="line">106</span><br><span class="line">107</span><br><span class="line">108</span><br><span class="line">109</span><br><span class="line">110</span><br><span class="line">111</span><br><span class="line">112</span><br><span class="line">113</span><br><span class="line">114</span><br></pre></td><td class="code"><pre><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">bool</span> <span class="title">os::create_thread</span><span class="params">(Thread* thread, ThreadType thr_type, <span class="keyword">size_t</span> stack_size)</span> </span>&#123;</span><br><span class="line">  assert(thread-&gt;osthread() == <span class="literal">NULL</span>, <span class="string">"caller responsible"</span>);</span><br><span class="line"></span><br><span class="line">  <span class="comment">// Allocate the OSThread object</span></span><br><span class="line">  OSThread* osthread = <span class="keyword">new</span> OSThread(<span class="literal">NULL</span>, <span class="literal">NULL</span>);</span><br><span class="line">  <span class="keyword">if</span> (osthread == <span class="literal">NULL</span>) &#123;</span><br><span class="line">    <span class="keyword">return</span> <span class="literal">false</span>;</span><br><span class="line">  &#125;</span><br><span class="line"></span><br><span class="line">  <span class="comment">// set the correct thread state</span></span><br><span class="line">  osthread-&gt;set_thread_type(thr_type);</span><br><span class="line"></span><br><span class="line">  <span class="comment">// Initial state is ALLOCATED but not INITIALIZED</span></span><br><span class="line">  osthread-&gt;set_state(ALLOCATED);</span><br><span class="line"></span><br><span class="line">  thread-&gt;set_osthread(osthread);</span><br><span class="line"></span><br><span class="line">  <span class="comment">// init thread attributes</span></span><br><span class="line">  <span class="keyword">pthread_attr_t</span> attr;</span><br><span class="line">  pthread_attr_init(&amp;attr);</span><br><span class="line">  pthread_attr_setdetachstate(&amp;attr, PTHREAD_CREATE_DETACHED);</span><br><span class="line"></span><br><span class="line">  <span class="comment">// stack size</span></span><br><span class="line">  <span class="keyword">if</span> (os::Linux::supports_variable_stack_size()) &#123;</span><br><span class="line">    <span class="comment">// calculate stack size if it's not specified by caller</span></span><br><span class="line">    <span class="keyword">if</span> (stack_size == <span class="number">0</span>) &#123;</span><br><span class="line">      stack_size = os::Linux::default_stack_size(thr_type);</span><br><span class="line"></span><br><span class="line">      <span class="keyword">switch</span> (thr_type) &#123;</span><br><span class="line">      <span class="keyword">case</span> os::java_thread:</span><br><span class="line">        <span class="comment">// Java threads use ThreadStackSize which default value can be</span></span><br><span class="line">        <span class="comment">// changed with the flag -Xss</span></span><br><span class="line">        assert (JavaThread::stack_size_at_create() &gt; <span class="number">0</span>, <span class="string">"this should be set"</span>);</span><br><span class="line">        stack_size = JavaThread::stack_size_at_create();</span><br><span class="line">        <span class="keyword">break</span>;</span><br><span class="line">      <span class="keyword">case</span> os::compiler_thread:</span><br><span class="line">        <span class="keyword">if</span> (CompilerThreadStackSize &gt; <span class="number">0</span>) &#123;</span><br><span class="line">          stack_size = (<span class="keyword">size_t</span>)(CompilerThreadStackSize * K);</span><br><span class="line">          <span class="keyword">break</span>;</span><br><span class="line">        &#125; <span class="comment">// else fall through:</span></span><br><span class="line">          <span class="comment">// use VMThreadStackSize if CompilerThreadStackSize is not defined</span></span><br><span class="line">      <span class="keyword">case</span> os::vm_thread:</span><br><span class="line">      <span class="keyword">case</span> os::pgc_thread:</span><br><span class="line">      <span class="keyword">case</span> os::cgc_thread:</span><br><span class="line">      <span class="keyword">case</span> os::watcher_thread:</span><br><span class="line">        <span class="keyword">if</span> (VMThreadStackSize &gt; <span class="number">0</span>) stack_size = (<span class="keyword">size_t</span>)(VMThreadStackSize * K);</span><br><span class="line">        <span class="keyword">break</span>;</span><br><span class="line">      &#125;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    stack_size = MAX2(stack_size, os::Linux::min_stack_allowed);</span><br><span class="line">    pthread_attr_setstacksize(&amp;attr, stack_size);</span><br><span class="line">  &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">    <span class="comment">// let pthread_create() pick the default value.</span></span><br><span class="line">  &#125;</span><br><span class="line"></span><br><span class="line">  <span class="comment">// glibc guard page</span></span><br><span class="line">  pthread_attr_setguardsize(&amp;attr, os::Linux::default_guard_size(thr_type));</span><br><span class="line"></span><br><span class="line">  ThreadState state;</span><br><span class="line"></span><br><span class="line">  &#123;</span><br><span class="line">    <span class="comment">// Serialize thread creation if we are running with fixed stack LinuxThreads</span></span><br><span class="line">    <span class="keyword">bool</span> lock = os::Linux::is_LinuxThreads() &amp;&amp; !os::Linux::is_floating_stack();</span><br><span class="line">    <span class="keyword">if</span> (lock) &#123;</span><br><span class="line">      os::Linux::createThread_lock()-&gt;lock_without_safepoint_check();</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">pthread_t</span> tid;</span><br><span class="line">    <span class="keyword">int</span> ret = pthread_create(&amp;tid, &amp;attr, (<span class="keyword">void</span>* (*)(<span class="keyword">void</span>*)) java_start, thread);</span><br><span class="line"></span><br><span class="line">    pthread_attr_destroy(&amp;attr);</span><br><span class="line"></span><br><span class="line">    <span class="keyword">if</span> (ret != <span class="number">0</span>) &#123;</span><br><span class="line">      <span class="keyword">if</span> (PrintMiscellaneous &amp;&amp; (Verbose || WizardMode)) &#123;</span><br><span class="line">        perror(<span class="string">"pthread_create()"</span>);</span><br><span class="line">      &#125;</span><br><span class="line">      <span class="comment">// Need to clean up stuff we've allocated so far</span></span><br><span class="line">      thread-&gt;set_osthread(<span class="literal">NULL</span>);</span><br><span class="line">      <span class="keyword">delete</span> osthread;</span><br><span class="line">      <span class="keyword">if</span> (lock) os::Linux::createThread_lock()-&gt;unlock();</span><br><span class="line">      <span class="keyword">return</span> <span class="literal">false</span>;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="comment">// Store pthread info into the OSThread</span></span><br><span class="line">    osthread-&gt;set_pthread_id(tid);</span><br><span class="line"></span><br><span class="line">    <span class="comment">// Wait until child thread is either initialized or aborted</span></span><br><span class="line">    &#123;</span><br><span class="line">      Monitor* sync_with_child = osthread-&gt;startThread_lock();</span><br><span class="line">      <span class="function">MutexLockerEx <span class="title">ml</span><span class="params">(sync_with_child, Mutex::_no_safepoint_check_flag)</span></span>;</span><br><span class="line">      <span class="keyword">while</span> ((state = osthread-&gt;get_state()) == ALLOCATED) &#123;</span><br><span class="line">        sync_with_child-&gt;wait(Mutex::_no_safepoint_check_flag);</span><br><span class="line">      &#125;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">if</span> (lock) &#123;</span><br><span class="line">      os::Linux::createThread_lock()-&gt;unlock();</span><br><span class="line">    &#125;</span><br><span class="line">  &#125;</span><br><span class="line"></span><br><span class="line">  <span class="comment">// Aborted due to thread limit being reached</span></span><br><span class="line">  <span class="keyword">if</span> (state == ZOMBIE) &#123;</span><br><span class="line">      thread-&gt;set_osthread(<span class="literal">NULL</span>);</span><br><span class="line">      <span class="keyword">delete</span> osthread;</span><br><span class="line">      <span class="keyword">return</span> <span class="literal">false</span>;</span><br><span class="line">  &#125;</span><br><span class="line"></span><br><span class="line">  <span class="comment">// The thread is returned suspended (in state INITIALIZED),</span></span><br><span class="line">  <span class="comment">// and is started higher up in the call chain</span></span><br><span class="line">  assert(state == INITIALIZED, <span class="string">"race condition"</span>);</span><br><span class="line">  <span class="keyword">return</span> <span class="literal">true</span>;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>如果new OSThread(NULL, NULL);失败了会一直返回到最上面的函数并抛出oom（如内存不够等条件）</p>
+<p>可以看到使用glibc的int ret = pthread_create(&amp;tid, &amp;attr, (void<em> (</em>)(void*)) java_start, thread);来创建线程。如果创建失败也会thread-&gt;set_osthread(NULL); （如ZOMBIE状态－达到线程上限）最后抛出oom</p>
+<p>关于glibc的pthread_create可以参考<br><a href="http://www.gnu.org/software/libc/manual/pdf/libc.pdf" target="_blank" rel="noopener">http://www.gnu.org/software/libc/manual/pdf/libc.pdf</a></p>
+
+      
+    </div>
+    
+    
+    
+
+    
+
+    
+      <div>
+        <div style="padding: 10px 0; margin: 20px auto; width: 90%; text-align: center;">
+  <div>Donate comment here</div>
+  <button id="rewardButton" disable="enable" onclick="var qr = document.getElementById('QR'); if (qr.style.display === 'none') {qr.style.display='block';} else {qr.style.display='none'}">
+    <span>打赏</span>
+  </button>
+  <div id="QR" style="display: none;">
+
+    
+      <div id="wechat" style="display: inline-block">
+        <img id="wechat_qr" src="/hexo/images/wechatpay.jpg" alt="Absurd 微信支付">
+        <p>微信支付</p>
+      </div>
+    
+
+    
+
+    
+
+  </div>
+</div>
+
+      </div>
+    
+
+    
+
+    <footer class="post-footer">
+      
+        <div class="post-tags">
+          
+            <a href="/hexo/tags/Thread/" rel="tag"># Thread</a>
+          
+            <a href="/hexo/tags/JVM/" rel="tag"># JVM</a>
+          
+        </div>
+      
+
+      
+      
+      
+
+      
+        <div class="post-nav">
+          <div class="post-nav-next post-nav-item">
+            
+              <a href="/hexo/post/afadb629.html" rel="next" title="HashMap源码(jdk1.8) ">
+                <i class="fa fa-chevron-left"></i> HashMap源码(jdk1.8) 
+              </a>
+            
+          </div>
+
+          <span class="post-nav-divider"></span>
+
+          <div class="post-nav-prev post-nav-item">
+            
+              <a href="/hexo/post/2355343c.html" rel="prev" title="dubbo源码解析（九） Filter & Listener">
+                dubbo源码解析（九） Filter & Listener <i class="fa fa-chevron-right"></i>
+              </a>
+            
+          </div>
+        </div>
+      
+
+      
+      
+    </footer>
+  </div>
+  
+  
+  
+  </article>
+
+
+
+    <div class="post-spread">
+      
+    </div>
+  </div>
+
+
+          </div>
+          
+
+
+          
+
+  
+    <div class="comments" id="comments">
+      
+        <div id="gitment-container"></div>
+      
+    </div>
+
+  
+
+
+
+        </div>
+        
+          
+  
+  <div class="sidebar-toggle">
+    <div class="sidebar-toggle-line-wrap">
+      <span class="sidebar-toggle-line sidebar-toggle-line-first"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-middle"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-last"></span>
+    </div>
+  </div>
+
+  <aside id="sidebar" class="sidebar">
+    
+    <div class="sidebar-inner">
+
+      
+
+      
+
+      <section class="site-overview-wrap sidebar-panel sidebar-panel-active">
+        <div class="site-overview">
+          <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+            
+              <img class="site-author-image" itemprop="image" src="/hexo/images/avatar.gif" alt="Absurd">
+            
+              <p class="site-author-name" itemprop="name">Absurd</p>
+              <p class="site-description motion-element" itemprop="description"></p>
+          </div>
+
+          <nav class="site-state motion-element">
+
+            
+              <div class="site-state-item site-state-posts">
+              
+                <a href="/hexo/archives/">
+              
+                  <span class="site-state-item-count">74</span>
+                  <span class="site-state-item-name">日志</span>
+                </a>
+              </div>
+            
+
+            
+              
+              
+              <div class="site-state-item site-state-categories">
+                <a href="/hexo/categories/index.html">
+                  <span class="site-state-item-count">17</span>
+                  <span class="site-state-item-name">分类</span>
+                </a>
+              </div>
+            
+
+            
+              
+              
+              <div class="site-state-item site-state-tags">
+                <a href="/hexo/tags/index.html">
+                  <span class="site-state-item-count">46</span>
+                  <span class="site-state-item-name">标签</span>
+                </a>
+              </div>
+            
+
+          </nav>
+
+          
+            <div class="feed-link motion-element">
+              <a href="/hexo/atom.xml" rel="alternate">
+                <i class="fa fa-rss"></i>
+                RSS
+              </a>
+            </div>
+          
+
+          
+            <div class="links-of-author motion-element">
+                
+                  <span class="links-of-author-item">
+                    <a href="https://github.com/www1350" target="_blank" title="GitHub">
+                      
+                        <i class="fa fa-fw fa-github"></i>GitHub</a>
+                  </span>
+                
+                  <span class="links-of-author-item">
+                    <a href="mailto:www_1350@163.com" target="_blank" title="E-Mail">
+                      
+                        <i class="fa fa-fw fa-envelope"></i>E-Mail</a>
+                  </span>
+                
+            </div>
+          
+
+          
+          
+
+          
+          
+
+          
+
+        </div>
+      </section>
+
+      
+
+      
+
+    </div>
+  </aside>
+
+
+        
+      </div>
+    </main>
+
+    <footer id="footer" class="footer">
+      <div class="footer-inner">
+        <div class="copyright">&copy; <span itemprop="copyrightYear">2021</span>
+  <span class="with-love">
+    <i class="fa fa-user"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">Absurd</span>
+
+  
+</div>
+
+
+  <div class="powered-by">由 <a class="theme-link" target="_blank" href="https://hexo.io">Hexo</a> 强力驱动</div>
+
+
+
+  <span class="post-meta-divider">|</span>
+
+
+
+  <div class="theme-info">主题 &mdash; <a class="theme-link" target="_blank" href="https://github.com/iissnan/hexo-theme-next">NexT.Mist</a> v5.1.4</div>
+
+
+
+
+        
+<div class="busuanzi-count">
+  <script async src="https://dn-lbstatics.qbox.me/busuanzi/2.3/busuanzi.pure.mini.js"></script>
+
+  
+    <span class="site-uv">
+      <i class="fa fa-user"></i>
+      <span class="busuanzi-value" id="busuanzi_value_site_uv"></span>
+      
+    </span>
+  
+
+  
+    <span class="site-pv">
+      <i class="fa fa-eye"></i>
+      <span class="busuanzi-value" id="busuanzi_value_site_pv"></span>
+      
+    </span>
+  
+</div>
+
+
+
+
+
+
+
+
+        
+      </div>
+    </footer>
+
+    
+      <div class="back-to-top">
+        <i class="fa fa-arrow-up"></i>
+        
+      </div>
+    
+
+    
+
+  </div>
+
+  
+
+<script type="text/javascript">
+  if (Object.prototype.toString.call(window.Promise) !== '[object Function]') {
+    window.Promise = null;
+  }
+</script>
+
+
+
+
+
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+    <script type="text/javascript" src="/hexo/lib/jquery/index.js?v=2.1.3"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/hexo/lib/fastclick/lib/fastclick.min.js?v=1.0.6"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/hexo/lib/jquery_lazyload/jquery.lazyload.js?v=1.9.7"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/hexo/lib/velocity/velocity.min.js?v=1.2.1"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/hexo/lib/velocity/velocity.ui.min.js?v=1.2.1"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/hexo/lib/fancybox/source/jquery.fancybox.pack.js?v=2.1.5"></script>
+  
+
+
+  
+
+
+  <script type="text/javascript" src="/hexo/js/src/utils.js?v=5.1.4"></script>
+
+  <script type="text/javascript" src="/hexo/js/src/motion.js?v=5.1.4"></script>
+
+
+
+  
+  
+
+  
+  <script type="text/javascript" src="/hexo/js/src/scrollspy.js?v=5.1.4"></script>
+<script type="text/javascript" src="/hexo/js/src/post-details.js?v=5.1.4"></script>
+
+
+
+  
+
+
+  <script type="text/javascript" src="/hexo/js/src/bootstrap.js?v=5.1.4"></script>
+
+
+
+  
+
+
+  
+
+
+
+
+	
+
+
+
+
+
+  
+
+
+
+
+
+  
+
+
+
+
+
+
+
+<!-- LOCAL: You can save these files to your site and update links -->
+    
+        
+        <link rel="stylesheet" href="https://aimingoo.github.io/gitmint/style/default.css">
+        <script src="https://aimingoo.github.io/gitmint/dist/gitmint.browser.js"></script>
+    
+<!-- END LOCAL -->
+
+    
+
+    
+      <script type="text/javascript">
+      function renderGitment(){
+        var gitment = new Gitmint({
+            id: window.location.pathname, 
+            owner: 'www1350',
+            repo: 'hexo',
+            
+            lang: "" || navigator.language || navigator.systemLanguage || navigator.userLanguage,
+            
+            oauth: {
+            
+            
+                client_secret: '471214f79bbafcfc2101577ba8b4e2439e6aab72',
+            
+                client_id: 'deb8b8a893a7e72bbf7c'
+            }});
+        gitment.render('gitment-container');
+      }
+
+      
+      renderGitment();
+      
+      </script>
+    
+
+
+
+
+
+
+
+  
+
+  <script type="text/javascript">
+    // Popup Window;
+    var isfetched = false;
+    var isXml = true;
+    // Search DB path;
+    var search_path = "search.xml";
+    if (search_path.length === 0) {
+      search_path = "search.xml";
+    } else if (/json$/i.test(search_path)) {
+      isXml = false;
+    }
+    var path = "/hexo/" + search_path;
+    // monitor main search box;
+
+    var onPopupClose = function (e) {
+      $('.popup').hide();
+      $('#local-search-input').val('');
+      $('.search-result-list').remove();
+      $('#no-result').remove();
+      $(".local-search-pop-overlay").remove();
+      $('body').css('overflow', '');
+    }
+
+    function proceedsearch() {
+      $("body")
+        .append('<div class="search-popup-overlay local-search-pop-overlay"></div>')
+        .css('overflow', 'hidden');
+      $('.search-popup-overlay').click(onPopupClose);
+      $('.popup').toggle();
+      var $localSearchInput = $('#local-search-input');
+      $localSearchInput.attr("autocapitalize", "none");
+      $localSearchInput.attr("autocorrect", "off");
+      $localSearchInput.focus();
+    }
+
+    // search function;
+    var searchFunc = function(path, search_id, content_id) {
+      'use strict';
+
+      // start loading animation
+      $("body")
+        .append('<div class="search-popup-overlay local-search-pop-overlay">' +
+          '<div id="search-loading-icon">' +
+          '<i class="fa fa-spinner fa-pulse fa-5x fa-fw"></i>' +
+          '</div>' +
+          '</div>')
+        .css('overflow', 'hidden');
+      $("#search-loading-icon").css('margin', '20% auto 0 auto').css('text-align', 'center');
+
+      $.ajax({
+        url: path,
+        dataType: isXml ? "xml" : "json",
+        async: true,
+        success: function(res) {
+          // get the contents from search data
+          isfetched = true;
+          $('.popup').detach().appendTo('.header-inner');
+          var datas = isXml ? $("entry", res).map(function() {
+            return {
+              title: $("title", this).text(),
+              content: $("content",this).text(),
+              url: $("url" , this).text()
+            };
+          }).get() : res;
+          var input = document.getElementById(search_id);
+          var resultContent = document.getElementById(content_id);
+          var inputEventFunction = function() {
+            var searchText = input.value.trim().toLowerCase();
+            var keywords = searchText.split(/[\s\-]+/);
+            if (keywords.length > 1) {
+              keywords.push(searchText);
+            }
+            var resultItems = [];
+            if (searchText.length > 0) {
+              // perform local searching
+              datas.forEach(function(data) {
+                var isMatch = false;
+                var hitCount = 0;
+                var searchTextCount = 0;
+                var title = data.title.trim();
+                var titleInLowerCase = title.toLowerCase();
+                var content = data.content.trim().replace(/<[^>]+>/g,"");
+                var contentInLowerCase = content.toLowerCase();
+                var articleUrl = decodeURIComponent(data.url);
+                var indexOfTitle = [];
+                var indexOfContent = [];
+                // only match articles with not empty titles
+                if(title != '') {
+                  keywords.forEach(function(keyword) {
+                    function getIndexByWord(word, text, caseSensitive) {
+                      var wordLen = word.length;
+                      if (wordLen === 0) {
+                        return [];
+                      }
+                      var startPosition = 0, position = [], index = [];
+                      if (!caseSensitive) {
+                        text = text.toLowerCase();
+                        word = word.toLowerCase();
+                      }
+                      while ((position = text.indexOf(word, startPosition)) > -1) {
+                        index.push({position: position, word: word});
+                        startPosition = position + wordLen;
+                      }
+                      return index;
+                    }
+
+                    indexOfTitle = indexOfTitle.concat(getIndexByWord(keyword, titleInLowerCase, false));
+                    indexOfContent = indexOfContent.concat(getIndexByWord(keyword, contentInLowerCase, false));
+                  });
+                  if (indexOfTitle.length > 0 || indexOfContent.length > 0) {
+                    isMatch = true;
+                    hitCount = indexOfTitle.length + indexOfContent.length;
+                  }
+                }
+
+                // show search results
+
+                if (isMatch) {
+                  // sort index by position of keyword
+
+                  [indexOfTitle, indexOfContent].forEach(function (index) {
+                    index.sort(function (itemLeft, itemRight) {
+                      if (itemRight.position !== itemLeft.position) {
+                        return itemRight.position - itemLeft.position;
+                      } else {
+                        return itemLeft.word.length - itemRight.word.length;
+                      }
+                    });
+                  });
+
+                  // merge hits into slices
+
+                  function mergeIntoSlice(text, start, end, index) {
+                    var item = index[index.length - 1];
+                    var position = item.position;
+                    var word = item.word;
+                    var hits = [];
+                    var searchTextCountInSlice = 0;
+                    while (position + word.length <= end && index.length != 0) {
+                      if (word === searchText) {
+                        searchTextCountInSlice++;
+                      }
+                      hits.push({position: position, length: word.length});
+                      var wordEnd = position + word.length;
+
+                      // move to next position of hit
+
+                      index.pop();
+                      while (index.length != 0) {
+                        item = index[index.length - 1];
+                        position = item.position;
+                        word = item.word;
+                        if (wordEnd > position) {
+                          index.pop();
+                        } else {
+                          break;
+                        }
+                      }
+                    }
+                    searchTextCount += searchTextCountInSlice;
+                    return {
+                      hits: hits,
+                      start: start,
+                      end: end,
+                      searchTextCount: searchTextCountInSlice
+                    };
+                  }
+
+                  var slicesOfTitle = [];
+                  if (indexOfTitle.length != 0) {
+                    slicesOfTitle.push(mergeIntoSlice(title, 0, title.length, indexOfTitle));
+                  }
+
+                  var slicesOfContent = [];
+                  while (indexOfContent.length != 0) {
+                    var item = indexOfContent[indexOfContent.length - 1];
+                    var position = item.position;
+                    var word = item.word;
+                    // cut out 100 characters
+                    var start = position - 20;
+                    var end = position + 80;
+                    if(start < 0){
+                      start = 0;
+                    }
+                    if (end < position + word.length) {
+                      end = position + word.length;
+                    }
+                    if(end > content.length){
+                      end = content.length;
+                    }
+                    slicesOfContent.push(mergeIntoSlice(content, start, end, indexOfContent));
+                  }
+
+                  // sort slices in content by search text's count and hits' count
+
+                  slicesOfContent.sort(function (sliceLeft, sliceRight) {
+                    if (sliceLeft.searchTextCount !== sliceRight.searchTextCount) {
+                      return sliceRight.searchTextCount - sliceLeft.searchTextCount;
+                    } else if (sliceLeft.hits.length !== sliceRight.hits.length) {
+                      return sliceRight.hits.length - sliceLeft.hits.length;
+                    } else {
+                      return sliceLeft.start - sliceRight.start;
+                    }
+                  });
+
+                  // select top N slices in content
+
+                  var upperBound = parseInt('1');
+                  if (upperBound >= 0) {
+                    slicesOfContent = slicesOfContent.slice(0, upperBound);
+                  }
+
+                  // highlight title and content
+
+                  function highlightKeyword(text, slice) {
+                    var result = '';
+                    var prevEnd = slice.start;
+                    slice.hits.forEach(function (hit) {
+                      result += text.substring(prevEnd, hit.position);
+                      var end = hit.position + hit.length;
+                      result += '<b class="search-keyword">' + text.substring(hit.position, end) + '</b>';
+                      prevEnd = end;
+                    });
+                    result += text.substring(prevEnd, slice.end);
+                    return result;
+                  }
+
+                  var resultItem = '';
+
+                  if (slicesOfTitle.length != 0) {
+                    resultItem += "<li><a href='" + articleUrl + "' class='search-result-title'>" + highlightKeyword(title, slicesOfTitle[0]) + "</a>";
+                  } else {
+                    resultItem += "<li><a href='" + articleUrl + "' class='search-result-title'>" + title + "</a>";
+                  }
+
+                  slicesOfContent.forEach(function (slice) {
+                    resultItem += "<a href='" + articleUrl + "'>" +
+                      "<p class=\"search-result\">" + highlightKeyword(content, slice) +
+                      "...</p>" + "</a>";
+                  });
+
+                  resultItem += "</li>";
+                  resultItems.push({
+                    item: resultItem,
+                    searchTextCount: searchTextCount,
+                    hitCount: hitCount,
+                    id: resultItems.length
+                  });
+                }
+              })
+            };
+            if (keywords.length === 1 && keywords[0] === "") {
+              resultContent.innerHTML = '<div id="no-result"><i class="fa fa-search fa-5x" /></div>'
+            } else if (resultItems.length === 0) {
+              resultContent.innerHTML = '<div id="no-result"><i class="fa fa-frown-o fa-5x" /></div>'
+            } else {
+              resultItems.sort(function (resultLeft, resultRight) {
+                if (resultLeft.searchTextCount !== resultRight.searchTextCount) {
+                  return resultRight.searchTextCount - resultLeft.searchTextCount;
+                } else if (resultLeft.hitCount !== resultRight.hitCount) {
+                  return resultRight.hitCount - resultLeft.hitCount;
+                } else {
+                  return resultRight.id - resultLeft.id;
+                }
+              });
+              var searchResultList = '<ul class=\"search-result-list\">';
+              resultItems.forEach(function (result) {
+                searchResultList += result.item;
+              })
+              searchResultList += "</ul>";
+              resultContent.innerHTML = searchResultList;
+            }
+          }
+
+          if ('auto' === 'auto') {
+            input.addEventListener('input', inputEventFunction);
+          } else {
+            $('.search-icon').click(inputEventFunction);
+            input.addEventListener('keypress', function (event) {
+              if (event.keyCode === 13) {
+                inputEventFunction();
+              }
+            });
+          }
+
+          // remove loading animation
+          $(".local-search-pop-overlay").remove();
+          $('body').css('overflow', '');
+
+          proceedsearch();
+        }
+      });
+    }
+
+    // handle and trigger popup window;
+    $('.popup-trigger').click(function(e) {
+      e.stopPropagation();
+      if (isfetched === false) {
+        searchFunc(path, 'local-search-input', 'local-search-result');
+      } else {
+        proceedsearch();
+      };
+    });
+
+    $('.popup-btn-close').click(onPopupClose);
+    $('.popup').click(function(e){
+      e.stopPropagation();
+    });
+    $(document).on('keyup', function (event) {
+      var shouldDismissSearchPopup = event.which === 27 &&
+        $('.search-popup').is(':visible');
+      if (shouldDismissSearchPopup) {
+        onPopupClose();
+      }
+    });
+  </script>
+
+
+
+
+
+  
+
+  
+
+  
+
+  
+  
+
+  
+
+  
+
+  
+
+</body>
+</html>

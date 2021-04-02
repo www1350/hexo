@@ -1,0 +1,1256 @@
+<!DOCTYPE html>
+
+
+
+  
+
+
+<html class="theme-next mist use-motion" lang="zh-Hans">
+<head><meta name="generator" content="Hexo 3.9.0">
+  <meta charset="UTF-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+<meta name="theme-color" content="#222">
+
+
+
+
+
+
+
+
+
+<meta http-equiv="Cache-Control" content="no-transform">
+<meta http-equiv="Cache-Control" content="no-siteapp">
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+  <link href="/hexo/lib/fancybox/source/jquery.fancybox.css?v=2.1.5" rel="stylesheet" type="text/css">
+
+
+
+
+
+
+
+<link href="/hexo/lib/font-awesome/css/font-awesome.min.css?v=4.6.2" rel="stylesheet" type="text/css">
+
+<link href="/hexo/css/main.css?v=5.1.4" rel="stylesheet" type="text/css">
+
+
+  <link rel="apple-touch-icon" sizes="180x180" href="/hexo/images/apple-touch-icon-next.png?v=5.1.4">
+
+
+  <link rel="icon" type="image/png" sizes="32x32" href="/hexo/images/favicon-32x32-next.png?v=5.1.4">
+
+
+  <link rel="icon" type="image/png" sizes="16x16" href="/hexo/images/favicon-16x16-next.png?v=5.1.4">
+
+
+  <link rel="mask-icon" href="/hexo/images/logo.svg?v=5.1.4" color="#222">
+
+
+
+
+
+  <meta name="keywords" content="RabbitMQ,">
+
+
+
+
+
+  <link rel="alternate" href="/hexo/atom.xml" title="Absurd博客" type="application/atom+xml">
+
+
+
+
+
+
+<meta name="description" content="关于详细介绍：http://blog.csdn.net/column/details/rabbitmq.htmlRabbitMQ：基于AMQP协议（Advanced Message Queue Protocol）介绍：http://www.infoq.com/cn/articles/AMQP-RabbitMQ/ActiveMQ：基于STOMP协议 所需环境：1.Erlang2.RabbitMQ3.">
+<meta name="keywords" content="RabbitMQ">
+<meta property="og:type" content="article">
+<meta property="og:title" content="RabbitMQ消息队列">
+<meta property="og:url" content="https://www1350.github.io/hexo/post/26d4999d.html">
+<meta property="og:site_name" content="Absurd博客">
+<meta property="og:description" content="关于详细介绍：http://blog.csdn.net/column/details/rabbitmq.htmlRabbitMQ：基于AMQP协议（Advanced Message Queue Protocol）介绍：http://www.infoq.com/cn/articles/AMQP-RabbitMQ/ActiveMQ：基于STOMP协议 所需环境：1.Erlang2.RabbitMQ3.">
+<meta property="og:locale" content="zh-Hans">
+<meta property="og:image" content="https://cloud.githubusercontent.com/assets/7789698/16560356/6d0cda70-4225-11e6-97bd-96f3a557078e.png">
+<meta property="og:image" content="https://cloud.githubusercontent.com/assets/7789698/16560357/764b5ce2-4225-11e6-91fe-9988a6a12df3.png">
+<meta property="og:image" content="https://cloud.githubusercontent.com/assets/7789698/16560366/7ed92a88-4225-11e6-8334-e986473d9530.png">
+<meta property="og:updated_time" content="2018-04-03T13:56:50.000Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="RabbitMQ消息队列">
+<meta name="twitter:description" content="关于详细介绍：http://blog.csdn.net/column/details/rabbitmq.htmlRabbitMQ：基于AMQP协议（Advanced Message Queue Protocol）介绍：http://www.infoq.com/cn/articles/AMQP-RabbitMQ/ActiveMQ：基于STOMP协议 所需环境：1.Erlang2.RabbitMQ3.">
+<meta name="twitter:image" content="https://cloud.githubusercontent.com/assets/7789698/16560356/6d0cda70-4225-11e6-97bd-96f3a557078e.png">
+
+
+
+<script type="text/javascript" id="hexo.configurations">
+  var NexT = window.NexT || {};
+  var CONFIG = {
+    root: '/hexo/',
+    scheme: 'Mist',
+    version: '5.1.4',
+    sidebar: {"position":"left","display":"post","offset":12,"b2t":false,"scrollpercent":false,"onmobile":false},
+    fancybox: true,
+    tabs: true,
+    motion: {"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},
+    duoshuo: {
+      userId: '0',
+      author: '博主'
+    },
+    algolia: {
+      applicationID: '',
+      apiKey: '',
+      indexName: '',
+      hits: {"per_page":10},
+      labels: {"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}
+    }
+  };
+</script>
+
+
+
+  <link rel="canonical" href="https://www1350.github.io/hexo/post/26d4999d.html">
+
+
+
+
+
+  <title>RabbitMQ消息队列 | Absurd博客</title>
+  
+
+
+
+
+
+
+
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage" lang="zh-Hans">
+
+  
+  
+    
+  
+
+  <div class="container sidebar-position-left page-post-detail">
+    <div class="headband"></div>
+
+    <header id="header" class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-wrapper">
+  <div class="site-meta ">
+    
+
+    <div class="custom-logo-site-title">
+      <a href="/hexo/" class="brand" rel="start">
+        <span class="logo-line-before"><i></i></span>
+        <span class="site-title">Absurd博客</span>
+        <span class="logo-line-after"><i></i></span>
+      </a>
+    </div>
+      
+        <p class="site-subtitle"></p>
+      
+  </div>
+
+  <div class="site-nav-toggle">
+    <button>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+    </button>
+  </div>
+</div>
+
+<nav class="site-nav">
+  
+
+  
+    <ul id="menu" class="menu">
+      
+        
+        <li class="menu-item menu-item-home">
+          <a href="/hexo/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-home"></i> <br>
+            
+            首页
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-about">
+          <a href="/hexo/about/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-user"></i> <br>
+            
+            关于
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-tags">
+          <a href="/hexo/tags/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-tags"></i> <br>
+            
+            标签
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-categories">
+          <a href="/hexo/categories/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-th"></i> <br>
+            
+            分类
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-archives">
+          <a href="/hexo/archives/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-archive"></i> <br>
+            
+            归档
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-bookmarks">
+          <a href="/hexo/bookmarks/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-archive"></i> <br>
+            
+            bookmarks
+          </a>
+        </li>
+      
+
+      
+        <li class="menu-item menu-item-search">
+          
+            <a href="javascript:;" class="popup-trigger">
+          
+            
+              <i class="menu-item-icon fa fa-search fa-fw"></i> <br>
+            
+            搜索
+          </a>
+        </li>
+      
+    </ul>
+  
+
+  
+    <div class="site-search">
+      
+  <div class="popup search-popup local-search-popup">
+  <div class="local-search-header clearfix">
+    <span class="search-icon">
+      <i class="fa fa-search"></i>
+    </span>
+    <span class="popup-btn-close">
+      <i class="fa fa-times-circle"></i>
+    </span>
+    <div class="local-search-input-wrapper">
+      <input autocomplete="off" placeholder="搜索..." spellcheck="false" type="text" id="local-search-input">
+    </div>
+  </div>
+  <div id="local-search-result"></div>
+</div>
+
+
+
+    </div>
+  
+</nav>
+
+
+
+ </div>
+    </header>
+
+    <main id="main" class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          <div id="content" class="content">
+            
+
+  <div id="posts" class="posts-expand">
+    
+
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal" itemscope itemtype="http://schema.org/Article">
+  
+  
+  
+  <div class="post-block">
+    <link itemprop="mainEntityOfPage" href="https://www1350.github.io/hexo/hexo/post/26d4999d.html">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="Absurd">
+      <meta itemprop="description" content>
+      <meta itemprop="image" content="/hexo/images/avatar.gif">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Absurd博客">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">RabbitMQ消息队列</h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">发表于</span>
+              
+              <time title="创建于" itemprop="dateCreated datePublished" datetime="2016-07-04T21:50:32+08:00">
+                2016-07-04
+              </time>
+            
+
+            
+
+            
+          </span>
+
+          
+            <span class="post-category">
+            
+              <span class="post-meta-divider">|</span>
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">分类于</span>
+              
+              
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/hexo/categories/消息队列/" itemprop="url" rel="index">
+                    <span itemprop="name">消息队列</span>
+                  </a>
+                </span>
+
+                
+                
+              
+            </span>
+          
+
+          
+            
+              <span class="post-comments-count">
+                <span class="post-meta-divider">|</span>
+                <span class="post-meta-item-icon">
+                  <i class="fa fa-comment-o"></i>
+                </span>
+                <a href="/hexo/post/26d4999d.html#comments" itemprop="discussionUrl">
+                  <span class="post-comments-count gitment-comments-count" data-xid="/hexo/post/26d4999d.html" itemprop="commentsCount"></span>
+                </a>
+              </span>
+            
+          
+
+          
+          
+
+          
+            <span class="post-meta-divider">|</span>
+            <span class="page-pv"><i class="fa fa-file-o"></i>
+            <span class="busuanzi-value" id="busuanzi_value_page_pv"></span>
+            </span>
+          
+
+          
+
+          
+
+        </div>
+      </header>
+    
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        <p>关于详细介绍：<a href="http://blog.csdn.net/column/details/rabbitmq.html" target="_blank" rel="noopener">http://blog.csdn.net/column/details/rabbitmq.html</a><br>RabbitMQ：基于AMQP协议（Advanced Message Queue Protocol）介绍：<a href="http://www.infoq.com/cn/articles/AMQP-RabbitMQ/" target="_blank" rel="noopener">http://www.infoq.com/cn/articles/AMQP-RabbitMQ/</a><br>ActiveMQ：基于STOMP协议</p>
+<p>所需环境：<br>1.Erlang<br>2.RabbitMQ<br>3.rabbit-client.jar  <a href="http://www.rabbitmq.com/api-guide.html" target="_blank" rel="noopener">api</a></p>
+<p><a href="http://www.lxway.com/991402946.htm" target="_blank" rel="noopener">http://www.lxway.com/991402946.htm</a><br>Direct Exchange – 处理路由键。需要将一个队列绑定到交换机上，要求该消息与一个特定的路由键完全匹配。这是一个完整的匹配。如果一个队列绑定到该交换机上要求路由键 “dog”，则只有被标记为“dog”的消息才被转发，不会转发dog.puppy，也不会转发dog.guard，只会转发dog。<br><img src="https://cloud.githubusercontent.com/assets/7789698/16560356/6d0cda70-4225-11e6-97bd-96f3a557078e.png" alt="image"></p>
+<p>Fanout Exchange – 不处理路由键。你只需要简单的将队列绑定到交换机上。一个发送到交换机的消息都会被转发到与该交换机绑定的所有队列上。很像子网广播，每台子网内的主机都获得了一份复制的消息。Fanout交换机转发消息是最快的。<br><img src="https://cloud.githubusercontent.com/assets/7789698/16560357/764b5ce2-4225-11e6-91fe-9988a6a12df3.png" alt="image"></p>
+<p>Topic Exchange – 将路由键和某模式进行匹配。此时队列需要绑定要一个模式上。符号“#”匹配一个或多个词，符号“<em>”匹配不多不少一个词。因此“audit.#”能够匹配到“audit.irs.corporate”，但是“audit.</em>” 只会匹配到“audit.irs”。我在RedHat的朋友做了一张不错的图，来表明topic交换机是如何工作的：<br><img src="https://cloud.githubusercontent.com/assets/7789698/16560366/7ed92a88-4225-11e6-8334-e986473d9530.png" alt="image"></p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line"> ConnectionFactory connFactory = new ConnectionFactory();//创建连接连接到MabbitMQ </span><br><span class="line">  connFactory.setUri(uri);//或 factory.setHost(&quot;localhost&quot;);  设置ip、uri或host</span><br><span class="line">Connection connection = factory.newConnection();  //创建一个连接</span><br><span class="line">  Channel channel = connection.createChannel();  //创建一个Channel </span><br><span class="line">channel.queueDeclare(queue, true, false, false, null);//指定队列</span><br><span class="line">        channel.basicPublish(&quot;&quot;, QUEUE_NAME, null, message.getBytes());     //往队列中发出一条消息  </span><br><span class="line"> //关闭频道和连接  </span><br><span class="line"> channel.close();  </span><br><span class="line">connection.close();</span><br></pre></td></tr></table></figure>
+<p>Connecting to a broker</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line">ConnectionFactory factory = new ConnectionFactory();</span><br><span class="line">factory.setUsername(userName);</span><br><span class="line">factory.setPassword(password);</span><br><span class="line">factory.setVirtualHost(virtualHost);</span><br><span class="line">factory.setHost(hostName);</span><br><span class="line">factory.setPort(portNumber);</span><br><span class="line">Connection conn = factory.newConnection();</span><br></pre></td></tr></table></figure>
+<p><a href="http://www.rabbitmq.com/uri-spec.html" target="_blank" rel="noopener">uri</a></p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">ConnectionFactory factory = new ConnectionFactory();</span><br><span class="line">factory.setUri(&quot;amqp://userName:password@hostName:portNumber/virtualHost&quot;);</span><br><span class="line">Connection conn = factory.newConnection();</span><br></pre></td></tr></table></figure>
+<p>Using Exchanges and Queues<br>声明一个exchange然后把队列和exchange和队列绑定起来（只有绑定以后，往exchange投递才会跑到相应队列）</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">channel.exchangeDeclare(exchangeName, &quot;direct&quot;, true);</span><br><span class="line">String queueName = channel.queueDeclare().getQueue();</span><br><span class="line">channel.queueBind(queueName, exchangeName, routingKey);</span><br></pre></td></tr></table></figure>
+<p>（完整的绑定过程）</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">channel.exchangeDeclare(exchangeName, &quot;direct&quot;, true);</span><br><span class="line">channel.queueDeclare(queueName, true, false, false, null);</span><br><span class="line">channel.queueBind(queueName, exchangeName, routingKey);</span><br></pre></td></tr></table></figure>
+<p>Publishing messages</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">byte[] messageBodyBytes = &quot;Hello, world!&quot;.getBytes();</span><br><span class="line">channel.basicPublish(exchangeName, routingKey, null, messageBodyBytes);</span><br></pre></td></tr></table></figure>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">channel.basicPublish(exchangeName, routingKey, mandatory,</span><br><span class="line">                     MessageProperties.PERSISTENT_TEXT_PLAIN,</span><br><span class="line">                     messageBodyBytes);</span><br></pre></td></tr></table></figure>
+<p>delivery mode 2 (persistent), priority 1 , content-type “text/plain”.</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line">channel.basicPublish(exchangeName, routingKey,</span><br><span class="line">             new AMQP.BasicProperties.Builder()</span><br><span class="line">               .contentType(&quot;text/plain&quot;)</span><br><span class="line">               .deliveryMode(2)</span><br><span class="line">               .priority(1)</span><br><span class="line">               .userId(&quot;bob&quot;)</span><br><span class="line">               .build()),</span><br><span class="line">               messageBodyBytes);</span><br></pre></td></tr></table></figure>
+<p>自定义header</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line">Map&lt;String, Object&gt; headers = new HashMap&lt;String, Object&gt;();</span><br><span class="line">headers.put(&quot;latitude&quot;,  51.5252949);</span><br><span class="line">headers.put(&quot;longitude&quot;, -0.0905493);</span><br><span class="line"></span><br><span class="line">channel.basicPublish(exchangeName, routingKey,</span><br><span class="line">             new AMQP.BasicProperties.Builder()</span><br><span class="line">               .headers(headers)</span><br><span class="line">               .build()),</span><br><span class="line">               messageBodyBytes);</span><br></pre></td></tr></table></figure>
+<p>expiration</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">channel.basicPublish(exchangeName, routingKey,</span><br><span class="line">             new AMQP.BasicProperties.Builder()</span><br><span class="line">               .expiration(&quot;60000&quot;)</span><br><span class="line">               .build()),</span><br><span class="line">               messageBodyBytes);</span><br></pre></td></tr></table></figure>
+<p>在确认模式下发布大量的信息到一个通道,等待确认</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br><span class="line">65</span><br><span class="line">66</span><br><span class="line">67</span><br><span class="line">68</span><br><span class="line">69</span><br><span class="line">70</span><br><span class="line">71</span><br><span class="line">72</span><br><span class="line">73</span><br><span class="line">74</span><br><span class="line">75</span><br><span class="line">76</span><br><span class="line">77</span><br><span class="line">78</span><br><span class="line">79</span><br><span class="line">80</span><br><span class="line">81</span><br><span class="line">82</span><br><span class="line">83</span><br><span class="line">84</span><br><span class="line">85</span><br><span class="line">86</span><br><span class="line">87</span><br><span class="line">88</span><br><span class="line">89</span><br><span class="line">90</span><br><span class="line">91</span><br></pre></td><td class="code"><pre><span class="line">package com.rabbitmq.examples;</span><br><span class="line"></span><br><span class="line">import java.io.IOException;</span><br><span class="line"></span><br><span class="line">import com.rabbitmq.client.Channel;</span><br><span class="line">import com.rabbitmq.client.Connection;</span><br><span class="line">import com.rabbitmq.client.ConnectionFactory;</span><br><span class="line">import com.rabbitmq.client.MessageProperties;</span><br><span class="line">import com.rabbitmq.client.QueueingConsumer;</span><br><span class="line"></span><br><span class="line">public class ConfirmDontLoseMessages &#123;</span><br><span class="line">    static int msgCount = 10000;</span><br><span class="line">    final static String QUEUE_NAME = &quot;confirm-test&quot;;</span><br><span class="line">    static ConnectionFactory connectionFactory;</span><br><span class="line"></span><br><span class="line">    public static void main(String[] args)</span><br><span class="line">        throws IOException, InterruptedException</span><br><span class="line">    &#123;</span><br><span class="line">        if (args.length &gt; 0) &#123;</span><br><span class="line">                msgCount = Integer.parseInt(args[0]);</span><br><span class="line">        &#125;</span><br><span class="line"></span><br><span class="line">        connectionFactory = new ConnectionFactory();</span><br><span class="line"></span><br><span class="line">        // Consume msgCount messages.</span><br><span class="line">        (new Thread(new Consumer())).start();</span><br><span class="line">        // Publish msgCount messages and wait for confirms.</span><br><span class="line">        (new Thread(new Publisher())).start();</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    @SuppressWarnings(&quot;ThrowablePrintedToSystemOut&quot;)</span><br><span class="line">    static class Publisher implements Runnable &#123;</span><br><span class="line">        public void run() &#123;</span><br><span class="line">            try &#123;</span><br><span class="line">                long startTime = System.currentTimeMillis();</span><br><span class="line"></span><br><span class="line">                // Setup</span><br><span class="line">                Connection conn = connectionFactory.newConnection();</span><br><span class="line">                Channel ch = conn.createChannel();</span><br><span class="line">                ch.queueDeclare(QUEUE_NAME, true, false, false, null);</span><br><span class="line">                ch.confirmSelect();</span><br><span class="line"></span><br><span class="line">                // Publish</span><br><span class="line">                for (long i = 0; i &lt; msgCount; ++i) &#123;</span><br><span class="line">                    ch.basicPublish(&quot;&quot;, QUEUE_NAME,</span><br><span class="line">                                    MessageProperties.PERSISTENT_BASIC,</span><br><span class="line">                                    &quot;nop&quot;.getBytes());</span><br><span class="line">                &#125;</span><br><span class="line"></span><br><span class="line">                ch.waitForConfirmsOrDie();</span><br><span class="line"></span><br><span class="line">                // Cleanup</span><br><span class="line">                ch.queueDelete(QUEUE_NAME);</span><br><span class="line">                ch.close();</span><br><span class="line">                conn.close();</span><br><span class="line"></span><br><span class="line">                long endTime = System.currentTimeMillis();</span><br><span class="line">                System.out.printf(&quot;Test took %.3fs\n&quot;,</span><br><span class="line">                                  (float)(endTime - startTime)/1000);</span><br><span class="line">            &#125; catch (Throwable e) &#123;</span><br><span class="line">                System.out.println(&quot;foobar :(&quot;);</span><br><span class="line">                System.out.print(e);</span><br><span class="line">            &#125;</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    static class Consumer implements Runnable &#123;</span><br><span class="line">        public void run() &#123;</span><br><span class="line">            try &#123;</span><br><span class="line">                // Setup</span><br><span class="line">                Connection conn = connectionFactory.newConnection();</span><br><span class="line">                Channel ch = conn.createChannel();</span><br><span class="line">                ch.queueDeclare(QUEUE_NAME, true, false, false, null);</span><br><span class="line"></span><br><span class="line">                // Consume</span><br><span class="line">                QueueingConsumer qc = new QueueingConsumer(ch);</span><br><span class="line">                ch.basicConsume(QUEUE_NAME, true, qc);</span><br><span class="line">                for (int i = 0; i &lt; msgCount; ++i) &#123;</span><br><span class="line">                    qc.nextDelivery();</span><br><span class="line">                &#125;</span><br><span class="line"></span><br><span class="line">                // Cleanup</span><br><span class="line">                ch.close();</span><br><span class="line">                conn.close();</span><br><span class="line">            &#125; catch (Throwable e) &#123;</span><br><span class="line">                System.out.println(&quot;Whoosh!&quot;);</span><br><span class="line">                System.out.print(e);</span><br><span class="line">            &#125;</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>*(the AMQP specification document)[<a href="http://www.amqp.org/]" target="_blank" rel="noopener">http://www.amqp.org/]</a></p>
+<p>接收消息的最有效的方法是建立一个订阅使用消费者接口。将自动被交付的消息到达,而不必显式地请求</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br></pre></td><td class="code"><pre><span class="line">boolean autoAck = false;</span><br><span class="line">channel.basicConsume(queueName, autoAck, &quot;myConsumerTag&quot;,</span><br><span class="line">     new DefaultConsumer(channel) &#123;</span><br><span class="line">         @Override</span><br><span class="line">         public void handleDelivery(String consumerTag,</span><br><span class="line">                                    Envelope envelope,</span><br><span class="line">                                    AMQP.BasicProperties properties,</span><br><span class="line">                                    byte[] body)</span><br><span class="line">             throws IOException</span><br><span class="line">         &#123;</span><br><span class="line">             String routingKey = envelope.getRoutingKey();</span><br><span class="line">             String contentType = properties.getContentType();</span><br><span class="line">             long deliveryTag = envelope.getDeliveryTag();</span><br><span class="line">             // (process the message components here ...)</span><br><span class="line">             channel.basicAck(deliveryTag, false);</span><br><span class="line">         &#125;</span><br><span class="line">     &#125;);</span><br></pre></td></tr></table></figure>
+<p>接收个别信息</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line">boolean autoAck = false;</span><br><span class="line">GetResponse response = channel.basicGet(queueName, autoAck);</span><br><span class="line">if (response == null) &#123;</span><br><span class="line">    // No message retrieved.</span><br><span class="line">&#125; else &#123;</span><br><span class="line">    AMQP.BasicProperties props = response.getProps();</span><br><span class="line">    byte[] body = response.getBody();</span><br><span class="line">    long deliveryTag = response.getEnvelope().getDeliveryTag();</span><br><span class="line">    ...</span><br><span class="line">    channel.basicAck(method.deliveryTag, false); //  autoAck = false必须设置 Channel.basicAck来确认已经接受消息</span><br></pre></td></tr></table></figure>
+<p>处理不被路由的消息<br>假如一个信息被设置强制性（mandatory）的flag不被路由的话会被送到发送端。<br>如果客户端没有配置返回特定通道侦听器,将放弃返回的相关消息。<br>为了获取这个消息，客户端可以实现ReturnListener 接口还有调用 Channel.setReturnListener</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line">channel.setReturnListener(new ReturnListener() &#123;</span><br><span class="line">    public void handleBasicReturn(int replyCode,</span><br><span class="line">                                  String replyText,</span><br><span class="line">                                  String exchange,</span><br><span class="line">                                  String routingKey,</span><br><span class="line">                                  AMQP.BasicProperties properties,</span><br><span class="line">                                  byte[] body)</span><br><span class="line">    throws IOException &#123;</span><br><span class="line">        ...</span><br><span class="line">    &#125;</span><br><span class="line">&#125;);</span><br></pre></td></tr></table></figure>
+<p>关闭协议</p>
+<p>The AMQP 0-9-1 connection and channel have the following lifecycle states:</p>
+<p>open: the object is ready to use<br>closing: the object has been explicitly notified to shut down locally, has issued a shutdown request to any supporting lower-layer objects, and is waiting for their shutdown procedures to complete<br>closed: the object has received all shutdown-complete notification(s) from any lower-layer objects, and as a consequence has shut itself down</p>
+<p>The AMQP connection and channel objects possess the following shutdown-related methods:</p>
+<p>addShutdownListener(ShutdownListener listener) and removeShutdownListener(ShutdownListener listener), to manage any listeners, which will be fired when the object transitions to closed state. Note that, adding a ShutdownListener to an object that is already closed will fire the listener immediately<br>getCloseReason(), to allow the investigation of what was the reason of the object’s shutdown<br>isOpen(), useful for testing whether the object is in an open state<br>close(int closeCode, String closeMessage), to explictly notify the object to shut down.</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line">import com.rabbitmq.client.ShutdownSignalException;</span><br><span class="line">import com.rabbitmq.client.ShutdownListener;</span><br><span class="line"></span><br><span class="line">connection.addShutdownListener(new ShutdownListener() &#123;</span><br><span class="line">    public void shutdownCompleted(ShutdownSignalException cause)</span><br><span class="line">    &#123;</span><br><span class="line">        ...</span><br><span class="line">    &#125;</span><br><span class="line">&#125;);</span><br></pre></td></tr></table></figure>
+<p>ShutdownSignalException包含了关闭时的错误异常</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br></pre></td><td class="code"><pre><span class="line">public void shutdownCompleted(ShutdownSignalException cause)</span><br><span class="line">&#123;</span><br><span class="line">  if (cause.isHardError())</span><br><span class="line">  &#123;</span><br><span class="line">    Connection conn = (Connection)cause.getReference();</span><br><span class="line">    if (!cause.isInitiatedByApplication())</span><br><span class="line">    &#123;</span><br><span class="line">      Method reason = cause.getReason();</span><br><span class="line">      ...</span><br><span class="line">    &#125;</span><br><span class="line">    ...</span><br><span class="line">  &#125; else &#123;</span><br><span class="line">    Channel ch = (Channel)cause.getReference();</span><br><span class="line">    ...</span><br><span class="line">  &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>原子性的使用open</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line">public void brokenMethod(Channel channel)</span><br><span class="line">&#123;</span><br><span class="line">    if (channel.isOpen())</span><br><span class="line">    &#123;</span><br><span class="line">        // The following code depends on the channel being in open state.</span><br><span class="line">        // However there is a possibility of the change in the channel state</span><br><span class="line">        // between isOpen() and basicQos(1) call</span><br><span class="line">        ...</span><br><span class="line">        channel.basicQos(1);//告诉RabbitMQ同一时间给一个消息给消费者  </span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>处于无效状态时应该抓取异常</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br></pre></td><td class="code"><pre><span class="line">public void validMethod(Channel channel)</span><br><span class="line">&#123;</span><br><span class="line">    try &#123;</span><br><span class="line">        ...</span><br><span class="line">        channel.basicQos(1);</span><br><span class="line">    &#125; catch (ShutdownSignalException sse) &#123;</span><br><span class="line">        // possibly check if channel was closed</span><br><span class="line">        // by the time we started action and reasons for</span><br><span class="line">        // closing it</span><br><span class="line">        ...</span><br><span class="line">    &#125; catch (IOException ioe) &#123;</span><br><span class="line">        // check why connection was closed</span><br><span class="line">        ...</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>连接设置<br>设置pool数</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">ExecutorService es = Executors.newFixedThreadPool(20);</span><br><span class="line">Connection conn = factory.newConnection(es);</span><br></pre></td></tr></table></figure>
+<p>使用地址列表</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">Address[] addrArr = new Address[]&#123; new Address(hostname1, portnumber1)</span><br><span class="line">                                 , new Address(hostname2, portnumber2)&#125;;</span><br><span class="line">Connection conn = factory.newConnection(addrArr);</span><br></pre></td></tr></table></figure>
+<p>心跳超时（Heartbeat Timeout）  <a href="http://www.rabbitmq.com/heartbeats.html" target="_blank" rel="noopener">Heartbeats guide</a><br>自定义线程工厂</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">import com.google.appengine.api.ThreadManager;</span><br><span class="line"></span><br><span class="line">ConnectionFactory cf = new ConnectionFactory();</span><br><span class="line">cf.setThreadFactory(ThreadManager.backgroundThreadFactory());</span><br></pre></td></tr></table></figure>
+<p>Automatic Recovery From Network Failures</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br></pre></td><td class="code"><pre><span class="line">ConnectionFactory factory = new ConnectionFactory();</span><br><span class="line">factory.setUsername(userName);</span><br><span class="line">factory.setPassword(password);</span><br><span class="line">factory.setVirtualHost(virtualHost);</span><br><span class="line">factory.setHost(hostName);</span><br><span class="line">factory.setPort(portNumber);</span><br><span class="line">factory.setAutomaticRecoveryEnabled(true);</span><br><span class="line">// connection that will recover automatically</span><br><span class="line">Connection conn = factory.newConnection();</span><br><span class="line"></span><br><span class="line"></span><br><span class="line">ConnectionFactory factory = new ConnectionFactory();</span><br><span class="line">// attempt recovery every 10 seconds</span><br><span class="line">factory.setNetworkRecoveryInterval(10000);</span><br><span class="line"></span><br><span class="line"></span><br><span class="line">ConnectionFactory factory = new ConnectionFactory();</span><br><span class="line"></span><br><span class="line">Address[] addresses = &#123;new Address(&quot;192.168.1.4&quot;), new Address(&quot;192.168.1.5&quot;)&#125;;</span><br><span class="line">factory.newConnection(addresses);</span><br></pre></td></tr></table></figure>
+<p>The RPC (Request/Reply) Pattern</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line">import com.rabbitmq.client.RpcClient;</span><br><span class="line"></span><br><span class="line">RpcClient rpc = new RpcClient(channel, exchangeName, routingKey);</span><br><span class="line"></span><br><span class="line"></span><br><span class="line"></span><br><span class="line">byte[] primitiveCall(byte[] message);</span><br><span class="line">String stringCall(String message)</span><br><span class="line">Map mapCall(Map message)</span><br><span class="line">Map mapCall(Object[] keyValuePairs)</span><br></pre></td></tr></table></figure>
+      
+    </div>
+    
+    
+    
+
+    
+
+    
+      <div>
+        <div style="padding: 10px 0; margin: 20px auto; width: 90%; text-align: center;">
+  <div>Donate comment here</div>
+  <button id="rewardButton" disable="enable" onclick="var qr = document.getElementById('QR'); if (qr.style.display === 'none') {qr.style.display='block';} else {qr.style.display='none'}">
+    <span>打赏</span>
+  </button>
+  <div id="QR" style="display: none;">
+
+    
+      <div id="wechat" style="display: inline-block">
+        <img id="wechat_qr" src="/hexo/images/wechatpay.jpg" alt="Absurd 微信支付">
+        <p>微信支付</p>
+      </div>
+    
+
+    
+
+    
+
+  </div>
+</div>
+
+      </div>
+    
+
+    
+
+    <footer class="post-footer">
+      
+        <div class="post-tags">
+          
+            <a href="/hexo/tags/RabbitMQ/" rel="tag"># RabbitMQ</a>
+          
+        </div>
+      
+
+      
+      
+      
+
+      
+        <div class="post-nav">
+          <div class="post-nav-next post-nav-item">
+            
+              <a href="/hexo/post/45ab4f18.html" rel="next" title="使用gradle构建一个web项目">
+                <i class="fa fa-chevron-left"></i> 使用gradle构建一个web项目
+              </a>
+            
+          </div>
+
+          <span class="post-nav-divider"></span>
+
+          <div class="post-nav-prev post-nav-item">
+            
+              <a href="/hexo/post/effa6b88.html" rel="prev" title="mongodb">
+                mongodb <i class="fa fa-chevron-right"></i>
+              </a>
+            
+          </div>
+        </div>
+      
+
+      
+      
+    </footer>
+  </div>
+  
+  
+  
+  </article>
+
+
+
+    <div class="post-spread">
+      
+    </div>
+  </div>
+
+
+          </div>
+          
+
+
+          
+
+  
+    <div class="comments" id="comments">
+      
+        <div id="gitment-container"></div>
+      
+    </div>
+
+  
+
+
+
+        </div>
+        
+          
+  
+  <div class="sidebar-toggle">
+    <div class="sidebar-toggle-line-wrap">
+      <span class="sidebar-toggle-line sidebar-toggle-line-first"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-middle"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-last"></span>
+    </div>
+  </div>
+
+  <aside id="sidebar" class="sidebar">
+    
+    <div class="sidebar-inner">
+
+      
+
+      
+
+      <section class="site-overview-wrap sidebar-panel sidebar-panel-active">
+        <div class="site-overview">
+          <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+            
+              <img class="site-author-image" itemprop="image" src="/hexo/images/avatar.gif" alt="Absurd">
+            
+              <p class="site-author-name" itemprop="name">Absurd</p>
+              <p class="site-description motion-element" itemprop="description"></p>
+          </div>
+
+          <nav class="site-state motion-element">
+
+            
+              <div class="site-state-item site-state-posts">
+              
+                <a href="/hexo/archives/">
+              
+                  <span class="site-state-item-count">74</span>
+                  <span class="site-state-item-name">日志</span>
+                </a>
+              </div>
+            
+
+            
+              
+              
+              <div class="site-state-item site-state-categories">
+                <a href="/hexo/categories/index.html">
+                  <span class="site-state-item-count">17</span>
+                  <span class="site-state-item-name">分类</span>
+                </a>
+              </div>
+            
+
+            
+              
+              
+              <div class="site-state-item site-state-tags">
+                <a href="/hexo/tags/index.html">
+                  <span class="site-state-item-count">46</span>
+                  <span class="site-state-item-name">标签</span>
+                </a>
+              </div>
+            
+
+          </nav>
+
+          
+            <div class="feed-link motion-element">
+              <a href="/hexo/atom.xml" rel="alternate">
+                <i class="fa fa-rss"></i>
+                RSS
+              </a>
+            </div>
+          
+
+          
+            <div class="links-of-author motion-element">
+                
+                  <span class="links-of-author-item">
+                    <a href="https://github.com/www1350" target="_blank" title="GitHub">
+                      
+                        <i class="fa fa-fw fa-github"></i>GitHub</a>
+                  </span>
+                
+                  <span class="links-of-author-item">
+                    <a href="mailto:www_1350@163.com" target="_blank" title="E-Mail">
+                      
+                        <i class="fa fa-fw fa-envelope"></i>E-Mail</a>
+                  </span>
+                
+            </div>
+          
+
+          
+          
+
+          
+          
+
+          
+
+        </div>
+      </section>
+
+      
+
+      
+
+    </div>
+  </aside>
+
+
+        
+      </div>
+    </main>
+
+    <footer id="footer" class="footer">
+      <div class="footer-inner">
+        <div class="copyright">&copy; <span itemprop="copyrightYear">2021</span>
+  <span class="with-love">
+    <i class="fa fa-user"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">Absurd</span>
+
+  
+</div>
+
+
+  <div class="powered-by">由 <a class="theme-link" target="_blank" href="https://hexo.io">Hexo</a> 强力驱动</div>
+
+
+
+  <span class="post-meta-divider">|</span>
+
+
+
+  <div class="theme-info">主题 &mdash; <a class="theme-link" target="_blank" href="https://github.com/iissnan/hexo-theme-next">NexT.Mist</a> v5.1.4</div>
+
+
+
+
+        
+<div class="busuanzi-count">
+  <script async src="https://dn-lbstatics.qbox.me/busuanzi/2.3/busuanzi.pure.mini.js"></script>
+
+  
+    <span class="site-uv">
+      <i class="fa fa-user"></i>
+      <span class="busuanzi-value" id="busuanzi_value_site_uv"></span>
+      
+    </span>
+  
+
+  
+    <span class="site-pv">
+      <i class="fa fa-eye"></i>
+      <span class="busuanzi-value" id="busuanzi_value_site_pv"></span>
+      
+    </span>
+  
+</div>
+
+
+
+
+
+
+
+
+        
+      </div>
+    </footer>
+
+    
+      <div class="back-to-top">
+        <i class="fa fa-arrow-up"></i>
+        
+      </div>
+    
+
+    
+
+  </div>
+
+  
+
+<script type="text/javascript">
+  if (Object.prototype.toString.call(window.Promise) !== '[object Function]') {
+    window.Promise = null;
+  }
+</script>
+
+
+
+
+
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+    <script type="text/javascript" src="/hexo/lib/jquery/index.js?v=2.1.3"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/hexo/lib/fastclick/lib/fastclick.min.js?v=1.0.6"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/hexo/lib/jquery_lazyload/jquery.lazyload.js?v=1.9.7"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/hexo/lib/velocity/velocity.min.js?v=1.2.1"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/hexo/lib/velocity/velocity.ui.min.js?v=1.2.1"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/hexo/lib/fancybox/source/jquery.fancybox.pack.js?v=2.1.5"></script>
+  
+
+
+  
+
+
+  <script type="text/javascript" src="/hexo/js/src/utils.js?v=5.1.4"></script>
+
+  <script type="text/javascript" src="/hexo/js/src/motion.js?v=5.1.4"></script>
+
+
+
+  
+  
+
+  
+  <script type="text/javascript" src="/hexo/js/src/scrollspy.js?v=5.1.4"></script>
+<script type="text/javascript" src="/hexo/js/src/post-details.js?v=5.1.4"></script>
+
+
+
+  
+
+
+  <script type="text/javascript" src="/hexo/js/src/bootstrap.js?v=5.1.4"></script>
+
+
+
+  
+
+
+  
+
+
+
+
+	
+
+
+
+
+
+  
+
+
+
+
+
+  
+
+
+
+
+
+
+
+<!-- LOCAL: You can save these files to your site and update links -->
+    
+        
+        <link rel="stylesheet" href="https://aimingoo.github.io/gitmint/style/default.css">
+        <script src="https://aimingoo.github.io/gitmint/dist/gitmint.browser.js"></script>
+    
+<!-- END LOCAL -->
+
+    
+
+    
+      <script type="text/javascript">
+      function renderGitment(){
+        var gitment = new Gitmint({
+            id: window.location.pathname, 
+            owner: 'www1350',
+            repo: 'hexo',
+            
+            lang: "" || navigator.language || navigator.systemLanguage || navigator.userLanguage,
+            
+            oauth: {
+            
+            
+                client_secret: '471214f79bbafcfc2101577ba8b4e2439e6aab72',
+            
+                client_id: 'deb8b8a893a7e72bbf7c'
+            }});
+        gitment.render('gitment-container');
+      }
+
+      
+      renderGitment();
+      
+      </script>
+    
+
+
+
+
+
+
+
+  
+
+  <script type="text/javascript">
+    // Popup Window;
+    var isfetched = false;
+    var isXml = true;
+    // Search DB path;
+    var search_path = "search.xml";
+    if (search_path.length === 0) {
+      search_path = "search.xml";
+    } else if (/json$/i.test(search_path)) {
+      isXml = false;
+    }
+    var path = "/hexo/" + search_path;
+    // monitor main search box;
+
+    var onPopupClose = function (e) {
+      $('.popup').hide();
+      $('#local-search-input').val('');
+      $('.search-result-list').remove();
+      $('#no-result').remove();
+      $(".local-search-pop-overlay").remove();
+      $('body').css('overflow', '');
+    }
+
+    function proceedsearch() {
+      $("body")
+        .append('<div class="search-popup-overlay local-search-pop-overlay"></div>')
+        .css('overflow', 'hidden');
+      $('.search-popup-overlay').click(onPopupClose);
+      $('.popup').toggle();
+      var $localSearchInput = $('#local-search-input');
+      $localSearchInput.attr("autocapitalize", "none");
+      $localSearchInput.attr("autocorrect", "off");
+      $localSearchInput.focus();
+    }
+
+    // search function;
+    var searchFunc = function(path, search_id, content_id) {
+      'use strict';
+
+      // start loading animation
+      $("body")
+        .append('<div class="search-popup-overlay local-search-pop-overlay">' +
+          '<div id="search-loading-icon">' +
+          '<i class="fa fa-spinner fa-pulse fa-5x fa-fw"></i>' +
+          '</div>' +
+          '</div>')
+        .css('overflow', 'hidden');
+      $("#search-loading-icon").css('margin', '20% auto 0 auto').css('text-align', 'center');
+
+      $.ajax({
+        url: path,
+        dataType: isXml ? "xml" : "json",
+        async: true,
+        success: function(res) {
+          // get the contents from search data
+          isfetched = true;
+          $('.popup').detach().appendTo('.header-inner');
+          var datas = isXml ? $("entry", res).map(function() {
+            return {
+              title: $("title", this).text(),
+              content: $("content",this).text(),
+              url: $("url" , this).text()
+            };
+          }).get() : res;
+          var input = document.getElementById(search_id);
+          var resultContent = document.getElementById(content_id);
+          var inputEventFunction = function() {
+            var searchText = input.value.trim().toLowerCase();
+            var keywords = searchText.split(/[\s\-]+/);
+            if (keywords.length > 1) {
+              keywords.push(searchText);
+            }
+            var resultItems = [];
+            if (searchText.length > 0) {
+              // perform local searching
+              datas.forEach(function(data) {
+                var isMatch = false;
+                var hitCount = 0;
+                var searchTextCount = 0;
+                var title = data.title.trim();
+                var titleInLowerCase = title.toLowerCase();
+                var content = data.content.trim().replace(/<[^>]+>/g,"");
+                var contentInLowerCase = content.toLowerCase();
+                var articleUrl = decodeURIComponent(data.url);
+                var indexOfTitle = [];
+                var indexOfContent = [];
+                // only match articles with not empty titles
+                if(title != '') {
+                  keywords.forEach(function(keyword) {
+                    function getIndexByWord(word, text, caseSensitive) {
+                      var wordLen = word.length;
+                      if (wordLen === 0) {
+                        return [];
+                      }
+                      var startPosition = 0, position = [], index = [];
+                      if (!caseSensitive) {
+                        text = text.toLowerCase();
+                        word = word.toLowerCase();
+                      }
+                      while ((position = text.indexOf(word, startPosition)) > -1) {
+                        index.push({position: position, word: word});
+                        startPosition = position + wordLen;
+                      }
+                      return index;
+                    }
+
+                    indexOfTitle = indexOfTitle.concat(getIndexByWord(keyword, titleInLowerCase, false));
+                    indexOfContent = indexOfContent.concat(getIndexByWord(keyword, contentInLowerCase, false));
+                  });
+                  if (indexOfTitle.length > 0 || indexOfContent.length > 0) {
+                    isMatch = true;
+                    hitCount = indexOfTitle.length + indexOfContent.length;
+                  }
+                }
+
+                // show search results
+
+                if (isMatch) {
+                  // sort index by position of keyword
+
+                  [indexOfTitle, indexOfContent].forEach(function (index) {
+                    index.sort(function (itemLeft, itemRight) {
+                      if (itemRight.position !== itemLeft.position) {
+                        return itemRight.position - itemLeft.position;
+                      } else {
+                        return itemLeft.word.length - itemRight.word.length;
+                      }
+                    });
+                  });
+
+                  // merge hits into slices
+
+                  function mergeIntoSlice(text, start, end, index) {
+                    var item = index[index.length - 1];
+                    var position = item.position;
+                    var word = item.word;
+                    var hits = [];
+                    var searchTextCountInSlice = 0;
+                    while (position + word.length <= end && index.length != 0) {
+                      if (word === searchText) {
+                        searchTextCountInSlice++;
+                      }
+                      hits.push({position: position, length: word.length});
+                      var wordEnd = position + word.length;
+
+                      // move to next position of hit
+
+                      index.pop();
+                      while (index.length != 0) {
+                        item = index[index.length - 1];
+                        position = item.position;
+                        word = item.word;
+                        if (wordEnd > position) {
+                          index.pop();
+                        } else {
+                          break;
+                        }
+                      }
+                    }
+                    searchTextCount += searchTextCountInSlice;
+                    return {
+                      hits: hits,
+                      start: start,
+                      end: end,
+                      searchTextCount: searchTextCountInSlice
+                    };
+                  }
+
+                  var slicesOfTitle = [];
+                  if (indexOfTitle.length != 0) {
+                    slicesOfTitle.push(mergeIntoSlice(title, 0, title.length, indexOfTitle));
+                  }
+
+                  var slicesOfContent = [];
+                  while (indexOfContent.length != 0) {
+                    var item = indexOfContent[indexOfContent.length - 1];
+                    var position = item.position;
+                    var word = item.word;
+                    // cut out 100 characters
+                    var start = position - 20;
+                    var end = position + 80;
+                    if(start < 0){
+                      start = 0;
+                    }
+                    if (end < position + word.length) {
+                      end = position + word.length;
+                    }
+                    if(end > content.length){
+                      end = content.length;
+                    }
+                    slicesOfContent.push(mergeIntoSlice(content, start, end, indexOfContent));
+                  }
+
+                  // sort slices in content by search text's count and hits' count
+
+                  slicesOfContent.sort(function (sliceLeft, sliceRight) {
+                    if (sliceLeft.searchTextCount !== sliceRight.searchTextCount) {
+                      return sliceRight.searchTextCount - sliceLeft.searchTextCount;
+                    } else if (sliceLeft.hits.length !== sliceRight.hits.length) {
+                      return sliceRight.hits.length - sliceLeft.hits.length;
+                    } else {
+                      return sliceLeft.start - sliceRight.start;
+                    }
+                  });
+
+                  // select top N slices in content
+
+                  var upperBound = parseInt('1');
+                  if (upperBound >= 0) {
+                    slicesOfContent = slicesOfContent.slice(0, upperBound);
+                  }
+
+                  // highlight title and content
+
+                  function highlightKeyword(text, slice) {
+                    var result = '';
+                    var prevEnd = slice.start;
+                    slice.hits.forEach(function (hit) {
+                      result += text.substring(prevEnd, hit.position);
+                      var end = hit.position + hit.length;
+                      result += '<b class="search-keyword">' + text.substring(hit.position, end) + '</b>';
+                      prevEnd = end;
+                    });
+                    result += text.substring(prevEnd, slice.end);
+                    return result;
+                  }
+
+                  var resultItem = '';
+
+                  if (slicesOfTitle.length != 0) {
+                    resultItem += "<li><a href='" + articleUrl + "' class='search-result-title'>" + highlightKeyword(title, slicesOfTitle[0]) + "</a>";
+                  } else {
+                    resultItem += "<li><a href='" + articleUrl + "' class='search-result-title'>" + title + "</a>";
+                  }
+
+                  slicesOfContent.forEach(function (slice) {
+                    resultItem += "<a href='" + articleUrl + "'>" +
+                      "<p class=\"search-result\">" + highlightKeyword(content, slice) +
+                      "...</p>" + "</a>";
+                  });
+
+                  resultItem += "</li>";
+                  resultItems.push({
+                    item: resultItem,
+                    searchTextCount: searchTextCount,
+                    hitCount: hitCount,
+                    id: resultItems.length
+                  });
+                }
+              })
+            };
+            if (keywords.length === 1 && keywords[0] === "") {
+              resultContent.innerHTML = '<div id="no-result"><i class="fa fa-search fa-5x" /></div>'
+            } else if (resultItems.length === 0) {
+              resultContent.innerHTML = '<div id="no-result"><i class="fa fa-frown-o fa-5x" /></div>'
+            } else {
+              resultItems.sort(function (resultLeft, resultRight) {
+                if (resultLeft.searchTextCount !== resultRight.searchTextCount) {
+                  return resultRight.searchTextCount - resultLeft.searchTextCount;
+                } else if (resultLeft.hitCount !== resultRight.hitCount) {
+                  return resultRight.hitCount - resultLeft.hitCount;
+                } else {
+                  return resultRight.id - resultLeft.id;
+                }
+              });
+              var searchResultList = '<ul class=\"search-result-list\">';
+              resultItems.forEach(function (result) {
+                searchResultList += result.item;
+              })
+              searchResultList += "</ul>";
+              resultContent.innerHTML = searchResultList;
+            }
+          }
+
+          if ('auto' === 'auto') {
+            input.addEventListener('input', inputEventFunction);
+          } else {
+            $('.search-icon').click(inputEventFunction);
+            input.addEventListener('keypress', function (event) {
+              if (event.keyCode === 13) {
+                inputEventFunction();
+              }
+            });
+          }
+
+          // remove loading animation
+          $(".local-search-pop-overlay").remove();
+          $('body').css('overflow', '');
+
+          proceedsearch();
+        }
+      });
+    }
+
+    // handle and trigger popup window;
+    $('.popup-trigger').click(function(e) {
+      e.stopPropagation();
+      if (isfetched === false) {
+        searchFunc(path, 'local-search-input', 'local-search-result');
+      } else {
+        proceedsearch();
+      };
+    });
+
+    $('.popup-btn-close').click(onPopupClose);
+    $('.popup').click(function(e){
+      e.stopPropagation();
+    });
+    $(document).on('keyup', function (event) {
+      var shouldDismissSearchPopup = event.which === 27 &&
+        $('.search-popup').is(':visible');
+      if (shouldDismissSearchPopup) {
+        onPopupClose();
+      }
+    });
+  </script>
+
+
+
+
+
+  
+
+  
+
+  
+
+  
+  
+
+  
+
+  
+
+  
+
+</body>
+</html>

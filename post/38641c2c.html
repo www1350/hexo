@@ -1,0 +1,1338 @@
+<!DOCTYPE html>
+
+
+
+  
+
+
+<html class="theme-next mist use-motion" lang="zh-Hans">
+<head><meta name="generator" content="Hexo 3.9.0">
+  <meta charset="UTF-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+<meta name="theme-color" content="#222">
+
+
+
+
+
+
+
+
+
+<meta http-equiv="Cache-Control" content="no-transform">
+<meta http-equiv="Cache-Control" content="no-siteapp">
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+  <link href="/hexo/lib/fancybox/source/jquery.fancybox.css?v=2.1.5" rel="stylesheet" type="text/css">
+
+
+
+
+
+
+
+<link href="/hexo/lib/font-awesome/css/font-awesome.min.css?v=4.6.2" rel="stylesheet" type="text/css">
+
+<link href="/hexo/css/main.css?v=5.1.4" rel="stylesheet" type="text/css">
+
+
+  <link rel="apple-touch-icon" sizes="180x180" href="/hexo/images/apple-touch-icon-next.png?v=5.1.4">
+
+
+  <link rel="icon" type="image/png" sizes="32x32" href="/hexo/images/favicon-32x32-next.png?v=5.1.4">
+
+
+  <link rel="icon" type="image/png" sizes="16x16" href="/hexo/images/favicon-16x16-next.png?v=5.1.4">
+
+
+  <link rel="mask-icon" href="/hexo/images/logo.svg?v=5.1.4" color="#222">
+
+
+
+
+
+  <meta name="keywords" content="sharding-jdbc,">
+
+
+
+
+
+  <link rel="alternate" href="/hexo/atom.xml" title="Absurd博客" type="application/atom+xml">
+
+
+
+
+
+
+<meta name="description" content="分库分表配置TableRuleConfiguration##build—&amp;gt;TableRule TableRuleConfiguration123456789101112131415//逻辑表,表名//例：订单数据根据主键尾数拆分为10张表,分别是t_order_0到t_order_9，他们的逻辑表名为t_order。private String logicTable;////如：ds_jdb">
+<meta name="keywords" content="sharding-jdbc">
+<meta property="og:type" content="article">
+<meta property="og:title" content="sharding-jdbc源码解析-分库分表（四）">
+<meta property="og:url" content="https://www1350.github.io/hexo/post/38641c2c.html">
+<meta property="og:site_name" content="Absurd博客">
+<meta property="og:description" content="分库分表配置TableRuleConfiguration##build—&amp;gt;TableRule TableRuleConfiguration123456789101112131415//逻辑表,表名//例：订单数据根据主键尾数拆分为10张表,分别是t_order_0到t_order_9，他们的逻辑表名为t_order。private String logicTable;////如：ds_jdb">
+<meta property="og:locale" content="zh-Hans">
+<meta property="og:image" content="https://user-images.githubusercontent.com/7789698/40271273-97779b9c-5bcd-11e8-8a63-f7736a1d752b.png">
+<meta property="og:updated_time" content="2018-05-23T06:33:14.000Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="sharding-jdbc源码解析-分库分表（四）">
+<meta name="twitter:description" content="分库分表配置TableRuleConfiguration##build—&amp;gt;TableRule TableRuleConfiguration123456789101112131415//逻辑表,表名//例：订单数据根据主键尾数拆分为10张表,分别是t_order_0到t_order_9，他们的逻辑表名为t_order。private String logicTable;////如：ds_jdb">
+<meta name="twitter:image" content="https://user-images.githubusercontent.com/7789698/40271273-97779b9c-5bcd-11e8-8a63-f7736a1d752b.png">
+
+
+
+<script type="text/javascript" id="hexo.configurations">
+  var NexT = window.NexT || {};
+  var CONFIG = {
+    root: '/hexo/',
+    scheme: 'Mist',
+    version: '5.1.4',
+    sidebar: {"position":"left","display":"post","offset":12,"b2t":false,"scrollpercent":false,"onmobile":false},
+    fancybox: true,
+    tabs: true,
+    motion: {"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},
+    duoshuo: {
+      userId: '0',
+      author: '博主'
+    },
+    algolia: {
+      applicationID: '',
+      apiKey: '',
+      indexName: '',
+      hits: {"per_page":10},
+      labels: {"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}
+    }
+  };
+</script>
+
+
+
+  <link rel="canonical" href="https://www1350.github.io/hexo/post/38641c2c.html">
+
+
+
+
+
+  <title>sharding-jdbc源码解析-分库分表（四） | Absurd博客</title>
+  
+
+
+
+
+
+
+
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage" lang="zh-Hans">
+
+  
+  
+    
+  
+
+  <div class="container sidebar-position-left page-post-detail">
+    <div class="headband"></div>
+
+    <header id="header" class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-wrapper">
+  <div class="site-meta ">
+    
+
+    <div class="custom-logo-site-title">
+      <a href="/hexo/" class="brand" rel="start">
+        <span class="logo-line-before"><i></i></span>
+        <span class="site-title">Absurd博客</span>
+        <span class="logo-line-after"><i></i></span>
+      </a>
+    </div>
+      
+        <p class="site-subtitle"></p>
+      
+  </div>
+
+  <div class="site-nav-toggle">
+    <button>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+    </button>
+  </div>
+</div>
+
+<nav class="site-nav">
+  
+
+  
+    <ul id="menu" class="menu">
+      
+        
+        <li class="menu-item menu-item-home">
+          <a href="/hexo/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-home"></i> <br>
+            
+            首页
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-about">
+          <a href="/hexo/about/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-user"></i> <br>
+            
+            关于
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-tags">
+          <a href="/hexo/tags/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-tags"></i> <br>
+            
+            标签
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-categories">
+          <a href="/hexo/categories/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-th"></i> <br>
+            
+            分类
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-archives">
+          <a href="/hexo/archives/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-archive"></i> <br>
+            
+            归档
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-bookmarks">
+          <a href="/hexo/bookmarks/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-archive"></i> <br>
+            
+            bookmarks
+          </a>
+        </li>
+      
+
+      
+        <li class="menu-item menu-item-search">
+          
+            <a href="javascript:;" class="popup-trigger">
+          
+            
+              <i class="menu-item-icon fa fa-search fa-fw"></i> <br>
+            
+            搜索
+          </a>
+        </li>
+      
+    </ul>
+  
+
+  
+    <div class="site-search">
+      
+  <div class="popup search-popup local-search-popup">
+  <div class="local-search-header clearfix">
+    <span class="search-icon">
+      <i class="fa fa-search"></i>
+    </span>
+    <span class="popup-btn-close">
+      <i class="fa fa-times-circle"></i>
+    </span>
+    <div class="local-search-input-wrapper">
+      <input autocomplete="off" placeholder="搜索..." spellcheck="false" type="text" id="local-search-input">
+    </div>
+  </div>
+  <div id="local-search-result"></div>
+</div>
+
+
+
+    </div>
+  
+</nav>
+
+
+
+ </div>
+    </header>
+
+    <main id="main" class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          <div id="content" class="content">
+            
+
+  <div id="posts" class="posts-expand">
+    
+
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal" itemscope itemtype="http://schema.org/Article">
+  
+  
+  
+  <div class="post-block">
+    <link itemprop="mainEntityOfPage" href="https://www1350.github.io/hexo/hexo/post/38641c2c.html">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="Absurd">
+      <meta itemprop="description" content>
+      <meta itemprop="image" content="/hexo/images/avatar.gif">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Absurd博客">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">sharding-jdbc源码解析-分库分表（四）</h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">发表于</span>
+              
+              <time title="创建于" itemprop="dateCreated datePublished" datetime="2018-05-17T14:43:01+08:00">
+                2018-05-17
+              </time>
+            
+
+            
+
+            
+          </span>
+
+          
+            <span class="post-category">
+            
+              <span class="post-meta-divider">|</span>
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">分类于</span>
+              
+              
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/hexo/categories/中间件/" itemprop="url" rel="index">
+                    <span itemprop="name">中间件</span>
+                  </a>
+                </span>
+
+                
+                
+                  ， 
+                
+              
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/hexo/categories/中间件/数据库/" itemprop="url" rel="index">
+                    <span itemprop="name">数据库</span>
+                  </a>
+                </span>
+
+                
+                
+              
+            </span>
+          
+
+          
+            
+              <span class="post-comments-count">
+                <span class="post-meta-divider">|</span>
+                <span class="post-meta-item-icon">
+                  <i class="fa fa-comment-o"></i>
+                </span>
+                <a href="/hexo/post/38641c2c.html#comments" itemprop="discussionUrl">
+                  <span class="post-comments-count gitment-comments-count" data-xid="/hexo/post/38641c2c.html" itemprop="commentsCount"></span>
+                </a>
+              </span>
+            
+          
+
+          
+          
+
+          
+            <span class="post-meta-divider">|</span>
+            <span class="page-pv"><i class="fa fa-file-o"></i>
+            <span class="busuanzi-value" id="busuanzi_value_page_pv"></span>
+            </span>
+          
+
+          
+
+          
+
+        </div>
+      </header>
+    
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        <h2 id="分库分表配置"><a href="#分库分表配置" class="headerlink" title="分库分表配置"></a>分库分表配置</h2><p>TableRuleConfiguration##build—&gt;TableRule</p>
+<h3 id="TableRuleConfiguration"><a href="#TableRuleConfiguration" class="headerlink" title="TableRuleConfiguration"></a>TableRuleConfiguration</h3><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">//逻辑表,表名</span></span><br><span class="line"><span class="comment">//例：订单数据根据主键尾数拆分为10张表,分别是t_order_0到t_order_9，他们的逻辑表名为t_order。</span></span><br><span class="line"><span class="keyword">private</span> String logicTable;</span><br><span class="line"><span class="comment">//</span></span><br><span class="line"><span class="comment">//如：ds_jdbc.t_order_$&#123;0..9&#125;</span></span><br><span class="line"><span class="comment">//</span></span><br><span class="line"><span class="keyword">private</span> String actualDataNodes;</span><br><span class="line"><span class="comment">//数据库分库策略</span></span><br><span class="line"><span class="keyword">private</span> ShardingStrategyConfiguration databaseShardingStrategyConfig;</span><br><span class="line"><span class="comment">//分表策略</span></span><br><span class="line"><span class="keyword">private</span> ShardingStrategyConfiguration tableShardingStrategyConfig;</span><br><span class="line"><span class="comment">//自增列</span></span><br><span class="line"><span class="keyword">private</span> String keyGeneratorColumnName;</span><br><span class="line"><span class="comment">//id生成器类名</span></span><br><span class="line"><span class="keyword">private</span> String keyGeneratorClass;</span><br></pre></td></tr></table></figure>
+<ul>
+<li>actualDataNodes</li>
+</ul>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">//使用groovy表达式解析出真实数据库节点</span></span><br><span class="line">List&lt;String&gt; actualDataNodes = <span class="keyword">new</span> InlineExpressionParser(<span class="keyword">this</span>.actualDataNodes).evaluate();</span><br></pre></td></tr></table></figure>
+<h4 id="InlineExpressionParser"><a href="#InlineExpressionParser" class="headerlink" title="InlineExpressionParser"></a>InlineExpressionParser</h4><p>内联表达式解析器</p>
+<p>inlineExpression是它唯一的参数和构造参数。如ds_jdbc.t_order_${[0, 9]}这样的表达式</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br><span class="line">65</span><br><span class="line">66</span><br><span class="line">67</span><br><span class="line">68</span><br><span class="line">69</span><br><span class="line">70</span><br><span class="line">71</span><br><span class="line">72</span><br><span class="line">73</span><br><span class="line">74</span><br><span class="line">75</span><br><span class="line">76</span><br><span class="line">77</span><br><span class="line">78</span><br><span class="line">79</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">public</span> List&lt;String&gt; <span class="title">evaluate</span><span class="params">()</span> </span>&#123;</span><br><span class="line">    <span class="keyword">if</span> (<span class="keyword">null</span> == inlineExpression) &#123;</span><br><span class="line">        <span class="keyword">return</span> Collections.emptyList();</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="keyword">return</span> flatten(evaluate(split()));</span><br><span class="line">&#125;</span><br><span class="line"><span class="comment">// ds_jdbc.t_order_$&#123;[0,9]&#125; ,ds_jdbc.t_order_$&#123;1..8&#125;  </span></span><br><span class="line"><span class="comment">//result: ["ds_jdbc.t_order_$&#123;[0,9]&#125;", "ds_jdbc.t_order_$&#123;1..8&#125;"] </span></span><br><span class="line"><span class="function"><span class="keyword">private</span> List&lt;String&gt; <span class="title">split</span><span class="params">()</span> </span>&#123;</span><br><span class="line">     List&lt;String&gt; result = <span class="keyword">new</span> ArrayList&lt;&gt;();</span><br><span class="line">     StringBuilder segment = <span class="keyword">new</span> StringBuilder();</span><br><span class="line">     <span class="keyword">int</span> bracketsDepth = <span class="number">0</span>;</span><br><span class="line">     <span class="keyword">for</span> (<span class="keyword">int</span> i = <span class="number">0</span>; i &lt; inlineExpression.length(); i++) &#123;</span><br><span class="line">        <span class="keyword">char</span> each = inlineExpression.charAt(i);</span><br><span class="line">        <span class="keyword">switch</span> (each) &#123;</span><br><span class="line">            <span class="comment">// ','</span></span><br><span class="line">            <span class="keyword">case</span> SPLITTER:</span><br><span class="line">               <span class="keyword">if</span> (bracketsDepth &gt; <span class="number">0</span>) &#123;</span><br><span class="line">                    segment.append(each);</span><br><span class="line">                &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">                    result.add(segment.toString().trim());</span><br><span class="line">                    segment.setLength(<span class="number">0</span>);</span><br><span class="line">                &#125;</span><br><span class="line">                <span class="keyword">break</span>;</span><br><span class="line">            <span class="keyword">case</span> <span class="string">'$'</span>:</span><br><span class="line">               <span class="keyword">if</span> (<span class="string">'&#123;'</span> == inlineExpression.charAt(i + <span class="number">1</span>)) &#123;</span><br><span class="line">                    bracketsDepth++;</span><br><span class="line">               &#125;</span><br><span class="line">               segment.append(each);</span><br><span class="line">               <span class="keyword">break</span>;</span><br><span class="line">            <span class="keyword">case</span> <span class="string">'&#125;'</span>:</span><br><span class="line">               <span class="keyword">if</span> (bracketsDepth &gt; <span class="number">0</span>) &#123;</span><br><span class="line">                   bracketsDepth--;</span><br><span class="line">               &#125;</span><br><span class="line">               segment.append(each);</span><br><span class="line">               <span class="keyword">break</span>;</span><br><span class="line">            <span class="keyword">default</span>:</span><br><span class="line">               segment.append(each);</span><br><span class="line">               <span class="keyword">break</span>;</span><br><span class="line">         &#125;</span><br><span class="line">      &#125;</span><br><span class="line">      <span class="keyword">if</span> (segment.length() &gt; <span class="number">0</span>) &#123;</span><br><span class="line">         result.add(segment.toString().trim());</span><br><span class="line">      &#125;</span><br><span class="line">      <span class="keyword">return</span> result;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="comment">//Groovy表达式</span></span><br><span class="line"><span class="comment">//inlineExpressions: "ds_jdbc.t_order_$&#123;[0,9]&#125; ,ds_jdbc.t_order_$&#123;1..8&#125;"    </span></span><br><span class="line"><span class="comment">//result : [ds_jdbc.t_order_[0, 9], ds_jdbc.t_order_[1, 2, 3, 4, 5, 6, 7, 8]]  -&gt; List&lt;GString&gt;</span></span><br><span class="line"><span class="function"><span class="keyword">private</span> List&lt;Object&gt; <span class="title">evaluate</span><span class="params">(<span class="keyword">final</span> List&lt;String&gt; inlineExpressions)</span> </span>&#123;</span><br><span class="line">        List&lt;Object&gt; result = <span class="keyword">new</span> ArrayList&lt;&gt;(inlineExpressions.size());</span><br><span class="line">        GroovyShell shell = <span class="keyword">new</span> GroovyShell();</span><br><span class="line">        <span class="keyword">for</span> (String each : inlineExpressions) &#123;</span><br><span class="line">            StringBuilder expression = <span class="keyword">new</span> StringBuilder(each);</span><br><span class="line">            <span class="keyword">if</span> (!each.startsWith(<span class="string">"\""</span>)) &#123;</span><br><span class="line">                expression.insert(<span class="number">0</span>, <span class="string">"\""</span>);</span><br><span class="line">            &#125;</span><br><span class="line">            <span class="keyword">if</span> (!each.endsWith(<span class="string">"\""</span>)) &#123;</span><br><span class="line">                expression.append(<span class="string">"\""</span>);</span><br><span class="line">            &#125;</span><br><span class="line">            result.add(shell.evaluate(expression.toString()));</span><br><span class="line">        &#125;</span><br><span class="line">        <span class="keyword">return</span> result;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line"><span class="comment">//segments: "[ds_jdbc.t_order_[0, 9], ds_jdbc.t_order_[1, 2, 3, 4, 5, 6, 7, 8]]"  -&gt; List&lt;GString&gt;</span></span><br><span class="line"><span class="comment">//result : "ds_jdbc.t_order_0","ds_jdbc.t_order_1","ds_jdbc.t_order_2","ds_jdbc.t_order_3","ds_jdbc.t_order_4","ds_jdbc.t_order_5","ds_jdbc.t_order_6","ds_jdbc.t_order_7","ds_jdbc.t_order_8","ds_jdbc.t_order_9"</span></span><br><span class="line"><span class="function"><span class="keyword">private</span> List&lt;String&gt; <span class="title">flatten</span><span class="params">(<span class="keyword">final</span> List&lt;Object&gt; segments)</span> </span>&#123;</span><br><span class="line">        List&lt;String&gt; result = <span class="keyword">new</span> ArrayList&lt;&gt;();</span><br><span class="line">        <span class="keyword">for</span> (Object each : segments) &#123;</span><br><span class="line">            <span class="keyword">if</span> (each <span class="keyword">instanceof</span> GString) &#123;</span><br><span class="line">                result.addAll(assemblyCartesianSegments((GString) each));</span><br><span class="line">            &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">                result.add(each.toString());</span><br><span class="line">            &#125;</span><br><span class="line">        &#125;</span><br><span class="line">        <span class="keyword">return</span> result;</span><br><span class="line">    &#125;</span><br></pre></td></tr></table></figure>
+<h3 id="TableRule"><a href="#TableRule" class="headerlink" title="TableRule"></a>TableRule</h3><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">private</span> <span class="keyword">final</span> String logicTable;</span><br><span class="line"><span class="comment">//静态分库分表数据单元</span></span><br><span class="line"><span class="comment">//"ds_jdbc.t_order_0","ds_jdbc.t_order_1","ds_jdbc.t_order_2","ds_jdbc.t_order_3","ds_jdbc.t_order_4","ds_jdbc.t_order_5","ds_jdbc.t_order_6","ds_jdbc.t_order_7","ds_jdbc.t_order_8","ds_jdbc.t_order_9"</span></span><br><span class="line"><span class="keyword">private</span> <span class="keyword">final</span> List&lt;DataNode&gt; actualDataNodes;</span><br><span class="line"></span><br><span class="line"><span class="keyword">private</span> <span class="keyword">final</span> ShardingStrategy databaseShardingStrategy;</span><br><span class="line"></span><br><span class="line"><span class="keyword">private</span> <span class="keyword">final</span> ShardingStrategy tableShardingStrategy;</span><br><span class="line"></span><br><span class="line"><span class="keyword">private</span> <span class="keyword">final</span> String generateKeyColumn;</span><br><span class="line"></span><br><span class="line"><span class="keyword">private</span> <span class="keyword">final</span> KeyGenerator keyGenerator;</span><br></pre></td></tr></table></figure>
+<h4 id="ShardingStrategyConfiguration"><a href="#ShardingStrategyConfiguration" class="headerlink" title="ShardingStrategyConfiguration"></a>ShardingStrategyConfiguration</h4><ul>
+<li><p>StandardShardingStrategyConfiguration 标准分片策略</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">//分片列名</span></span><br><span class="line"><span class="keyword">private</span> <span class="keyword">final</span> String shardingColumn;</span><br><span class="line"><span class="comment">//用于处理=和IN的分片</span></span><br><span class="line"><span class="keyword">private</span> <span class="keyword">final</span> String preciseAlgorithmClassName;</span><br><span class="line"><span class="comment">//处理BETWEEN AND分片</span></span><br><span class="line"><span class="keyword">private</span> <span class="keyword">final</span> String rangeAlgorithmClassName;</span><br></pre></td></tr></table></figure>
+</li>
+<li><p>ComplexShardingStrategyConfiguration</p>
+</li>
+</ul>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">private</span> <span class="keyword">final</span> String shardingColumns;</span><br><span class="line"><span class="comment">//</span></span><br><span class="line"><span class="keyword">private</span> <span class="keyword">final</span> String algorithmClassName;</span><br></pre></td></tr></table></figure>
+<ul>
+<li>InlineShardingStrategyConfiguration</li>
+</ul>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">private</span> <span class="keyword">final</span> String shardingColumn;</span><br><span class="line"><span class="comment">//分片表达式，</span></span><br><span class="line"><span class="comment">//如：t_user_$&#123;u_id % 8&#125; 表示t_user表按照u_id按8取模分成8个表，表名称为t_user_0到t_user_7。</span></span><br><span class="line"><span class="keyword">private</span> <span class="keyword">final</span> String algorithmExpression;</span><br></pre></td></tr></table></figure>
+<ul>
+<li>HintShardingStrategyConfiguration</li>
+</ul>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">private</span> <span class="keyword">final</span> String algorithmClassName;</span><br></pre></td></tr></table></figure>
+<ul>
+<li>NoneShardingStrategyConfiguration</li>
+</ul>
+<h4 id="ShardingStrategy"><a href="#ShardingStrategy" class="headerlink" title="ShardingStrategy"></a>ShardingStrategy</h4><ul>
+<li>StandardShardingStrategy</li>
+</ul>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">private</span> <span class="keyword">final</span> String shardingColumn;</span><br><span class="line"><span class="comment">//用于处理=和IN的算法</span></span><br><span class="line"><span class="keyword">private</span> <span class="keyword">final</span> PreciseShardingAlgorithm preciseShardingAlgorithm;</span><br><span class="line"><span class="comment">//这个是可选的，处理BETWEEN AND算法</span></span><br><span class="line"><span class="keyword">private</span> <span class="keyword">final</span> Optional&lt;RangeShardingAlgorithm&gt; rangeShardingAlgorithm;</span><br></pre></td></tr></table></figure>
+<ul>
+<li>ComplexShardingStrategy  复合分片策略</li>
+</ul>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">@Getter</span></span><br><span class="line"><span class="keyword">private</span> <span class="keyword">final</span> Collection&lt;String&gt; shardingColumns;</span><br><span class="line"><span class="comment">//复合分片算法</span></span><br><span class="line"><span class="keyword">private</span> <span class="keyword">final</span> ComplexKeysShardingAlgorithm shardingAlgorithm;</span><br></pre></td></tr></table></figure>
+<ul>
+<li>InlineShardingStrategy  行表达式分片策略</li>
+</ul>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">private</span> <span class="keyword">final</span> String shardingColumn;</span><br><span class="line"><span class="comment">//表达式转化成groovy闭包</span></span><br><span class="line"><span class="keyword">private</span> <span class="keyword">final</span> Closure&lt;?&gt; closure;</span><br></pre></td></tr></table></figure>
+<ul>
+<li>HintShardingStrategy 通过Hint而非SQL解析的方式分片的策略</li>
+</ul>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">@Getter</span></span><br><span class="line"><span class="keyword">private</span> <span class="keyword">final</span> Collection&lt;String&gt; shardingColumns;</span><br><span class="line"></span><br><span class="line"><span class="keyword">private</span> <span class="keyword">final</span> HintShardingAlgorithm shardingAlgorithm;</span><br></pre></td></tr></table></figure>
+<ul>
+<li>NoneShardingStrategy 不分片的策略</li>
+</ul>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">private</span> <span class="keyword">final</span> Collection&lt;String&gt; shardingColumns = Collections.emptyList();</span><br></pre></td></tr></table></figure>
+<h3 id="ShardingRuleConfiguration"><a href="#ShardingRuleConfiguration" class="headerlink" title="ShardingRuleConfiguration"></a>ShardingRuleConfiguration</h3><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br></pre></td><td class="code"><pre><span class="line"></span><br><span class="line"><span class="keyword">private</span> String defaultDataSourceName;</span><br><span class="line">    </span><br><span class="line"><span class="keyword">private</span> Collection&lt;TableRuleConfiguration&gt; tableRuleConfigs = <span class="keyword">new</span> LinkedList&lt;&gt;();</span><br><span class="line">    </span><br><span class="line"><span class="keyword">private</span> Collection&lt;String&gt; bindingTableGroups = <span class="keyword">new</span> LinkedList&lt;&gt;();</span><br><span class="line">    </span><br><span class="line"><span class="keyword">private</span> ShardingStrategyConfiguration defaultDatabaseShardingStrategyConfig;</span><br><span class="line">    </span><br><span class="line"><span class="keyword">private</span> ShardingStrategyConfiguration defaultTableShardingStrategyConfig;</span><br><span class="line">    </span><br><span class="line"><span class="keyword">private</span> String defaultKeyGeneratorClass;</span><br><span class="line">    </span><br><span class="line"><span class="keyword">private</span> Collection&lt;MasterSlaveRuleConfiguration&gt; masterSlaveRuleConfigs = </span><br><span class="line">    <span class="keyword">new</span> LinkedList&lt;&gt;();</span><br></pre></td></tr></table></figure>
+<h3 id="ShardingRule"><a href="#ShardingRule" class="headerlink" title="ShardingRule"></a>ShardingRule</h3><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">private</span> <span class="keyword">final</span> Map&lt;String, DataSource&gt; dataSourceMap;</span><br><span class="line"></span><br><span class="line"><span class="keyword">private</span> <span class="keyword">final</span> String defaultDataSourceName;</span><br><span class="line"><span class="comment">//表规则配置对象集合</span></span><br><span class="line"><span class="keyword">private</span> <span class="keyword">final</span> Collection&lt;TableRule&gt; tableRules;</span><br><span class="line"></span><br><span class="line"><span class="keyword">private</span> <span class="keyword">final</span> Collection&lt;BindingTableRule&gt; bindingTableRules = <span class="keyword">new</span> LinkedList&lt;&gt;();</span><br><span class="line"><span class="comment">//分库策略</span></span><br><span class="line"><span class="keyword">private</span> <span class="keyword">final</span> ShardingStrategy defaultDatabaseShardingStrategy;</span><br><span class="line"><span class="comment">//分表策略</span></span><br><span class="line"><span class="keyword">private</span> <span class="keyword">final</span> ShardingStrategy defaultTableShardingStrategy;</span><br><span class="line"></span><br><span class="line"><span class="keyword">private</span> <span class="keyword">final</span> KeyGenerator defaultKeyGenerator;</span><br></pre></td></tr></table></figure>
+<h2 id="重要的接口"><a href="#重要的接口" class="headerlink" title="重要的接口"></a>重要的接口</h2><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">//分片值规则</span></span><br><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">interface</span> <span class="title">ShardingValue</span> </span>&#123;</span><br><span class="line">    <span class="comment">//获取逻辑表名</span></span><br><span class="line">    <span class="function">String <span class="title">getLogicTableName</span><span class="params">()</span></span>;</span><br><span class="line">    </span><br><span class="line">    <span class="comment">//获取列名</span></span><br><span class="line">    <span class="function">String <span class="title">getColumnName</span><span class="params">()</span></span>;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">//表映射单元</span></span><br><span class="line"><span class="meta">@RequiredArgsConstructor</span></span><br><span class="line"><span class="meta">@Getter</span></span><br><span class="line"><span class="meta">@EqualsAndHashCode</span></span><br><span class="line"><span class="meta">@ToString</span></span><br><span class="line"><span class="keyword">public</span> <span class="keyword">final</span> <span class="class"><span class="keyword">class</span> <span class="title">TableUnit</span> </span>&#123;</span><br><span class="line">    <span class="comment">//真实数据源名</span></span><br><span class="line">    <span class="keyword">private</span> <span class="keyword">final</span> String dataSourceName;</span><br><span class="line">    <span class="comment">//逻辑表名</span></span><br><span class="line">    <span class="keyword">private</span> <span class="keyword">final</span> String logicTableName;</span><br><span class="line">    <span class="comment">//真实表名</span></span><br><span class="line">    <span class="keyword">private</span> <span class="keyword">final</span> String actualTableName;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">//SQL执行单元</span></span><br><span class="line"><span class="meta">@RequiredArgsConstructor</span></span><br><span class="line"><span class="meta">@Getter</span></span><br><span class="line"><span class="meta">@EqualsAndHashCode</span></span><br><span class="line"><span class="meta">@ToString</span></span><br><span class="line"><span class="keyword">public</span> <span class="keyword">final</span> <span class="class"><span class="keyword">class</span> <span class="title">SQLExecutionUnit</span> </span>&#123;</span><br><span class="line">    <span class="comment">//真实数据源</span></span><br><span class="line">    <span class="keyword">private</span> <span class="keyword">final</span> String dataSource;</span><br><span class="line">    <span class="comment">//真实sql</span></span><br><span class="line">    <span class="keyword">private</span> <span class="keyword">final</span> String sql;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">//SQL路由结果</span></span><br><span class="line"><span class="meta">@RequiredArgsConstructor</span></span><br><span class="line"><span class="meta">@Getter</span></span><br><span class="line"><span class="keyword">public</span> <span class="keyword">final</span> <span class="class"><span class="keyword">class</span> <span class="title">SQLRouteResult</span> </span>&#123;</span><br><span class="line">    </span><br><span class="line">    <span class="keyword">private</span> <span class="keyword">final</span> SQLStatement sqlStatement;</span><br><span class="line">    </span><br><span class="line">    <span class="keyword">private</span> <span class="keyword">final</span> Set&lt;SQLExecutionUnit&gt; executionUnits = <span class="keyword">new</span> LinkedHashSet&lt;&gt;();</span><br><span class="line">    </span><br><span class="line">    <span class="keyword">private</span> <span class="keyword">final</span> List&lt;Number&gt; generatedKeys = <span class="keyword">new</span> LinkedList&lt;&gt;();</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<h2 id="执行流程"><a href="#执行流程" class="headerlink" title="执行流程"></a>执行流程</h2><p><img src="https://user-images.githubusercontent.com/7789698/40271273-97779b9c-5bcd-11e8-8a63-f7736a1d752b.png" alt="121212"></p>
+<h2 id="路由"><a href="#路由" class="headerlink" title="路由"></a>路由</h2><h3 id="SQLRouter"><a href="#SQLRouter" class="headerlink" title="SQLRouter"></a>SQLRouter</h3><p>SQL 路由器接口</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">interface</span> <span class="title">SQLRouter</span> </span>&#123;</span><br><span class="line">    <span class="comment">//解析sql</span></span><br><span class="line">    <span class="function">SQLStatement <span class="title">parse</span><span class="params">(String logicSQL, <span class="keyword">int</span> parametersSize)</span></span>;</span><br><span class="line">    </span><br><span class="line">    <span class="comment">//路由sql</span></span><br><span class="line">    <span class="function">SQLRouteResult <span class="title">route</span><span class="params">(String logicSQL, List&lt;Object&gt; parameters, SQLStatement sqlStatement)</span></span>;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>有两种实现：</p>
+<ul>
+<li>DatabaseHintSQLRouter：通过提示且仅路由至数据库的SQL路由器</li>
+</ul>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">@Override</span></span><br><span class="line"><span class="function"><span class="keyword">public</span> SQLStatement <span class="title">parse</span><span class="params">(<span class="keyword">final</span> String logicSQL, <span class="keyword">final</span> <span class="keyword">int</span> parametersSize)</span> </span>&#123;</span><br><span class="line">    <span class="comment">//通过词法分析分析出sql的类型</span></span><br><span class="line">    <span class="keyword">return</span> <span class="keyword">new</span> SQLJudgeEngine(logicSQL).judge();</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">@Override</span></span><br><span class="line"><span class="comment">// TODO insert SQL need parse gen key</span></span><br><span class="line"><span class="function"><span class="keyword">public</span> SQLRouteResult <span class="title">route</span><span class="params">(<span class="keyword">final</span> String logicSQL, <span class="keyword">final</span> List&lt;Object&gt; parameters, <span class="keyword">final</span> SQLStatement sqlStatement)</span> </span>&#123;</span><br><span class="line">    <span class="comment">//SQL路由结果</span></span><br><span class="line">    SQLRouteResult result = <span class="keyword">new</span> SQLRouteResult(sqlStatement);</span><br><span class="line">    <span class="comment">//路由</span></span><br><span class="line">    RoutingResult routingResult = <span class="keyword">new</span> DatabaseHintRoutingEngine(shardingRule.getDataSourceMap(), (HintShardingStrategy) shardingRule.getDefaultDatabaseShardingStrategy()).route();</span><br><span class="line">    <span class="keyword">for</span> (TableUnit each : routingResult.getTableUnits().getTableUnits()) &#123;</span><br><span class="line">        result.getExecutionUnits().add(<span class="keyword">new</span> SQLExecutionUnit(each.getDataSourceName(), logicSQL));</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="comment">//打印sql</span></span><br><span class="line">    <span class="keyword">if</span> (showSQL) &#123;</span><br><span class="line">        SQLLogger.logSQL(logicSQL, sqlStatement, result.getExecutionUnits(), parameters);</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="keyword">return</span> result;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>DatabaseHintRoutingEngine 数据库提示路由引擎</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">private</span> <span class="keyword">final</span> Map&lt;String, DataSource&gt; dataSourceMap;</span><br><span class="line"><span class="comment">//hint路由策略</span></span><br><span class="line"><span class="keyword">private</span> <span class="keyword">final</span> HintShardingStrategy databaseShardingStrategy;</span><br><span class="line"></span><br><span class="line"><span class="meta">@Override</span></span><br><span class="line"><span class="function"><span class="keyword">public</span> RoutingResult <span class="title">route</span><span class="params">()</span> </span>&#123;</span><br><span class="line">    <span class="comment">//获取分片键值</span></span><br><span class="line">    Optional&lt;ShardingValue&gt; shardingValue = HintManagerHolder.getDatabaseShardingValue(<span class="keyword">new</span> ShardingKey(HintManagerHolder.DB_TABLE_NAME, HintManagerHolder.DB_COLUMN_NAME));</span><br><span class="line">    Preconditions.checkState(shardingValue.isPresent());</span><br><span class="line">    log.debug(<span class="string">"Before database sharding only db:&#123;&#125; sharding values: &#123;&#125;"</span>, dataSourceMap.keySet(), shardingValue.get());</span><br><span class="line">    <span class="comment">//路由</span></span><br><span class="line">    Collection&lt;String&gt; routingDataSources;</span><br><span class="line">    routingDataSources = databaseShardingStrategy.doSharding(dataSourceMap.keySet(), Collections.singletonList(shardingValue.get()));</span><br><span class="line">    Preconditions.checkState(!routingDataSources.isEmpty(), <span class="string">"no database route info"</span>);</span><br><span class="line">    log.debug(<span class="string">"After database sharding only result: &#123;&#125;"</span>, routingDataSources);</span><br><span class="line">    RoutingResult result = <span class="keyword">new</span> RoutingResult();</span><br><span class="line">    <span class="comment">//TableUnit</span></span><br><span class="line">    <span class="keyword">for</span> (String each : routingDataSources) &#123;</span><br><span class="line">        result.getTableUnits().getTableUnits().add(<span class="keyword">new</span> TableUnit(each, <span class="string">""</span>, <span class="string">""</span>));</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="keyword">return</span> result;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>HintShardingStrategy  hint路由策略</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">@Override</span></span><br><span class="line"><span class="function"><span class="keyword">public</span> Collection&lt;String&gt; <span class="title">doSharding</span><span class="params">(<span class="keyword">final</span> Collection&lt;String&gt; availableTargetNames, <span class="keyword">final</span> Collection&lt;ShardingValue&gt; shardingValues)</span> </span>&#123;</span><br><span class="line">    <span class="comment">//通过HintShardingAlgorithm接口路由</span></span><br><span class="line">    Collection&lt;String&gt; shardingResult = shardingAlgorithm.doSharding(availableTargetNames, shardingValues.iterator().next());</span><br><span class="line">    Collection&lt;String&gt; result = <span class="keyword">new</span> TreeSet&lt;&gt;(String.CASE_INSENSITIVE_ORDER);</span><br><span class="line">    result.addAll(shardingResult);</span><br><span class="line">    <span class="keyword">return</span> result;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<ul>
+<li><p>ParsingSQLRouter：需要解析的SQL路由器</p>
+<p>解析</p>
+</li>
+</ul>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">@Override</span></span><br><span class="line"><span class="function"><span class="keyword">public</span> SQLStatement <span class="title">parse</span><span class="params">(<span class="keyword">final</span> String logicSQL, <span class="keyword">final</span> <span class="keyword">int</span> parametersSize)</span> </span>&#123;</span><br><span class="line">    SQLParsingEngine parsingEngine = <span class="keyword">new</span> SQLParsingEngine(databaseType, logicSQL, shardingRule);</span><br><span class="line">    SQLStatement result = parsingEngine.parse();</span><br><span class="line">    <span class="keyword">if</span> (result <span class="keyword">instanceof</span> InsertStatement) &#123;</span><br><span class="line">        ((InsertStatement) result).appendGenerateKeyToken(shardingRule, parametersSize);</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="keyword">return</span> result;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>SQLParsingEngine 是sql解析引擎，下一章讲到。经过sql解析引擎解析后得到SQLStatement，如果是InsertStatement会改写sql处理 GenerateKeyToken。关于sql改写后面会讲到。</p>
+<h3 id="InsertStatement"><a href="#InsertStatement" class="headerlink" title="InsertStatement"></a>InsertStatement</h3><p>被sql解析引擎解析后，最重要的是返回了SQLStatement，拿insert举例就是InsertStatement</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">//sql类型，比如DML</span></span><br><span class="line"><span class="keyword">private</span> <span class="keyword">final</span> SQLType type;</span><br><span class="line">    </span><br><span class="line"><span class="keyword">private</span> <span class="keyword">final</span> Tables tables = <span class="keyword">new</span> Tables();</span><br><span class="line"><span class="comment">//条件&lt;列名，值&gt; </span></span><br><span class="line"><span class="keyword">private</span> <span class="keyword">final</span> Conditions conditions = <span class="keyword">new</span> Conditions();</span><br><span class="line"><span class="comment">//所有token，比如TableToken（t_order）、ItemToken(order_id)、GeneratedKeyToken(57)</span></span><br><span class="line"><span class="keyword">private</span> <span class="keyword">final</span> List&lt;SQLToken&gt; sqlTokens = <span class="keyword">new</span> LinkedList&lt;&gt;();</span><br><span class="line">    </span><br><span class="line"><span class="keyword">private</span> <span class="keyword">int</span> parametersIndex;</span><br><span class="line"><span class="comment">//所有列</span></span><br><span class="line"><span class="keyword">private</span> <span class="keyword">final</span> Collection&lt;Column&gt; columns = <span class="keyword">new</span> LinkedList&lt;&gt;();</span><br><span class="line"><span class="comment">//批量条件&lt;列名，值&gt;</span></span><br><span class="line"><span class="keyword">private</span> <span class="keyword">final</span> List&lt;Conditions&gt; multipleConditions = <span class="keyword">new</span> LinkedList&lt;&gt;();</span><br><span class="line"><span class="comment">//最后一列结束位置</span></span><br><span class="line"><span class="keyword">private</span> <span class="keyword">int</span> columnsListLastPosition;</span><br><span class="line"><span class="comment">//自增列是第几个，-1表示没有</span></span><br><span class="line"><span class="keyword">private</span> <span class="keyword">int</span> generateKeyColumnIndex = -<span class="number">1</span>;</span><br><span class="line"><span class="comment">//VALUES或VALUE后面值开始的位置</span></span><br><span class="line"><span class="keyword">private</span> <span class="keyword">int</span> afterValuesPosition;</span><br><span class="line"><span class="comment">//VALUES或VALUE后面值结束位置 </span></span><br><span class="line"><span class="keyword">private</span> <span class="keyword">int</span> valuesListLastPosition;</span><br><span class="line"></span><br><span class="line"><span class="keyword">private</span> GeneratedKey generatedKey;</span><br></pre></td></tr></table></figure>
+<p>  路由</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">@Override</span></span><br><span class="line"><span class="function"><span class="keyword">public</span> SQLRouteResult <span class="title">route</span><span class="params">(<span class="keyword">final</span> String logicSQL, <span class="keyword">final</span> List&lt;Object&gt; parameters, <span class="keyword">final</span> SQLStatement sqlStatement)</span> </span>&#123;</span><br><span class="line">    <span class="comment">//SQL路由结果</span></span><br><span class="line">    SQLRouteResult result = <span class="keyword">new</span> SQLRouteResult(sqlStatement);</span><br><span class="line">    <span class="keyword">if</span> (sqlStatement <span class="keyword">instanceof</span> InsertStatement &amp;&amp; <span class="keyword">null</span> != ((InsertStatement) sqlStatement).getGeneratedKey()) &#123;</span><br><span class="line">        <span class="comment">//处理插入sql的主键</span></span><br><span class="line">        processGeneratedKey(parameters, (InsertStatement) sqlStatement, result);</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="comment">//路由</span></span><br><span class="line">    RoutingResult routingResult = route(parameters, sqlStatement);</span><br><span class="line">    <span class="comment">//SQL重写引擎</span></span><br><span class="line">    SQLRewriteEngine rewriteEngine = <span class="keyword">new</span> SQLRewriteEngine(shardingRule, logicSQL, databaseType, sqlStatement);</span><br><span class="line">    <span class="keyword">boolean</span> isSingleRouting = routingResult.isSingleRouting();</span><br><span class="line">    <span class="keyword">if</span> (sqlStatement <span class="keyword">instanceof</span> SelectStatement &amp;&amp; <span class="keyword">null</span> != ((SelectStatement) sqlStatement).getLimit()) &#123;</span><br><span class="line">        <span class="comment">// 处理分页</span></span><br><span class="line">        processLimit(parameters, (SelectStatement) sqlStatement, isSingleRouting);</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="comment">//重写</span></span><br><span class="line">    SQLBuilder sqlBuilder = rewriteEngine.rewrite(!isSingleRouting);</span><br><span class="line">    <span class="comment">// 笛卡尔积结果生成 ExecutionUnit</span></span><br><span class="line">    <span class="keyword">if</span> (routingResult <span class="keyword">instanceof</span> CartesianRoutingResult) &#123;</span><br><span class="line">        <span class="keyword">for</span> (CartesianDataSource cartesianDataSource : ((CartesianRoutingResult) routingResult).getRoutingDataSources()) &#123;</span><br><span class="line">           </span><br><span class="line">            <span class="keyword">for</span> (CartesianTableReference cartesianTableReference : cartesianDataSource.getRoutingTableReferences()) &#123;</span><br><span class="line">                result.getExecutionUnits().add(<span class="keyword">new</span> SQLExecutionUnit(cartesianDataSource.getDataSource(), rewriteEngine.generateSQL(cartesianTableReference, sqlBuilder)));</span><br><span class="line">            &#125;</span><br><span class="line">        &#125;</span><br><span class="line">    &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">         <span class="comment">//将每个逻辑表名转化成真实表名</span></span><br><span class="line">        <span class="keyword">for</span> (TableUnit each : routingResult.getTableUnits().getTableUnits()) &#123;</span><br><span class="line">            result.getExecutionUnits().add(<span class="keyword">new</span> SQLExecutionUnit(each.getDataSourceName(), rewriteEngine.generateSQL(each, sqlBuilder)));</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="comment">// 打印 SQL</span></span><br><span class="line">    <span class="keyword">if</span> (showSQL) &#123;</span><br><span class="line">        SQLLogger.logSQL(logicSQL, sqlStatement, result.getExecutionUnits(), parameters);</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="keyword">return</span> result;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"></span><br><span class="line"> <span class="function"><span class="keyword">private</span> RoutingResult <span class="title">route</span><span class="params">(<span class="keyword">final</span> List&lt;Object&gt; parameters, <span class="keyword">final</span> SQLStatement sqlStatement)</span> </span>&#123;</span><br><span class="line">     <span class="comment">//获取所有sql语句中的逻辑表名</span></span><br><span class="line">        Collection&lt;String&gt; tableNames = sqlStatement.getTables().getTableNames();</span><br><span class="line">        RoutingEngine routingEngine;</span><br><span class="line">        <span class="keyword">if</span> (tableNames.isEmpty()) &#123;</span><br><span class="line">            routingEngine = <span class="keyword">new</span> DatabaseAllRoutingEngine(shardingRule.getDataSourceMap());</span><br><span class="line">            <span class="comment">//1.只有一个逻辑表名2.是否表名全为BindingTable3.所有逻辑表名都在默认数据库</span></span><br><span class="line">        &#125; <span class="keyword">else</span> <span class="keyword">if</span> (<span class="number">1</span> == tableNames.size() || shardingRule.isAllBindingTables(tableNames) || shardingRule.isAllInDefaultDataSource(tableNames)) &#123;</span><br><span class="line">            <span class="comment">//使用第一个表名做路由。</span></span><br><span class="line">            <span class="comment">//如：SELECT * FROM t_order o join t_order_item i ON o.order_id = i.order_id 则使用t_order</span></span><br><span class="line">            routingEngine = <span class="keyword">new</span> SimpleRoutingEngine(shardingRule, parameters, tableNames.iterator().next(), sqlStatement);</span><br><span class="line">        &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">            <span class="comment">// TODO config for cartesian set</span></span><br><span class="line">            <span class="comment">//可配置是否执行笛卡尔积</span></span><br><span class="line">            routingEngine = <span class="keyword">new</span> ComplexRoutingEngine(shardingRule, parameters, tableNames, sqlStatement);</span><br><span class="line">        &#125;</span><br><span class="line">     <span class="comment">//路由</span></span><br><span class="line">        <span class="keyword">return</span> routingEngine.route();</span><br><span class="line">    &#125;</span><br></pre></td></tr></table></figure>
+<h2 id="路由引擎"><a href="#路由引擎" class="headerlink" title="路由引擎"></a>路由引擎</h2><h3 id="RoutingEngine"><a href="#RoutingEngine" class="headerlink" title="RoutingEngine"></a>RoutingEngine</h3><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">interface</span> <span class="title">RoutingEngine</span> </span>&#123;</span><br><span class="line">    </span><br><span class="line">    <span class="comment">/**</span></span><br><span class="line"><span class="comment">     * Route.</span></span><br><span class="line"><span class="comment">     *</span></span><br><span class="line"><span class="comment">     * <span class="doctag">@return</span> routing result</span></span><br><span class="line"><span class="comment">     */</span></span><br><span class="line">    <span class="function">RoutingResult <span class="title">route</span><span class="params">()</span></span>;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<h4 id="SimpleRoutingEngine"><a href="#SimpleRoutingEngine" class="headerlink" title="SimpleRoutingEngine"></a>SimpleRoutingEngine</h4><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">private</span> <span class="keyword">final</span> ShardingRule shardingRule;</span><br><span class="line"><span class="comment">//参数</span></span><br><span class="line"><span class="keyword">private</span> <span class="keyword">final</span> List&lt;Object&gt; parameters;</span><br><span class="line"><span class="comment">//逻辑表名</span></span><br><span class="line"><span class="keyword">private</span> <span class="keyword">final</span> String logicTableName;</span><br><span class="line"></span><br><span class="line"><span class="keyword">private</span> <span class="keyword">final</span> SQLStatement sqlStatement;</span><br></pre></td></tr></table></figure>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">@Override</span></span><br><span class="line"><span class="function"><span class="keyword">public</span> RoutingResult <span class="title">route</span><span class="params">()</span> </span>&#123;</span><br><span class="line">    <span class="comment">//获取规则</span></span><br><span class="line">    TableRule tableRule = shardingRule.getTableRule(logicTableName);</span><br><span class="line">    <span class="comment">//Hint则使用分片管理器获取，否则使用数据库分片算法。获取逻辑表、列名、条件值</span></span><br><span class="line">    List&lt;ShardingValue&gt; databaseShardingValues = getDatabaseShardingValues(tableRule);</span><br><span class="line">    <span class="comment">//表分片算法。获取逻辑表、列名、条件值</span></span><br><span class="line">    List&lt;ShardingValue&gt; tableShardingValues = getTableShardingValues(tableRule);</span><br><span class="line">    <span class="comment">//根据逻辑表、列名、条件值路由出真实数据库节点</span></span><br><span class="line">    Collection&lt;String&gt; routedDataSources = routeDataSources(tableRule, databaseShardingValues);</span><br><span class="line">    Collection&lt;DataNode&gt; routedDataNodes = <span class="keyword">new</span> LinkedList&lt;&gt;();</span><br><span class="line">    <span class="keyword">for</span> (String each : routedDataSources) &#123;</span><br><span class="line">        routedDataNodes.addAll(routeTables(tableRule, each, tableShardingValues));</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="comment">//生成RoutingResult。包含TableUnit集合。TableUnit包括真实数据源、逻辑表名、真实表名</span></span><br><span class="line">    <span class="keyword">return</span> generateRoutingResult(routedDataNodes);</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">private</span> Collection&lt;String&gt; <span class="title">routeDataSources</span><span class="params">(<span class="keyword">final</span> TableRule tableRule, <span class="keyword">final</span> List&lt;ShardingValue&gt; databaseShardingValues)</span> </span>&#123;</span><br><span class="line">        <span class="comment">//获取所有真实数据库名</span></span><br><span class="line">        Collection&lt;String&gt; availableTargetDatabases = tableRule.getActualDatasourceNames();</span><br><span class="line">        <span class="keyword">if</span> (databaseShardingValues.isEmpty()) &#123;</span><br><span class="line">            <span class="keyword">return</span> availableTargetDatabases;</span><br><span class="line">        &#125;</span><br><span class="line">        <span class="comment">//ShardingStrategy#doSharding</span></span><br><span class="line">        Collection&lt;String&gt; result = shardingRule.getDatabaseShardingStrategy(tableRule).doSharding(availableTargetDatabases, databaseShardingValues);</span><br><span class="line">        Preconditions.checkState(!result.isEmpty(), <span class="string">"no database route info"</span>);</span><br><span class="line">        <span class="keyword">return</span> result;</span><br><span class="line">    &#125;</span><br></pre></td></tr></table></figure>
+<h4 id="分库规则"><a href="#分库规则" class="headerlink" title="分库规则"></a>分库规则</h4><p>假如user_id模2分库，demo_ds_0、demo_ds_1    <code>shardingRuleConfig.setDefaultDatabaseShardingStrategyConfig(new InlineShardingStrategyConfiguration(&quot;user_id&quot;, &quot;demo_ds_${user_id % 2}&quot;));</code></p>
+<p>如SELECT o.* FROM t_order o  WHERE o.user_id= 10</p>
+<p>则返回ListShardingValue ,t_order（逻辑表）、user_id（列名）、10（值）</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">private</span> List&lt;ShardingValue&gt; <span class="title">getDatabaseShardingValues</span><span class="params">(<span class="keyword">final</span> TableRule tableRule)</span> </span>&#123;</span><br><span class="line">    <span class="comment">//获取分库规则</span></span><br><span class="line">    ShardingStrategy strategy = shardingRule.getDatabaseShardingStrategy(tableRule);</span><br><span class="line">    <span class="comment">//分库的列名</span></span><br><span class="line">    <span class="keyword">return</span> HintManagerHolder.isUseShardingHint() ? getDatabaseShardingValuesFromHint(strategy.getShardingColumns()) : getShardingValues(strategy.getShardingColumns());</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">private</span> List&lt;ShardingValue&gt; <span class="title">getShardingValues</span><span class="params">(<span class="keyword">final</span> Collection&lt;String&gt; shardingColumns)</span> </span>&#123;</span><br><span class="line">    List&lt;ShardingValue&gt; result = <span class="keyword">new</span> ArrayList&lt;&gt;(shardingColumns.size());</span><br><span class="line">    <span class="comment">//查看sql的条件里面是否能找到分库规则使用的列名</span></span><br><span class="line">    <span class="keyword">for</span> (String each : shardingColumns) &#123;</span><br><span class="line">        Optional&lt;Condition&gt; condition = sqlStatement.getConditions().find(<span class="keyword">new</span> Column(each, logicTableName));</span><br><span class="line">        <span class="keyword">if</span> (condition.isPresent()) &#123;</span><br><span class="line">            result.add(condition.get().getShardingValue(parameters));</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="keyword">return</span> result;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>Condition</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">public</span> ShardingValue <span class="title">getShardingValue</span><span class="params">(<span class="keyword">final</span> List&lt;Object&gt; parameters)</span> </span>&#123;</span><br><span class="line">    List&lt;Comparable&lt;?&gt;&gt; conditionValues = getValues(parameters);</span><br><span class="line">    <span class="keyword">switch</span> (operator) &#123;</span><br><span class="line">            <span class="comment">//'='或者"IN"返回 ListShardingValue</span></span><br><span class="line">        <span class="keyword">case</span> EQUAL:</span><br><span class="line">        <span class="keyword">case</span> IN:</span><br><span class="line">            <span class="keyword">return</span> <span class="keyword">new</span> ListShardingValue&lt;&gt;(column.getTableName(), column.getName(), conditionValues);</span><br><span class="line">            <span class="comment">//"BETWEEN"返回RangeShardingValue</span></span><br><span class="line">        <span class="keyword">case</span> BETWEEN:</span><br><span class="line">            <span class="keyword">return</span> <span class="keyword">new</span> RangeShardingValue&lt;&gt;(column.getTableName(), column.getName(), Range.range(conditionValues.get(<span class="number">0</span>), BoundType.CLOSED, conditionValues.get(<span class="number">1</span>), BoundType.CLOSED));</span><br><span class="line">        <span class="keyword">default</span>:</span><br><span class="line">            <span class="keyword">throw</span> <span class="keyword">new</span> UnsupportedOperationException(operator.getExpression());</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<h4 id="分表规则"><a href="#分表规则" class="headerlink" title="分表规则"></a>分表规则</h4><p>假如按order_id模2分表   <code>shardingRuleConfig.setDefaultTableShardingStrategyConfig(new StandardShardingStrategyConfiguration(&quot;order_id&quot;, ModuloShardingTableAlgorithm.class.getName()));</code></p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">private</span> List&lt;ShardingValue&gt; <span class="title">getTableShardingValues</span><span class="params">(<span class="keyword">final</span> TableRule tableRule)</span> </span>&#123;</span><br><span class="line">    ShardingStrategy strategy = shardingRule.getTableShardingStrategy(tableRule);</span><br><span class="line">    <span class="keyword">return</span> HintManagerHolder.isUseShardingHint() ? getTableShardingValuesFromHint(strategy.getShardingColumns()) : getShardingValues(strategy.getShardingColumns());</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<h3 id="分片策略实现"><a href="#分片策略实现" class="headerlink" title="分片策略实现"></a>分片策略实现</h3><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">interface</span> <span class="title">ShardingStrategy</span> </span>&#123;</span><br><span class="line">    <span class="comment">//availableTargetNames真实数据库名集合</span></span><br><span class="line">    <span class="comment">//SQL 的逻辑表、列名、条件（分片值）集合</span></span><br><span class="line">    <span class="function">Collection&lt;String&gt; <span class="title">doSharding</span><span class="params">(Collection&lt;String&gt; availableTargetNames, Collection&lt;ShardingValue&gt; shardingValues)</span></span>;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<h4 id="StandardShardingStrategy"><a href="#StandardShardingStrategy" class="headerlink" title="StandardShardingStrategy"></a>StandardShardingStrategy</h4><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">@Override</span></span><br><span class="line"><span class="function"><span class="keyword">public</span> Collection&lt;String&gt; <span class="title">doSharding</span><span class="params">(<span class="keyword">final</span> Collection&lt;String&gt; availableTargetNames, <span class="keyword">final</span> Collection&lt;ShardingValue&gt; shardingValues)</span> </span>&#123;</span><br><span class="line">    <span class="comment">//获取第一个分片值</span></span><br><span class="line">    ShardingValue shardingValue = shardingValues.iterator().next();</span><br><span class="line">    Collection&lt;String&gt; shardingResult = shardingValue <span class="keyword">instanceof</span> ListShardingValue</span><br><span class="line">            ? doSharding(availableTargetNames, (ListShardingValue) shardingValue) : doSharding(availableTargetNames, (RangeShardingValue) shardingValue);</span><br><span class="line">    Collection&lt;String&gt; result = <span class="keyword">new</span> TreeSet&lt;&gt;(String.CASE_INSENSITIVE_ORDER);</span><br><span class="line">    result.addAll(shardingResult);</span><br><span class="line">    <span class="keyword">return</span> result;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">private</span> Collection&lt;String&gt; <span class="title">doSharding</span><span class="params">(<span class="keyword">final</span> Collection&lt;String&gt; availableTargetNames, <span class="keyword">final</span> ListShardingValue&lt;?&gt; shardingValue)</span> </span>&#123;</span><br><span class="line">        Collection&lt;String&gt; result = <span class="keyword">new</span> LinkedList&lt;&gt;();</span><br><span class="line">        <span class="comment">//ListShardingValue-》List&lt;PreciseShardingValue&gt;</span></span><br><span class="line">        <span class="comment">//每个值都划出来，使用preciseShardingAlgorithm策略，获取真实数据库名</span></span><br><span class="line">        <span class="keyword">for</span> (PreciseShardingValue&lt;?&gt; each : transferToPreciseShardingValues(shardingValue)) &#123;</span><br><span class="line">            result.add(preciseShardingAlgorithm.doSharding(availableTargetNames, each));</span><br><span class="line">        &#125;</span><br><span class="line">        <span class="keyword">return</span> result;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">private</span> Collection&lt;String&gt; <span class="title">doSharding</span><span class="params">(<span class="keyword">final</span> Collection&lt;String&gt; availableTargetNames, <span class="keyword">final</span> RangeShardingValue&lt;?&gt; shardingValue)</span> </span>&#123;</span><br><span class="line">        <span class="keyword">if</span> (!rangeShardingAlgorithm.isPresent()) &#123;</span><br><span class="line">            <span class="keyword">throw</span> <span class="keyword">new</span> UnsupportedOperationException(<span class="string">"Cannot find range sharding strategy in sharding rule."</span>);</span><br><span class="line">        &#125;</span><br><span class="line">        <span class="comment">//rangeShardingAlgorithm策略获取真实数据库名</span></span><br><span class="line">        <span class="keyword">return</span> rangeShardingAlgorithm.get().doSharding(availableTargetNames, shardingValue);</span><br><span class="line">    &#125;</span><br></pre></td></tr></table></figure>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="keyword">final</span> <span class="class"><span class="keyword">class</span> <span class="title">ModuloShardingAlgorithm</span> <span class="keyword">implements</span> <span class="title">PreciseShardingAlgorithm</span>&lt;<span class="title">Integer</span>&gt; </span>&#123;</span><br><span class="line">    </span><br><span class="line">    <span class="meta">@Override</span></span><br><span class="line">    <span class="function"><span class="keyword">public</span> String <span class="title">doSharding</span><span class="params">(<span class="keyword">final</span> Collection&lt;String&gt; availableTargetNames, <span class="keyword">final</span> PreciseShardingValue&lt;Integer&gt; shardingValue)</span> </span>&#123;</span><br><span class="line">        <span class="keyword">for</span> (String each : availableTargetNames) &#123;</span><br><span class="line">            <span class="keyword">if</span> (each.endsWith(shardingValue.getValue() % <span class="number">2</span> + <span class="string">""</span>)) &#123;</span><br><span class="line">                <span class="keyword">return</span> each;</span><br><span class="line">            &#125;</span><br><span class="line">        &#125;</span><br><span class="line">        <span class="keyword">throw</span> <span class="keyword">new</span> IllegalArgumentException();</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<h2 id="SQL重写"><a href="#SQL重写" class="headerlink" title="SQL重写"></a>SQL重写</h2><h3 id="SQLRewriteEngine"><a href="#SQLRewriteEngine" class="headerlink" title="SQLRewriteEngine"></a>SQLRewriteEngine</h3><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">private</span> <span class="keyword">final</span> ShardingRule shardingRule;</span><br><span class="line"><span class="comment">//原始sql</span></span><br><span class="line"><span class="keyword">private</span> <span class="keyword">final</span> String originalSQL;</span><br><span class="line"><span class="comment">//数据库类型</span></span><br><span class="line"><span class="keyword">private</span> <span class="keyword">final</span> DatabaseType databaseType;</span><br><span class="line"><span class="comment">//所有的SQL词根</span></span><br><span class="line"><span class="keyword">private</span> <span class="keyword">final</span> List&lt;SQLToken&gt; sqlTokens = <span class="keyword">new</span> LinkedList&lt;&gt;();</span><br><span class="line"></span><br><span class="line"><span class="keyword">private</span> <span class="keyword">final</span> SQLStatement sqlStatement;</span><br></pre></td></tr></table></figure>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">public</span> SQLBuilder <span class="title">rewrite</span><span class="params">(<span class="keyword">final</span> <span class="keyword">boolean</span> isRewriteLimit)</span> </span>&#123;</span><br><span class="line">    SQLBuilder result = <span class="keyword">new</span> SQLBuilder();</span><br><span class="line">    <span class="keyword">if</span> (sqlTokens.isEmpty()) &#123;</span><br><span class="line">        result.appendLiterals(originalSQL);</span><br><span class="line">        <span class="keyword">return</span> result;</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="keyword">int</span> count = <span class="number">0</span>;</span><br><span class="line">    <span class="comment">//sqlTokens按beginPos次序排序</span></span><br><span class="line">    sortByBeginPosition();</span><br><span class="line">    <span class="keyword">for</span> (SQLToken each : sqlTokens) &#123;</span><br><span class="line">        <span class="keyword">if</span> (<span class="number">0</span> == count) &#123;</span><br><span class="line">            <span class="comment">//第一个词素加入</span></span><br><span class="line">            result.appendLiterals(originalSQL.substring(<span class="number">0</span>, each.getBeginPosition()));</span><br><span class="line">        &#125;</span><br><span class="line">        TableToken（t_order）、ItemToken(order_id)、GeneratedKeyToken(<span class="number">57</span>)</span><br><span class="line">        <span class="comment">//表名</span></span><br><span class="line">        <span class="keyword">if</span> (each <span class="keyword">instanceof</span> TableToken) &#123;</span><br><span class="line">            appendTableToken(result, (TableToken) each, count, sqlTokens);</span><br><span class="line">        <span class="comment">//ItemToken 如列名</span></span><br><span class="line">        &#125; <span class="keyword">else</span> <span class="keyword">if</span> (each <span class="keyword">instanceof</span> ItemsToken) &#123;</span><br><span class="line">            appendItemsToken(result, (ItemsToken) each, count, sqlTokens);</span><br><span class="line">        <span class="comment">//limit 后面的rowCount、offset</span></span><br><span class="line">        &#125; <span class="keyword">else</span> <span class="keyword">if</span> (each <span class="keyword">instanceof</span> RowCountToken) &#123;</span><br><span class="line">            appendLimitRowCount(result, (RowCountToken) each, count, sqlTokens, isRewriteLimit);</span><br><span class="line">          <span class="comment">//limit 后面的offset</span></span><br><span class="line">        &#125; <span class="keyword">else</span> <span class="keyword">if</span> (each <span class="keyword">instanceof</span> OffsetToken) &#123;</span><br><span class="line">            appendLimitOffsetToken(result, (OffsetToken) each, count, sqlTokens, isRewriteLimit);</span><br><span class="line">          <span class="comment">//转换order</span></span><br><span class="line">        &#125; <span class="keyword">else</span> <span class="keyword">if</span> (each <span class="keyword">instanceof</span> OrderByToken) &#123;</span><br><span class="line">            appendOrderByToken(result, count, sqlTokens);</span><br><span class="line">        &#125;</span><br><span class="line">        count++;</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="keyword">return</span> result;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">public</span> String <span class="title">generateSQL</span><span class="params">(<span class="keyword">final</span> TableUnit tableUnit, <span class="keyword">final</span> SQLBuilder sqlBuilder)</span> </span>&#123;</span><br><span class="line">    <span class="keyword">return</span> sqlBuilder.toSQL(getTableTokens(tableUnit));</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>根据TableUnit转换逻辑表名和真实表名</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">private</span> Map&lt;String, String&gt; <span class="title">getTableTokens</span><span class="params">(<span class="keyword">final</span> TableUnit tableUnit)</span> </span>&#123;</span><br><span class="line">    Map&lt;String, String&gt; tableTokens = <span class="keyword">new</span> HashMap&lt;&gt;();</span><br><span class="line">    tableTokens.put(tableUnit.getLogicTableName(), tableUnit.getActualTableName());</span><br><span class="line">    Optional&lt;BindingTableRule&gt; bindingTableRule = shardingRule.findBindingTableRule(tableUnit.getLogicTableName());</span><br><span class="line">    <span class="keyword">if</span> (bindingTableRule.isPresent()) &#123;</span><br><span class="line">        tableTokens.putAll(getBindingTableTokens(tableUnit, bindingTableRule.get()));</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="keyword">return</span> tableTokens;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<h2 id="处理自增键"><a href="#处理自增键" class="headerlink" title="处理自增键"></a>处理自增键</h2><h3 id="ParsingSQLRouter"><a href="#ParsingSQLRouter" class="headerlink" title="ParsingSQLRouter"></a>ParsingSQLRouter</h3><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">private</span> <span class="keyword">void</span> <span class="title">processGeneratedKey</span><span class="params">(<span class="keyword">final</span> List&lt;Object&gt; parameters, <span class="keyword">final</span> InsertStatement insertStatement, <span class="keyword">final</span> SQLRouteResult sqlRouteResult)</span> </span>&#123;</span><br><span class="line">    GeneratedKey generatedKey = insertStatement.getGeneratedKey();</span><br><span class="line">    <span class="keyword">if</span> (parameters.isEmpty()) &#123;</span><br><span class="line">        sqlRouteResult.getGeneratedKeys().add(generatedKey.getValue());</span><br><span class="line">    &#125; <span class="keyword">else</span> <span class="keyword">if</span> (parameters.size() == generatedKey.getIndex()) &#123;</span><br><span class="line">        Number key = shardingRule.generateKey(insertStatement.getTables().getSingleTableName());</span><br><span class="line">        parameters.add(key);</span><br><span class="line">        setGeneratedKeys(sqlRouteResult, key);</span><br><span class="line">    &#125; <span class="keyword">else</span> <span class="keyword">if</span> (-<span class="number">1</span> != generatedKey.getIndex()) &#123;</span><br><span class="line">        setGeneratedKeys(sqlRouteResult, (Number) parameters.get(generatedKey.getIndex()));</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<h3 id="ShardingRule-1"><a href="#ShardingRule-1" class="headerlink" title="ShardingRule"></a>ShardingRule</h3><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">public</span> Number <span class="title">generateKey</span><span class="params">(<span class="keyword">final</span> String logicTableName)</span> </span>&#123;</span><br><span class="line">    Optional&lt;TableRule&gt; tableRule = tryFindTableRule(logicTableName);</span><br><span class="line">    <span class="keyword">if</span> (!tableRule.isPresent()) &#123;</span><br><span class="line">        <span class="keyword">throw</span> <span class="keyword">new</span> ShardingJdbcException(<span class="string">"Cannot find strategy for generate keys."</span>);</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="keyword">if</span> (<span class="keyword">null</span> != tableRule.get().getKeyGenerator()) &#123;</span><br><span class="line">        <span class="keyword">return</span> tableRule.get().getKeyGenerator().generateKey();</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="keyword">return</span> defaultKeyGenerator.generateKey();</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">interface</span> <span class="title">KeyGenerator</span> </span>&#123;</span><br><span class="line">    </span><br><span class="line">    <span class="comment">/**</span></span><br><span class="line"><span class="comment">     * Generate key.</span></span><br><span class="line"><span class="comment">     * </span></span><br><span class="line"><span class="comment">     * <span class="doctag">@return</span> generated key</span></span><br><span class="line"><span class="comment">     */</span></span><br><span class="line">    <span class="function">Number <span class="title">generateKey</span><span class="params">()</span></span>;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+      
+    </div>
+    
+    
+    
+
+    
+
+    
+      <div>
+        <div style="padding: 10px 0; margin: 20px auto; width: 90%; text-align: center;">
+  <div>Donate comment here</div>
+  <button id="rewardButton" disable="enable" onclick="var qr = document.getElementById('QR'); if (qr.style.display === 'none') {qr.style.display='block';} else {qr.style.display='none'}">
+    <span>打赏</span>
+  </button>
+  <div id="QR" style="display: none;">
+
+    
+      <div id="wechat" style="display: inline-block">
+        <img id="wechat_qr" src="/hexo/images/wechatpay.jpg" alt="Absurd 微信支付">
+        <p>微信支付</p>
+      </div>
+    
+
+    
+
+    
+
+  </div>
+</div>
+
+      </div>
+    
+
+    
+
+    <footer class="post-footer">
+      
+        <div class="post-tags">
+          
+            <a href="/hexo/tags/sharding-jdbc/" rel="tag"># sharding-jdbc</a>
+          
+        </div>
+      
+
+      
+      
+      
+
+      
+        <div class="post-nav">
+          <div class="post-nav-next post-nav-item">
+            
+              <a href="/hexo/post/87f178fd.html" rel="next" title="sharding-jdbc源码解析-词法分析（三）">
+                <i class="fa fa-chevron-left"></i> sharding-jdbc源码解析-词法分析（三）
+              </a>
+            
+          </div>
+
+          <span class="post-nav-divider"></span>
+
+          <div class="post-nav-prev post-nav-item">
+            
+              <a href="/hexo/post/8ce3a370.html" rel="prev" title="sharding-jdbc源码解析-sql解析（五）">
+                sharding-jdbc源码解析-sql解析（五） <i class="fa fa-chevron-right"></i>
+              </a>
+            
+          </div>
+        </div>
+      
+
+      
+      
+    </footer>
+  </div>
+  
+  
+  
+  </article>
+
+
+
+    <div class="post-spread">
+      
+    </div>
+  </div>
+
+
+          </div>
+          
+
+
+          
+
+  
+    <div class="comments" id="comments">
+      
+        <div id="gitment-container"></div>
+      
+    </div>
+
+  
+
+
+
+        </div>
+        
+          
+  
+  <div class="sidebar-toggle">
+    <div class="sidebar-toggle-line-wrap">
+      <span class="sidebar-toggle-line sidebar-toggle-line-first"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-middle"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-last"></span>
+    </div>
+  </div>
+
+  <aside id="sidebar" class="sidebar">
+    
+    <div class="sidebar-inner">
+
+      
+
+      
+        <ul class="sidebar-nav motion-element">
+          <li class="sidebar-nav-toc sidebar-nav-active" data-target="post-toc-wrap">
+            文章目录
+          </li>
+          <li class="sidebar-nav-overview" data-target="site-overview-wrap">
+            站点概览
+          </li>
+        </ul>
+      
+
+      <section class="site-overview-wrap sidebar-panel">
+        <div class="site-overview">
+          <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+            
+              <img class="site-author-image" itemprop="image" src="/hexo/images/avatar.gif" alt="Absurd">
+            
+              <p class="site-author-name" itemprop="name">Absurd</p>
+              <p class="site-description motion-element" itemprop="description"></p>
+          </div>
+
+          <nav class="site-state motion-element">
+
+            
+              <div class="site-state-item site-state-posts">
+              
+                <a href="/hexo/archives/">
+              
+                  <span class="site-state-item-count">74</span>
+                  <span class="site-state-item-name">日志</span>
+                </a>
+              </div>
+            
+
+            
+              
+              
+              <div class="site-state-item site-state-categories">
+                <a href="/hexo/categories/index.html">
+                  <span class="site-state-item-count">17</span>
+                  <span class="site-state-item-name">分类</span>
+                </a>
+              </div>
+            
+
+            
+              
+              
+              <div class="site-state-item site-state-tags">
+                <a href="/hexo/tags/index.html">
+                  <span class="site-state-item-count">46</span>
+                  <span class="site-state-item-name">标签</span>
+                </a>
+              </div>
+            
+
+          </nav>
+
+          
+            <div class="feed-link motion-element">
+              <a href="/hexo/atom.xml" rel="alternate">
+                <i class="fa fa-rss"></i>
+                RSS
+              </a>
+            </div>
+          
+
+          
+            <div class="links-of-author motion-element">
+                
+                  <span class="links-of-author-item">
+                    <a href="https://github.com/www1350" target="_blank" title="GitHub">
+                      
+                        <i class="fa fa-fw fa-github"></i>GitHub</a>
+                  </span>
+                
+                  <span class="links-of-author-item">
+                    <a href="mailto:www_1350@163.com" target="_blank" title="E-Mail">
+                      
+                        <i class="fa fa-fw fa-envelope"></i>E-Mail</a>
+                  </span>
+                
+            </div>
+          
+
+          
+          
+
+          
+          
+
+          
+
+        </div>
+      </section>
+
+      
+      <!--noindex-->
+        <section class="post-toc-wrap motion-element sidebar-panel sidebar-panel-active">
+          <div class="post-toc">
+
+            
+              
+            
+
+            
+              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#分库分表配置"><span class="nav-number">1.</span> <span class="nav-text">分库分表配置</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#TableRuleConfiguration"><span class="nav-number">1.1.</span> <span class="nav-text">TableRuleConfiguration</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#InlineExpressionParser"><span class="nav-number">1.1.1.</span> <span class="nav-text">InlineExpressionParser</span></a></li></ol></li><li class="nav-item nav-level-3"><a class="nav-link" href="#TableRule"><span class="nav-number">1.2.</span> <span class="nav-text">TableRule</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#ShardingStrategyConfiguration"><span class="nav-number">1.2.1.</span> <span class="nav-text">ShardingStrategyConfiguration</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#ShardingStrategy"><span class="nav-number">1.2.2.</span> <span class="nav-text">ShardingStrategy</span></a></li></ol></li><li class="nav-item nav-level-3"><a class="nav-link" href="#ShardingRuleConfiguration"><span class="nav-number">1.3.</span> <span class="nav-text">ShardingRuleConfiguration</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#ShardingRule"><span class="nav-number">1.4.</span> <span class="nav-text">ShardingRule</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#重要的接口"><span class="nav-number">2.</span> <span class="nav-text">重要的接口</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#执行流程"><span class="nav-number">3.</span> <span class="nav-text">执行流程</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#路由"><span class="nav-number">4.</span> <span class="nav-text">路由</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#SQLRouter"><span class="nav-number">4.1.</span> <span class="nav-text">SQLRouter</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#InsertStatement"><span class="nav-number">4.2.</span> <span class="nav-text">InsertStatement</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#路由引擎"><span class="nav-number">5.</span> <span class="nav-text">路由引擎</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#RoutingEngine"><span class="nav-number">5.1.</span> <span class="nav-text">RoutingEngine</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#SimpleRoutingEngine"><span class="nav-number">5.1.1.</span> <span class="nav-text">SimpleRoutingEngine</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#分库规则"><span class="nav-number">5.1.2.</span> <span class="nav-text">分库规则</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#分表规则"><span class="nav-number">5.1.3.</span> <span class="nav-text">分表规则</span></a></li></ol></li><li class="nav-item nav-level-3"><a class="nav-link" href="#分片策略实现"><span class="nav-number">5.2.</span> <span class="nav-text">分片策略实现</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#StandardShardingStrategy"><span class="nav-number">5.2.1.</span> <span class="nav-text">StandardShardingStrategy</span></a></li></ol></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#SQL重写"><span class="nav-number">6.</span> <span class="nav-text">SQL重写</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#SQLRewriteEngine"><span class="nav-number">6.1.</span> <span class="nav-text">SQLRewriteEngine</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#处理自增键"><span class="nav-number">7.</span> <span class="nav-text">处理自增键</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#ParsingSQLRouter"><span class="nav-number">7.1.</span> <span class="nav-text">ParsingSQLRouter</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#ShardingRule-1"><span class="nav-number">7.2.</span> <span class="nav-text">ShardingRule</span></a></li></ol></li></ol></div>
+            
+
+          </div>
+        </section>
+      <!--/noindex-->
+      
+
+      
+
+    </div>
+  </aside>
+
+
+        
+      </div>
+    </main>
+
+    <footer id="footer" class="footer">
+      <div class="footer-inner">
+        <div class="copyright">&copy; <span itemprop="copyrightYear">2021</span>
+  <span class="with-love">
+    <i class="fa fa-user"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">Absurd</span>
+
+  
+</div>
+
+
+  <div class="powered-by">由 <a class="theme-link" target="_blank" href="https://hexo.io">Hexo</a> 强力驱动</div>
+
+
+
+  <span class="post-meta-divider">|</span>
+
+
+
+  <div class="theme-info">主题 &mdash; <a class="theme-link" target="_blank" href="https://github.com/iissnan/hexo-theme-next">NexT.Mist</a> v5.1.4</div>
+
+
+
+
+        
+<div class="busuanzi-count">
+  <script async src="https://dn-lbstatics.qbox.me/busuanzi/2.3/busuanzi.pure.mini.js"></script>
+
+  
+    <span class="site-uv">
+      <i class="fa fa-user"></i>
+      <span class="busuanzi-value" id="busuanzi_value_site_uv"></span>
+      
+    </span>
+  
+
+  
+    <span class="site-pv">
+      <i class="fa fa-eye"></i>
+      <span class="busuanzi-value" id="busuanzi_value_site_pv"></span>
+      
+    </span>
+  
+</div>
+
+
+
+
+
+
+
+
+        
+      </div>
+    </footer>
+
+    
+      <div class="back-to-top">
+        <i class="fa fa-arrow-up"></i>
+        
+      </div>
+    
+
+    
+
+  </div>
+
+  
+
+<script type="text/javascript">
+  if (Object.prototype.toString.call(window.Promise) !== '[object Function]') {
+    window.Promise = null;
+  }
+</script>
+
+
+
+
+
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+    <script type="text/javascript" src="/hexo/lib/jquery/index.js?v=2.1.3"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/hexo/lib/fastclick/lib/fastclick.min.js?v=1.0.6"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/hexo/lib/jquery_lazyload/jquery.lazyload.js?v=1.9.7"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/hexo/lib/velocity/velocity.min.js?v=1.2.1"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/hexo/lib/velocity/velocity.ui.min.js?v=1.2.1"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/hexo/lib/fancybox/source/jquery.fancybox.pack.js?v=2.1.5"></script>
+  
+
+
+  
+
+
+  <script type="text/javascript" src="/hexo/js/src/utils.js?v=5.1.4"></script>
+
+  <script type="text/javascript" src="/hexo/js/src/motion.js?v=5.1.4"></script>
+
+
+
+  
+  
+
+  
+  <script type="text/javascript" src="/hexo/js/src/scrollspy.js?v=5.1.4"></script>
+<script type="text/javascript" src="/hexo/js/src/post-details.js?v=5.1.4"></script>
+
+
+
+  
+
+
+  <script type="text/javascript" src="/hexo/js/src/bootstrap.js?v=5.1.4"></script>
+
+
+
+  
+
+
+  
+
+
+
+
+	
+
+
+
+
+
+  
+
+
+
+
+
+  
+
+
+
+
+
+
+
+<!-- LOCAL: You can save these files to your site and update links -->
+    
+        
+        <link rel="stylesheet" href="https://aimingoo.github.io/gitmint/style/default.css">
+        <script src="https://aimingoo.github.io/gitmint/dist/gitmint.browser.js"></script>
+    
+<!-- END LOCAL -->
+
+    
+
+    
+      <script type="text/javascript">
+      function renderGitment(){
+        var gitment = new Gitmint({
+            id: window.location.pathname, 
+            owner: 'www1350',
+            repo: 'hexo',
+            
+            lang: "" || navigator.language || navigator.systemLanguage || navigator.userLanguage,
+            
+            oauth: {
+            
+            
+                client_secret: '471214f79bbafcfc2101577ba8b4e2439e6aab72',
+            
+                client_id: 'deb8b8a893a7e72bbf7c'
+            }});
+        gitment.render('gitment-container');
+      }
+
+      
+      renderGitment();
+      
+      </script>
+    
+
+
+
+
+
+
+
+  
+
+  <script type="text/javascript">
+    // Popup Window;
+    var isfetched = false;
+    var isXml = true;
+    // Search DB path;
+    var search_path = "search.xml";
+    if (search_path.length === 0) {
+      search_path = "search.xml";
+    } else if (/json$/i.test(search_path)) {
+      isXml = false;
+    }
+    var path = "/hexo/" + search_path;
+    // monitor main search box;
+
+    var onPopupClose = function (e) {
+      $('.popup').hide();
+      $('#local-search-input').val('');
+      $('.search-result-list').remove();
+      $('#no-result').remove();
+      $(".local-search-pop-overlay").remove();
+      $('body').css('overflow', '');
+    }
+
+    function proceedsearch() {
+      $("body")
+        .append('<div class="search-popup-overlay local-search-pop-overlay"></div>')
+        .css('overflow', 'hidden');
+      $('.search-popup-overlay').click(onPopupClose);
+      $('.popup').toggle();
+      var $localSearchInput = $('#local-search-input');
+      $localSearchInput.attr("autocapitalize", "none");
+      $localSearchInput.attr("autocorrect", "off");
+      $localSearchInput.focus();
+    }
+
+    // search function;
+    var searchFunc = function(path, search_id, content_id) {
+      'use strict';
+
+      // start loading animation
+      $("body")
+        .append('<div class="search-popup-overlay local-search-pop-overlay">' +
+          '<div id="search-loading-icon">' +
+          '<i class="fa fa-spinner fa-pulse fa-5x fa-fw"></i>' +
+          '</div>' +
+          '</div>')
+        .css('overflow', 'hidden');
+      $("#search-loading-icon").css('margin', '20% auto 0 auto').css('text-align', 'center');
+
+      $.ajax({
+        url: path,
+        dataType: isXml ? "xml" : "json",
+        async: true,
+        success: function(res) {
+          // get the contents from search data
+          isfetched = true;
+          $('.popup').detach().appendTo('.header-inner');
+          var datas = isXml ? $("entry", res).map(function() {
+            return {
+              title: $("title", this).text(),
+              content: $("content",this).text(),
+              url: $("url" , this).text()
+            };
+          }).get() : res;
+          var input = document.getElementById(search_id);
+          var resultContent = document.getElementById(content_id);
+          var inputEventFunction = function() {
+            var searchText = input.value.trim().toLowerCase();
+            var keywords = searchText.split(/[\s\-]+/);
+            if (keywords.length > 1) {
+              keywords.push(searchText);
+            }
+            var resultItems = [];
+            if (searchText.length > 0) {
+              // perform local searching
+              datas.forEach(function(data) {
+                var isMatch = false;
+                var hitCount = 0;
+                var searchTextCount = 0;
+                var title = data.title.trim();
+                var titleInLowerCase = title.toLowerCase();
+                var content = data.content.trim().replace(/<[^>]+>/g,"");
+                var contentInLowerCase = content.toLowerCase();
+                var articleUrl = decodeURIComponent(data.url);
+                var indexOfTitle = [];
+                var indexOfContent = [];
+                // only match articles with not empty titles
+                if(title != '') {
+                  keywords.forEach(function(keyword) {
+                    function getIndexByWord(word, text, caseSensitive) {
+                      var wordLen = word.length;
+                      if (wordLen === 0) {
+                        return [];
+                      }
+                      var startPosition = 0, position = [], index = [];
+                      if (!caseSensitive) {
+                        text = text.toLowerCase();
+                        word = word.toLowerCase();
+                      }
+                      while ((position = text.indexOf(word, startPosition)) > -1) {
+                        index.push({position: position, word: word});
+                        startPosition = position + wordLen;
+                      }
+                      return index;
+                    }
+
+                    indexOfTitle = indexOfTitle.concat(getIndexByWord(keyword, titleInLowerCase, false));
+                    indexOfContent = indexOfContent.concat(getIndexByWord(keyword, contentInLowerCase, false));
+                  });
+                  if (indexOfTitle.length > 0 || indexOfContent.length > 0) {
+                    isMatch = true;
+                    hitCount = indexOfTitle.length + indexOfContent.length;
+                  }
+                }
+
+                // show search results
+
+                if (isMatch) {
+                  // sort index by position of keyword
+
+                  [indexOfTitle, indexOfContent].forEach(function (index) {
+                    index.sort(function (itemLeft, itemRight) {
+                      if (itemRight.position !== itemLeft.position) {
+                        return itemRight.position - itemLeft.position;
+                      } else {
+                        return itemLeft.word.length - itemRight.word.length;
+                      }
+                    });
+                  });
+
+                  // merge hits into slices
+
+                  function mergeIntoSlice(text, start, end, index) {
+                    var item = index[index.length - 1];
+                    var position = item.position;
+                    var word = item.word;
+                    var hits = [];
+                    var searchTextCountInSlice = 0;
+                    while (position + word.length <= end && index.length != 0) {
+                      if (word === searchText) {
+                        searchTextCountInSlice++;
+                      }
+                      hits.push({position: position, length: word.length});
+                      var wordEnd = position + word.length;
+
+                      // move to next position of hit
+
+                      index.pop();
+                      while (index.length != 0) {
+                        item = index[index.length - 1];
+                        position = item.position;
+                        word = item.word;
+                        if (wordEnd > position) {
+                          index.pop();
+                        } else {
+                          break;
+                        }
+                      }
+                    }
+                    searchTextCount += searchTextCountInSlice;
+                    return {
+                      hits: hits,
+                      start: start,
+                      end: end,
+                      searchTextCount: searchTextCountInSlice
+                    };
+                  }
+
+                  var slicesOfTitle = [];
+                  if (indexOfTitle.length != 0) {
+                    slicesOfTitle.push(mergeIntoSlice(title, 0, title.length, indexOfTitle));
+                  }
+
+                  var slicesOfContent = [];
+                  while (indexOfContent.length != 0) {
+                    var item = indexOfContent[indexOfContent.length - 1];
+                    var position = item.position;
+                    var word = item.word;
+                    // cut out 100 characters
+                    var start = position - 20;
+                    var end = position + 80;
+                    if(start < 0){
+                      start = 0;
+                    }
+                    if (end < position + word.length) {
+                      end = position + word.length;
+                    }
+                    if(end > content.length){
+                      end = content.length;
+                    }
+                    slicesOfContent.push(mergeIntoSlice(content, start, end, indexOfContent));
+                  }
+
+                  // sort slices in content by search text's count and hits' count
+
+                  slicesOfContent.sort(function (sliceLeft, sliceRight) {
+                    if (sliceLeft.searchTextCount !== sliceRight.searchTextCount) {
+                      return sliceRight.searchTextCount - sliceLeft.searchTextCount;
+                    } else if (sliceLeft.hits.length !== sliceRight.hits.length) {
+                      return sliceRight.hits.length - sliceLeft.hits.length;
+                    } else {
+                      return sliceLeft.start - sliceRight.start;
+                    }
+                  });
+
+                  // select top N slices in content
+
+                  var upperBound = parseInt('1');
+                  if (upperBound >= 0) {
+                    slicesOfContent = slicesOfContent.slice(0, upperBound);
+                  }
+
+                  // highlight title and content
+
+                  function highlightKeyword(text, slice) {
+                    var result = '';
+                    var prevEnd = slice.start;
+                    slice.hits.forEach(function (hit) {
+                      result += text.substring(prevEnd, hit.position);
+                      var end = hit.position + hit.length;
+                      result += '<b class="search-keyword">' + text.substring(hit.position, end) + '</b>';
+                      prevEnd = end;
+                    });
+                    result += text.substring(prevEnd, slice.end);
+                    return result;
+                  }
+
+                  var resultItem = '';
+
+                  if (slicesOfTitle.length != 0) {
+                    resultItem += "<li><a href='" + articleUrl + "' class='search-result-title'>" + highlightKeyword(title, slicesOfTitle[0]) + "</a>";
+                  } else {
+                    resultItem += "<li><a href='" + articleUrl + "' class='search-result-title'>" + title + "</a>";
+                  }
+
+                  slicesOfContent.forEach(function (slice) {
+                    resultItem += "<a href='" + articleUrl + "'>" +
+                      "<p class=\"search-result\">" + highlightKeyword(content, slice) +
+                      "...</p>" + "</a>";
+                  });
+
+                  resultItem += "</li>";
+                  resultItems.push({
+                    item: resultItem,
+                    searchTextCount: searchTextCount,
+                    hitCount: hitCount,
+                    id: resultItems.length
+                  });
+                }
+              })
+            };
+            if (keywords.length === 1 && keywords[0] === "") {
+              resultContent.innerHTML = '<div id="no-result"><i class="fa fa-search fa-5x" /></div>'
+            } else if (resultItems.length === 0) {
+              resultContent.innerHTML = '<div id="no-result"><i class="fa fa-frown-o fa-5x" /></div>'
+            } else {
+              resultItems.sort(function (resultLeft, resultRight) {
+                if (resultLeft.searchTextCount !== resultRight.searchTextCount) {
+                  return resultRight.searchTextCount - resultLeft.searchTextCount;
+                } else if (resultLeft.hitCount !== resultRight.hitCount) {
+                  return resultRight.hitCount - resultLeft.hitCount;
+                } else {
+                  return resultRight.id - resultLeft.id;
+                }
+              });
+              var searchResultList = '<ul class=\"search-result-list\">';
+              resultItems.forEach(function (result) {
+                searchResultList += result.item;
+              })
+              searchResultList += "</ul>";
+              resultContent.innerHTML = searchResultList;
+            }
+          }
+
+          if ('auto' === 'auto') {
+            input.addEventListener('input', inputEventFunction);
+          } else {
+            $('.search-icon').click(inputEventFunction);
+            input.addEventListener('keypress', function (event) {
+              if (event.keyCode === 13) {
+                inputEventFunction();
+              }
+            });
+          }
+
+          // remove loading animation
+          $(".local-search-pop-overlay").remove();
+          $('body').css('overflow', '');
+
+          proceedsearch();
+        }
+      });
+    }
+
+    // handle and trigger popup window;
+    $('.popup-trigger').click(function(e) {
+      e.stopPropagation();
+      if (isfetched === false) {
+        searchFunc(path, 'local-search-input', 'local-search-result');
+      } else {
+        proceedsearch();
+      };
+    });
+
+    $('.popup-btn-close').click(onPopupClose);
+    $('.popup').click(function(e){
+      e.stopPropagation();
+    });
+    $(document).on('keyup', function (event) {
+      var shouldDismissSearchPopup = event.which === 27 &&
+        $('.search-popup').is(':visible');
+      if (shouldDismissSearchPopup) {
+        onPopupClose();
+      }
+    });
+  </script>
+
+
+
+
+
+  
+
+  
+
+  
+
+  
+  
+
+  
+
+  
+
+  
+
+</body>
+</html>

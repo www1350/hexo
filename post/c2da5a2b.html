@@ -1,0 +1,1477 @@
+<!DOCTYPE html>
+
+
+
+  
+
+
+<html class="theme-next mist use-motion" lang="zh-Hans">
+<head><meta name="generator" content="Hexo 3.9.0">
+  <meta charset="UTF-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+<meta name="theme-color" content="#222">
+
+
+
+
+
+
+
+
+
+<meta http-equiv="Cache-Control" content="no-transform">
+<meta http-equiv="Cache-Control" content="no-siteapp">
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+  <link href="/hexo/lib/fancybox/source/jquery.fancybox.css?v=2.1.5" rel="stylesheet" type="text/css">
+
+
+
+
+
+
+
+<link href="/hexo/lib/font-awesome/css/font-awesome.min.css?v=4.6.2" rel="stylesheet" type="text/css">
+
+<link href="/hexo/css/main.css?v=5.1.4" rel="stylesheet" type="text/css">
+
+
+  <link rel="apple-touch-icon" sizes="180x180" href="/hexo/images/apple-touch-icon-next.png?v=5.1.4">
+
+
+  <link rel="icon" type="image/png" sizes="32x32" href="/hexo/images/favicon-32x32-next.png?v=5.1.4">
+
+
+  <link rel="icon" type="image/png" sizes="16x16" href="/hexo/images/favicon-16x16-next.png?v=5.1.4">
+
+
+  <link rel="mask-icon" href="/hexo/images/logo.svg?v=5.1.4" color="#222">
+
+
+
+
+
+  <meta name="keywords" content="Hexo, NexT">
+
+
+
+
+
+  <link rel="alternate" href="/hexo/atom.xml" title="Absurd博客" type="application/atom+xml">
+
+
+
+
+
+
+<meta name="description" content="http://blog.jobbole.com/24006/ 索引区分度 区分度: 指字段在数据库中的不重复比区分度在新建索引时有着非常重要的参考价值,在MySQL中,区分度的计算规则如下:   字段去重后的总数与全表总记录数的商。  例如: select count(distinct(name))/count(*) from t_base_user; count(distinct(name))/">
+<meta property="og:type" content="article">
+<meta property="og:title" content="mysql查询优化技巧">
+<meta property="og:url" content="https://www1350.github.io/hexo/post/c2da5a2b.html">
+<meta property="og:site_name" content="Absurd博客">
+<meta property="og:description" content="http://blog.jobbole.com/24006/ 索引区分度 区分度: 指字段在数据库中的不重复比区分度在新建索引时有着非常重要的参考价值,在MySQL中,区分度的计算规则如下:   字段去重后的总数与全表总记录数的商。  例如: select count(distinct(name))/count(*) from t_base_user; count(distinct(name))/">
+<meta property="og:locale" content="zh-Hans">
+<meta property="og:updated_time" content="2018-04-16T07:46:22.000Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="mysql查询优化技巧">
+<meta name="twitter:description" content="http://blog.jobbole.com/24006/ 索引区分度 区分度: 指字段在数据库中的不重复比区分度在新建索引时有着非常重要的参考价值,在MySQL中,区分度的计算规则如下:   字段去重后的总数与全表总记录数的商。  例如: select count(distinct(name))/count(*) from t_base_user; count(distinct(name))/">
+
+
+
+<script type="text/javascript" id="hexo.configurations">
+  var NexT = window.NexT || {};
+  var CONFIG = {
+    root: '/hexo/',
+    scheme: 'Mist',
+    version: '5.1.4',
+    sidebar: {"position":"left","display":"post","offset":12,"b2t":false,"scrollpercent":false,"onmobile":false},
+    fancybox: true,
+    tabs: true,
+    motion: {"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},
+    duoshuo: {
+      userId: '0',
+      author: '博主'
+    },
+    algolia: {
+      applicationID: '',
+      apiKey: '',
+      indexName: '',
+      hits: {"per_page":10},
+      labels: {"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}
+    }
+  };
+</script>
+
+
+
+  <link rel="canonical" href="https://www1350.github.io/hexo/post/c2da5a2b.html">
+
+
+
+
+
+  <title>mysql查询优化技巧 | Absurd博客</title>
+  
+
+
+
+
+
+
+
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage" lang="zh-Hans">
+
+  
+  
+    
+  
+
+  <div class="container sidebar-position-left page-post-detail">
+    <div class="headband"></div>
+
+    <header id="header" class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-wrapper">
+  <div class="site-meta ">
+    
+
+    <div class="custom-logo-site-title">
+      <a href="/hexo/" class="brand" rel="start">
+        <span class="logo-line-before"><i></i></span>
+        <span class="site-title">Absurd博客</span>
+        <span class="logo-line-after"><i></i></span>
+      </a>
+    </div>
+      
+        <p class="site-subtitle"></p>
+      
+  </div>
+
+  <div class="site-nav-toggle">
+    <button>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+    </button>
+  </div>
+</div>
+
+<nav class="site-nav">
+  
+
+  
+    <ul id="menu" class="menu">
+      
+        
+        <li class="menu-item menu-item-home">
+          <a href="/hexo/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-home"></i> <br>
+            
+            首页
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-about">
+          <a href="/hexo/about/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-user"></i> <br>
+            
+            关于
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-tags">
+          <a href="/hexo/tags/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-tags"></i> <br>
+            
+            标签
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-categories">
+          <a href="/hexo/categories/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-th"></i> <br>
+            
+            分类
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-archives">
+          <a href="/hexo/archives/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-archive"></i> <br>
+            
+            归档
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-bookmarks">
+          <a href="/hexo/bookmarks/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-archive"></i> <br>
+            
+            bookmarks
+          </a>
+        </li>
+      
+
+      
+        <li class="menu-item menu-item-search">
+          
+            <a href="javascript:;" class="popup-trigger">
+          
+            
+              <i class="menu-item-icon fa fa-search fa-fw"></i> <br>
+            
+            搜索
+          </a>
+        </li>
+      
+    </ul>
+  
+
+  
+    <div class="site-search">
+      
+  <div class="popup search-popup local-search-popup">
+  <div class="local-search-header clearfix">
+    <span class="search-icon">
+      <i class="fa fa-search"></i>
+    </span>
+    <span class="popup-btn-close">
+      <i class="fa fa-times-circle"></i>
+    </span>
+    <div class="local-search-input-wrapper">
+      <input autocomplete="off" placeholder="搜索..." spellcheck="false" type="text" id="local-search-input">
+    </div>
+  </div>
+  <div id="local-search-result"></div>
+</div>
+
+
+
+    </div>
+  
+</nav>
+
+
+
+ </div>
+    </header>
+
+    <main id="main" class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          <div id="content" class="content">
+            
+
+  <div id="posts" class="posts-expand">
+    
+
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal" itemscope itemtype="http://schema.org/Article">
+  
+  
+  
+  <div class="post-block">
+    <link itemprop="mainEntityOfPage" href="https://www1350.github.io/hexo/hexo/post/c2da5a2b.html">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="Absurd">
+      <meta itemprop="description" content>
+      <meta itemprop="image" content="/hexo/images/avatar.gif">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Absurd博客">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">mysql查询优化技巧</h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">发表于</span>
+              
+              <time title="创建于" itemprop="dateCreated datePublished" datetime="2018-04-03T22:39:01+08:00">
+                2018-04-03
+              </time>
+            
+
+            
+
+            
+          </span>
+
+          
+
+          
+            
+              <span class="post-comments-count">
+                <span class="post-meta-divider">|</span>
+                <span class="post-meta-item-icon">
+                  <i class="fa fa-comment-o"></i>
+                </span>
+                <a href="/hexo/post/c2da5a2b.html#comments" itemprop="discussionUrl">
+                  <span class="post-comments-count gitment-comments-count" data-xid="/hexo/post/c2da5a2b.html" itemprop="commentsCount"></span>
+                </a>
+              </span>
+            
+          
+
+          
+          
+
+          
+            <span class="post-meta-divider">|</span>
+            <span class="page-pv"><i class="fa fa-file-o"></i>
+            <span class="busuanzi-value" id="busuanzi_value_page_pv"></span>
+            </span>
+          
+
+          
+
+          
+
+        </div>
+      </header>
+    
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        <p><a href="http://blog.jobbole.com/24006/" target="_blank" rel="noopener">http://blog.jobbole.com/24006/</a></p>
+<h1 id="索引区分度"><a href="#索引区分度" class="headerlink" title="索引区分度"></a>索引区分度</h1><blockquote>
+<p>区分度: 指字段在数据库中的不重复比<br>区分度在新建索引时有着非常重要的参考价值,在MySQL中,区分度的计算规则如下:</p>
+</blockquote>
+<blockquote>
+<p>字段去重后的总数与全表总记录数的商。</p>
+</blockquote>
+<p>例如:</p>
+<p><code>select count(distinct(name))/count(*) from t_base_user;</code></p>
+<h2 id="count-distinct-name-count"><a href="#count-distinct-name-count" class="headerlink" title="count(distinct(name))/count(*)"></a>count(distinct(name))/count(*)</h2><p>1.0000</p>
+<p>其中区分度最大值为1.000,最小为0.0000,区分度的值越大,也就是数据不重复率越大，新建索引效果也越好,在主键以及唯一键上面的区分度是最高的,为1.0000,在状态,性别等字段上面的区分度值是最小的。 (这个就要看数据量了,如果只有几条数据,这时区分度还挺高的,如果数据量多,区分度基本为0.0000。也就是在这些字段上添加索引后,效果也不佳的原因。)</p>
+<p>值得注意的是: 如果表中没有任何记录时,计算区分度的结果是为空值，其他情况下,区分度值均分布在0.0000-1.0000之间。</p>
+<p>个人强烈建议, 建索引时,一定要先计算该字段的区分度,原因如下:</p>
+<p>1、单列索引</p>
+<p>可以查看该字段的区分度,根据区分度的大小,也能大概知道在该字段上的新建索引是否有效，以及效果如何。区分度越大,索引效果越明显。</p>
+<p>2、多列索引(联合索引)</p>
+<p>多列索引中其实还有一个字段的先后顺序问题,一般是将区分度较高的放在前面,这样联合索引才更有效,例如:</p>
+<p><code>select * from t_base_user where name=&quot;&quot; and status=1;</code></p>
+<p>像上述语句,如果建联合索引的话,就应该是:</p>
+<p><code>alter table t_base_user add index idx_name_status(name,status);</code></p>
+<p>而不是:</p>
+<p><code>alter table t_base_user add index idx_status_name(status,name)；</code></p>
+<h1 id="最左前缀匹配原则"><a href="#最左前缀匹配原则" class="headerlink" title="最左前缀匹配原则"></a>最左前缀匹配原则</h1><p>  MySQL会一直向右匹配直到遇到范围查询(&gt;、&lt;、between、like)就停止匹配，比如<br><code>select * from t_base_user where type=&quot;10&quot; and created_at&lt;&quot;2017-11-03&quot; and status=1</code>, (该语句仅作为演示)</p>
+<p>在上述语句中,status就不会走索引,因为遇到&lt;时,MySQL已经停止匹配,此时走的索引为:(type,created_at),其先后顺序是可以调整的,而走不到status索引,此时需要修改语句为:</p>
+<p><code>select * from t_base_user where type=10 and status=1 and created_at&lt;&quot;2017-11-03&quot;</code></p>
+<p>举例：<br>CREATE TABLE <code>titles</code> (<br>  <code>id</code> varchar(50) NOT NULL DEFAULT ‘’,<br>  <code>emp_no</code> varchar(50) NOT NULL DEFAULT ‘’,<br>  <code>title</code> varchar(50) NOT NULL DEFAULT ‘’,<br>  <code>from_date</code> datetime DEFAULT NULL COMMENT ‘from’,<br>  <code>to_date</code> datetime DEFAULT NULL,<br>  <code>date_create</code> datetime DEFAULT NULL,<br>  <code>date_update</code> datetime DEFAULT NULL,<br>  <code>date_delete</code> datetime DEFAULT NULL,<br>  PRIMARY KEY (<code>id</code>),<br>  KEY <code>idx_emp</code> (<code>emp_no</code>,<code>title</code>,<code>from_date</code>) USING BTREE<br>) ENGINE=InnoDB DEFAULT CHARSET=utf8;</p>
+<p>一：全列匹配<br><code>EXPLAIN SELECT * FROM titles WHERE emp_no=&#39;10001&#39; AND title=&#39;Senior Engineer&#39; AND from_date=&#39;1986-06-26&#39;;</code></p>
+<table>
+<thead>
+<tr>
+<th style="text-align:left">id</th>
+<th style="text-align:center">select_type</th>
+<th style="text-align:center">table</th>
+<th style="text-align:center">type</th>
+<th style="text-align:center">possible_keys</th>
+<th style="text-align:center">key</th>
+<th style="text-align:center">key_len</th>
+<th style="text-align:center">ref</th>
+<th style="text-align:center">rows</th>
+<th style="text-align:right">Extra</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align:left">1</td>
+<td style="text-align:center">SIMPLE</td>
+<td style="text-align:center">titles</td>
+<td style="text-align:center">ref</td>
+<td style="text-align:center">idx_emp</td>
+<td style="text-align:center">idx_emp</td>
+<td style="text-align:center">310</td>
+<td style="text-align:center">const,const,const</td>
+<td style="text-align:center">1</td>
+</tr>
+</tbody>
+</table>
+<p>次序调换也是一样<br><code>EXPLAIN SELECT * FROM titles WHERE from_date=&#39;1986-06-26&#39; AND emp_no=&#39;10001&#39; AND title=&#39;Senior Engineer&#39;;</code></p>
+<p>二：最左前缀匹配</p>
+<p><code>EXPLAIN SELECT * FROM titles WHERE emp_no=&#39;10001&#39;;</code></p>
+<table>
+<thead>
+<tr>
+<th style="text-align:left">id</th>
+<th style="text-align:center">select_type</th>
+<th style="text-align:center">table</th>
+<th style="text-align:center">type</th>
+<th style="text-align:center">possible_keys</th>
+<th style="text-align:center">key</th>
+<th style="text-align:center">key_len</th>
+<th style="text-align:center">ref</th>
+<th style="text-align:center">rows</th>
+<th style="text-align:right">Extra</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align:left">1</td>
+<td style="text-align:center">SIMPLE</td>
+<td style="text-align:center">titles</td>
+<td style="text-align:center">ref</td>
+<td style="text-align:center">idx_emp</td>
+<td style="text-align:center">idx_emp</td>
+<td style="text-align:center">152</td>
+<td style="text-align:center">const</td>
+<td style="text-align:center">1</td>
+</tr>
+</tbody>
+</table>
+<p>三：查询条件用到了索引中列的精确匹配，但是中间某个条件未提供<br><code>EXPLAIN SELECT * FROM employees.titles WHERE emp_no=&#39;10001&#39; AND from_date=&#39;1986-06-26&#39;;</code></p>
+<table>
+<thead>
+<tr>
+<th style="text-align:left">id</th>
+<th style="text-align:center">select_type</th>
+<th style="text-align:center">table</th>
+<th style="text-align:center">type</th>
+<th style="text-align:center">possible_keys</th>
+<th style="text-align:center">key</th>
+<th style="text-align:center">key_len</th>
+<th style="text-align:center">ref</th>
+<th style="text-align:center">rows</th>
+<th style="text-align:right">Extra</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align:left">1</td>
+<td style="text-align:center">SIMPLE</td>
+<td style="text-align:center">titles</td>
+<td style="text-align:center">ref</td>
+<td style="text-align:center">idx_emp</td>
+<td style="text-align:center">idx_emp</td>
+<td style="text-align:center">152</td>
+<td style="text-align:center">const</td>
+<td style="text-align:center">1</td>
+<td style="text-align:right">Using index condition</td>
+</tr>
+</tbody>
+</table>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">EXPLAIN SELECT * FROM titles</span><br><span class="line">WHERE emp_no=&apos;10001&apos;</span><br><span class="line">AND title IN (&apos;Senior Engineer&apos;, &apos;Staff&apos;, &apos;Engineer&apos;, &apos;Senior Staff&apos;, &apos;Assistant Engineer&apos;, &apos;Technique Leader&apos;, &apos;Manager&apos;)</span><br><span class="line">AND from_date=&apos;1986-06-26&apos;;</span><br></pre></td></tr></table></figure>
+<table>
+<thead>
+<tr>
+<th style="text-align:left">id</th>
+<th style="text-align:center">select_type</th>
+<th style="text-align:center">table</th>
+<th style="text-align:center">type</th>
+<th style="text-align:center">possible_keys</th>
+<th style="text-align:center">key</th>
+<th style="text-align:center">key_len</th>
+<th style="text-align:center">ref</th>
+<th style="text-align:center">rows</th>
+<th style="text-align:right">Extra</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align:left">1</td>
+<td style="text-align:center">SIMPLE</td>
+<td style="text-align:center">titles</td>
+<td style="text-align:center">ALL</td>
+<td style="text-align:center">idx_emp</td>
+<td style="text-align:center"></td>
+<td style="text-align:center"></td>
+<td style="text-align:center">NULL</td>
+<td style="text-align:center">7</td>
+<td style="text-align:right">Using where</td>
+</tr>
+</tbody>
+</table>
+<p>四：查询条件没有指定索引第一列</p>
+<p><code>EXPLAIN SELECT * FROM titles WHERE from_date=&#39;1986-06-26&#39;;</code></p>
+<table>
+<thead>
+<tr>
+<th style="text-align:left">id</th>
+<th style="text-align:center">select_type</th>
+<th style="text-align:center">table</th>
+<th style="text-align:center">type</th>
+<th style="text-align:center">possible_keys</th>
+<th style="text-align:center">key</th>
+<th style="text-align:center">key_len</th>
+<th style="text-align:center">ref</th>
+<th style="text-align:center">rows</th>
+<th style="text-align:right">Extra</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align:left">1</td>
+<td style="text-align:center">SIMPLE</td>
+<td style="text-align:center">titles</td>
+<td style="text-align:center">ALL</td>
+<td style="text-align:center">NULL</td>
+<td style="text-align:center">NULL</td>
+<td style="text-align:center">NULL</td>
+<td style="text-align:center">NULL</td>
+<td style="text-align:center">443308</td>
+<td style="text-align:right">Using where</td>
+</tr>
+</tbody>
+</table>
+<p>五：匹配某列的前缀字符串<br><code>EXPLAIN SELECT * FROM employees.titles WHERE emp_no=&#39;10001&#39; AND title LIKE &#39;Senior%&#39;;</code></p>
+<table>
+<thead>
+<tr>
+<th style="text-align:left">id</th>
+<th style="text-align:center">select_type</th>
+<th style="text-align:center">table</th>
+<th style="text-align:center">type</th>
+<th style="text-align:center">possible_keys</th>
+<th style="text-align:center">key</th>
+<th style="text-align:center">key_len</th>
+<th style="text-align:center">ref</th>
+<th style="text-align:center">rows</th>
+<th style="text-align:right">Extra</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align:left">1</td>
+<td style="text-align:center">SIMPLE</td>
+<td style="text-align:center">titles</td>
+<td style="text-align:center">range</td>
+<td style="text-align:center">PRIMARY</td>
+<td style="text-align:center">PRIMARY</td>
+<td style="text-align:center">56</td>
+<td style="text-align:center">NULL</td>
+<td style="text-align:center">1</td>
+<td style="text-align:right">Using where</td>
+</tr>
+</tbody>
+</table>
+<h1 id="避免全表扫描"><a href="#避免全表扫描" class="headerlink" title="避免全表扫描"></a>避免全表扫描</h1><ol>
+<li>应尽量避免在 where 子句中使用!=或&lt;&gt;操作符，否则将引擎放弃使用索引而进行全表扫描</li>
+<li>对查询进行优化，应尽量避免全表扫描，首先应考虑在 where 及 order by 涉及的列上建立索引。</li>
+<li>应尽量避免在 where 子句中对字段进行 null 值判断，否则将导致引擎放弃使用索引而进行全表扫描<br>如：</li>
+</ol>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">select id from t where num is null</span><br></pre></td></tr></table></figure>
+<p>可以在num上设置默认值0，确保表中num列没有null值，然后这样查询：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">select id from t where num=0</span><br></pre></td></tr></table></figure>
+<ol>
+<li>尽量避免在 where 子句中使用 or 来连接条件，否则将导致引擎放弃使用索引而进行全表扫描，如：</li>
+</ol>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">select id from t where num=10 or num=20</span><br></pre></td></tr></table></figure>
+<p>可以这样查询：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">select id from t where num=10</span><br><span class="line">union all</span><br><span class="line">select id from t where num=20</span><br></pre></td></tr></table></figure>
+<p>5.不能前置百分号</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">select id from t where name like ‘hkjh%’</span><br></pre></td></tr></table></figure>
+<p> 若要提高效率，可以考虑全文检索。</p>
+<ol>
+<li>in 和 not in 也要慎用，如：</li>
+</ol>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">select id from t where num in(1,2,3)</span><br></pre></td></tr></table></figure>
+<p>对于连续的数值，能用 between 就不要用 in 了：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">select id from t where num between 1 and 3</span><br></pre></td></tr></table></figure>
+<p>7.如果在 where 子句中使用参数，也会导致全表扫描。因为SQL只有在运行时才会解析局部变量，但优化程序不能将访问计划的选择推迟到运行时；它必须在编译时进行选择。然 而，如果在编译时建立访问计划，变量的值还是未知的，因而无法作为索引选择的输入项。如下面语句将进行全表扫描：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">select id from t where num=@num</span><br></pre></td></tr></table></figure>
+<p>可以改为强制查询使用索引：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">select id from t with(index(索引名)) where num=@num</span><br></pre></td></tr></table></figure>
+<p>8.应尽量避免在where子句中对字段进行函数操作，这将导致引擎放弃使用索引而进行全表扫描。如：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">select id from t where substring(name,1,3)=’abc’–name以abc开头的id</span><br><span class="line">select id from t where datediff(day,createdate,’2005-11-30′)=0–’2005-11-30′生成的id</span><br></pre></td></tr></table></figure>
+<p>应改为:</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">select id from t where name like ‘abc%’</span><br><span class="line">select id from t where createdate&gt;=’2005-11-30′ and createdate&lt;’2005-12-1′</span><br></pre></td></tr></table></figure>
+<h1 id="用-exists-代替-in"><a href="#用-exists-代替-in" class="headerlink" title="用 exists 代替 in"></a>用 exists 代替 in</h1><p>很多时候用 exists 代替 in 是一个好的选择：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">select num from a where num in(select num from b)</span><br></pre></td></tr></table></figure>
+<p>用下面的语句替换：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">select num from a where exists(select 1 from b where num=a.num)</span><br></pre></td></tr></table></figure>
+<h1 id="使用数字型字段"><a href="#使用数字型字段" class="headerlink" title="使用数字型字段"></a>使用数字型字段</h1><p>1.尽量使用数字型字段，若只含数值信息的字段尽量不要设计为字符型，这会降低查询和连接的性能，并会增加存储开销。这是因为引擎在处理查询和连接时会 逐个比较字符串中每一个字符，而对于数字型而言只需要比较一次就够了。</p>
+<p>2.尽可能的使用 varchar/nvarchar 代替 char/nchar ，因为首先变长字段存储空间小，可以节省存储空间，其次对于查询来说，在一个相对较小的字段内搜索效率显然要高些。</p>
+<h1 id="临时表"><a href="#临时表" class="headerlink" title="临时表"></a>临时表</h1><ul>
+<li>尽量使用表变量来代替临时表。如果表变量包含大量数据，请注意索引非常有限（只有主键索引）。</li>
+<li>在新建临时表时，如果一次性插入数据量很大，那么可以使用 select into 代替 create table，避免造成大量 log ，以提高速度；如果数据量不大，为了缓和系统表的资源，应先create table，然后insert。</li>
+<li>如果使用到了临时表，在存储过程的最后务必将所有的临时表显式删除，先 truncate table ，然后 drop table ，这样可以避免系统表的较长时间锁定。<h1 id="重构查询的方式"><a href="#重构查询的方式" class="headerlink" title="重构查询的方式"></a>重构查询的方式</h1></li>
+</ul>
+<ol>
+<li>将一个复杂查询拆分为数个小且简单的查询，数据返回也快。</li>
+<li>切分查询，如删除10万条数据，可以切分为10次，每次删除1万条。</li>
+<li>分解关联查询：</li>
+</ol>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">SELECT * FROM tag</span><br><span class="line">    JOIN tag_post ON tag_post.tag_id = tag.id</span><br><span class="line">    JOIN post ON tag_post.post_id = post.id</span><br><span class="line">WHERE tag.name = &apos;mysql&apos;;</span><br></pre></td></tr></table></figure>
+<p>分解为</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">SELECT * FROM tag WHERE name = &apos;mysql&apos;;</span><br><span class="line">SELECT * FROM tag_post WHERE tag_id = 1234;</span><br><span class="line">SELECT * FROM post WHERE post.id in (123,456,789,818);</span><br></pre></td></tr></table></figure>
+<p>4.当只要一行数据时使用 LIMIT 1</p>
+<p>一个实例，如何对单表查询优化：</p>
+<p><code>select * from   product   limit</code>    866613,20 37.44秒</p>
+<p><code>select id from  product   limit  866613,20</code>   0.2秒(主键索引)</p>
+<p><code>SELECT *  FROM  product  WHERE    ID   &gt;=  (select   id   from  product  limit   866613,1)  limit  20</code><br>0.2秒</p>
+<h1 id="慢查询基础"><a href="#慢查询基础" class="headerlink" title="慢查询基础"></a>慢查询基础</h1><p> 优化数据访问，就是优化访问的数据，操作对象是要访问的数据，两方面，是否向服务器请求了大量不需要的数据，二是是否逼迫MySQL扫描额外的记录（没有必要扫描）。</p>
+<p>  请求不需要数据的典型案例：不加LIMIT（返回全部数据，只取10条）、多表关联Select * 返回全部列（多表关联查询时<em>返回多个表的全部列）、还是Select </em>（可能写程序方面或代码复用方面有好处，但还要权衡）、重复查询相同数据（真需要这样，可以缓存下来，移动开发这个很有必要本地存储）。</p>
+<p>标志额外扫描的三个指标：响应时间（自己判断是否合理值）、扫描的行数、返回的行数，一般扫描行数&gt;返回行数。</p>
+<p>扫描的行数需要与一个“访问类型”概念关联，就是 Explain 中的 type，explain的type结果由差到优分别是：ALL（全表扫描）、index（索引扫描）、range（范围扫描）、ref（唯一索引查询 key_col=xx）、const（常数引用）等。从“访问类型”可以明白，索引让 MySQL 以最高效、扫描行数最少的方式找到需要的记录。</p>
+<p>书中有个例子，说明在where中使用已是索引的列和取消该列的索引后两种结果，type由ref变为All，预估要访问的rows从10变为5073，差异非常明显。</p>
+<h1 id="MySQL查询优化器的局限性"><a href="#MySQL查询优化器的局限性" class="headerlink" title="MySQL查询优化器的局限性"></a>MySQL查询优化器的局限性</h1><p>一个UNION限制，无法将限制条件从外层下推到内层，改造例子如下</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line">(SELECT first_name,last_name</span><br><span class="line">FROM sak.actor</span><br><span class="line">ORDER BY last_name)</span><br><span class="line">UNION ALL</span><br><span class="line">(SELECT first_name,last_name</span><br><span class="line">FROM sak.customer</span><br><span class="line">ORDER BY last_name)</span><br><span class="line">LIMIT 20;</span><br></pre></td></tr></table></figure>
+<p>优化后</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line">(SELECT first_name,last_name</span><br><span class="line">FROM sak.actor</span><br><span class="line">ORDER BY last_name</span><br><span class="line">LIMIT 20)</span><br><span class="line">UNION ALL</span><br><span class="line">(SELECT first_name,last_name</span><br><span class="line">FROM sak.customer</span><br><span class="line">ORDER BY last_name</span><br><span class="line">LIMIT 20)</span><br><span class="line">LIMIT 20;</span><br></pre></td></tr></table></figure>
+<p>等值传递：讲的IN列表，MySQL会将IN列表的值传到各个过滤子句，如果IN列表太大，会造成额外消耗，优化和执行都很慢。</p>
+<p>最大值和最小值，MySQL对 MIN()和MAX()做得不好</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">SELECT MIN(actor_id) FROM sak.actor WHERE first_name = &apos;EE&apos;;</span><br></pre></td></tr></table></figure>
+<p>改造后（first_name 不是索引，原来必须全表查询）</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">SELECT actor_id FROM sak.actor USE INDEX(PRIMARY)</span><br><span class="line">WHERE first_name = &apos;EE&apos; LIMIT 1;</span><br></pre></td></tr></table></figure>
+
+      
+    </div>
+    
+    
+    
+
+    
+
+    
+      <div>
+        <div style="padding: 10px 0; margin: 20px auto; width: 90%; text-align: center;">
+  <div>Donate comment here</div>
+  <button id="rewardButton" disable="enable" onclick="var qr = document.getElementById('QR'); if (qr.style.display === 'none') {qr.style.display='block';} else {qr.style.display='none'}">
+    <span>打赏</span>
+  </button>
+  <div id="QR" style="display: none;">
+
+    
+      <div id="wechat" style="display: inline-block">
+        <img id="wechat_qr" src="/hexo/images/wechatpay.jpg" alt="Absurd 微信支付">
+        <p>微信支付</p>
+      </div>
+    
+
+    
+
+    
+
+  </div>
+</div>
+
+      </div>
+    
+
+    
+
+    <footer class="post-footer">
+      
+
+      
+      
+      
+
+      
+        <div class="post-nav">
+          <div class="post-nav-next post-nav-item">
+            
+              <a href="/hexo/post/5909dfe9.html" rel="next" title="RocketMQ 源码分析(四) ----rocketmq-store分析">
+                <i class="fa fa-chevron-left"></i> RocketMQ 源码分析(四) ----rocketmq-store分析
+              </a>
+            
+          </div>
+
+          <span class="post-nav-divider"></span>
+
+          <div class="post-nav-prev post-nav-item">
+            
+              <a href="/hexo/post/d38fb5d0.html" rel="prev" title="netty入门到精通">
+                netty入门到精通 <i class="fa fa-chevron-right"></i>
+              </a>
+            
+          </div>
+        </div>
+      
+
+      
+      
+    </footer>
+  </div>
+  
+  
+  
+  </article>
+
+
+
+    <div class="post-spread">
+      
+    </div>
+  </div>
+
+
+          </div>
+          
+
+
+          
+
+  
+    <div class="comments" id="comments">
+      
+        <div id="gitment-container"></div>
+      
+    </div>
+
+  
+
+
+
+        </div>
+        
+          
+  
+  <div class="sidebar-toggle">
+    <div class="sidebar-toggle-line-wrap">
+      <span class="sidebar-toggle-line sidebar-toggle-line-first"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-middle"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-last"></span>
+    </div>
+  </div>
+
+  <aside id="sidebar" class="sidebar">
+    
+    <div class="sidebar-inner">
+
+      
+
+      
+        <ul class="sidebar-nav motion-element">
+          <li class="sidebar-nav-toc sidebar-nav-active" data-target="post-toc-wrap">
+            文章目录
+          </li>
+          <li class="sidebar-nav-overview" data-target="site-overview-wrap">
+            站点概览
+          </li>
+        </ul>
+      
+
+      <section class="site-overview-wrap sidebar-panel">
+        <div class="site-overview">
+          <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+            
+              <img class="site-author-image" itemprop="image" src="/hexo/images/avatar.gif" alt="Absurd">
+            
+              <p class="site-author-name" itemprop="name">Absurd</p>
+              <p class="site-description motion-element" itemprop="description"></p>
+          </div>
+
+          <nav class="site-state motion-element">
+
+            
+              <div class="site-state-item site-state-posts">
+              
+                <a href="/hexo/archives/">
+              
+                  <span class="site-state-item-count">74</span>
+                  <span class="site-state-item-name">日志</span>
+                </a>
+              </div>
+            
+
+            
+              
+              
+              <div class="site-state-item site-state-categories">
+                <a href="/hexo/categories/index.html">
+                  <span class="site-state-item-count">17</span>
+                  <span class="site-state-item-name">分类</span>
+                </a>
+              </div>
+            
+
+            
+              
+              
+              <div class="site-state-item site-state-tags">
+                <a href="/hexo/tags/index.html">
+                  <span class="site-state-item-count">46</span>
+                  <span class="site-state-item-name">标签</span>
+                </a>
+              </div>
+            
+
+          </nav>
+
+          
+            <div class="feed-link motion-element">
+              <a href="/hexo/atom.xml" rel="alternate">
+                <i class="fa fa-rss"></i>
+                RSS
+              </a>
+            </div>
+          
+
+          
+            <div class="links-of-author motion-element">
+                
+                  <span class="links-of-author-item">
+                    <a href="https://github.com/www1350" target="_blank" title="GitHub">
+                      
+                        <i class="fa fa-fw fa-github"></i>GitHub</a>
+                  </span>
+                
+                  <span class="links-of-author-item">
+                    <a href="mailto:www_1350@163.com" target="_blank" title="E-Mail">
+                      
+                        <i class="fa fa-fw fa-envelope"></i>E-Mail</a>
+                  </span>
+                
+            </div>
+          
+
+          
+          
+
+          
+          
+
+          
+
+        </div>
+      </section>
+
+      
+      <!--noindex-->
+        <section class="post-toc-wrap motion-element sidebar-panel sidebar-panel-active">
+          <div class="post-toc">
+
+            
+              
+            
+
+            
+              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#索引区分度"><span class="nav-number">1.</span> <span class="nav-text">索引区分度</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#count-distinct-name-count"><span class="nav-number">1.1.</span> <span class="nav-text">count(distinct(name))/count(*)</span></a></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#最左前缀匹配原则"><span class="nav-number">2.</span> <span class="nav-text">最左前缀匹配原则</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#避免全表扫描"><span class="nav-number">3.</span> <span class="nav-text">避免全表扫描</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#用-exists-代替-in"><span class="nav-number">4.</span> <span class="nav-text">用 exists 代替 in</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#使用数字型字段"><span class="nav-number">5.</span> <span class="nav-text">使用数字型字段</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#临时表"><span class="nav-number">6.</span> <span class="nav-text">临时表</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#重构查询的方式"><span class="nav-number">7.</span> <span class="nav-text">重构查询的方式</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#慢查询基础"><span class="nav-number">8.</span> <span class="nav-text">慢查询基础</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#MySQL查询优化器的局限性"><span class="nav-number">9.</span> <span class="nav-text">MySQL查询优化器的局限性</span></a></li></ol></div>
+            
+
+          </div>
+        </section>
+      <!--/noindex-->
+      
+
+      
+
+    </div>
+  </aside>
+
+
+        
+      </div>
+    </main>
+
+    <footer id="footer" class="footer">
+      <div class="footer-inner">
+        <div class="copyright">&copy; <span itemprop="copyrightYear">2021</span>
+  <span class="with-love">
+    <i class="fa fa-user"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">Absurd</span>
+
+  
+</div>
+
+
+  <div class="powered-by">由 <a class="theme-link" target="_blank" href="https://hexo.io">Hexo</a> 强力驱动</div>
+
+
+
+  <span class="post-meta-divider">|</span>
+
+
+
+  <div class="theme-info">主题 &mdash; <a class="theme-link" target="_blank" href="https://github.com/iissnan/hexo-theme-next">NexT.Mist</a> v5.1.4</div>
+
+
+
+
+        
+<div class="busuanzi-count">
+  <script async src="https://dn-lbstatics.qbox.me/busuanzi/2.3/busuanzi.pure.mini.js"></script>
+
+  
+    <span class="site-uv">
+      <i class="fa fa-user"></i>
+      <span class="busuanzi-value" id="busuanzi_value_site_uv"></span>
+      
+    </span>
+  
+
+  
+    <span class="site-pv">
+      <i class="fa fa-eye"></i>
+      <span class="busuanzi-value" id="busuanzi_value_site_pv"></span>
+      
+    </span>
+  
+</div>
+
+
+
+
+
+
+
+
+        
+      </div>
+    </footer>
+
+    
+      <div class="back-to-top">
+        <i class="fa fa-arrow-up"></i>
+        
+      </div>
+    
+
+    
+
+  </div>
+
+  
+
+<script type="text/javascript">
+  if (Object.prototype.toString.call(window.Promise) !== '[object Function]') {
+    window.Promise = null;
+  }
+</script>
+
+
+
+
+
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+    <script type="text/javascript" src="/hexo/lib/jquery/index.js?v=2.1.3"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/hexo/lib/fastclick/lib/fastclick.min.js?v=1.0.6"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/hexo/lib/jquery_lazyload/jquery.lazyload.js?v=1.9.7"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/hexo/lib/velocity/velocity.min.js?v=1.2.1"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/hexo/lib/velocity/velocity.ui.min.js?v=1.2.1"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/hexo/lib/fancybox/source/jquery.fancybox.pack.js?v=2.1.5"></script>
+  
+
+
+  
+
+
+  <script type="text/javascript" src="/hexo/js/src/utils.js?v=5.1.4"></script>
+
+  <script type="text/javascript" src="/hexo/js/src/motion.js?v=5.1.4"></script>
+
+
+
+  
+  
+
+  
+  <script type="text/javascript" src="/hexo/js/src/scrollspy.js?v=5.1.4"></script>
+<script type="text/javascript" src="/hexo/js/src/post-details.js?v=5.1.4"></script>
+
+
+
+  
+
+
+  <script type="text/javascript" src="/hexo/js/src/bootstrap.js?v=5.1.4"></script>
+
+
+
+  
+
+
+  
+
+
+
+
+	
+
+
+
+
+
+  
+
+
+
+
+
+  
+
+
+
+
+
+
+
+<!-- LOCAL: You can save these files to your site and update links -->
+    
+        
+        <link rel="stylesheet" href="https://aimingoo.github.io/gitmint/style/default.css">
+        <script src="https://aimingoo.github.io/gitmint/dist/gitmint.browser.js"></script>
+    
+<!-- END LOCAL -->
+
+    
+
+    
+      <script type="text/javascript">
+      function renderGitment(){
+        var gitment = new Gitmint({
+            id: window.location.pathname, 
+            owner: 'www1350',
+            repo: 'hexo',
+            
+            lang: "" || navigator.language || navigator.systemLanguage || navigator.userLanguage,
+            
+            oauth: {
+            
+            
+                client_secret: '471214f79bbafcfc2101577ba8b4e2439e6aab72',
+            
+                client_id: 'deb8b8a893a7e72bbf7c'
+            }});
+        gitment.render('gitment-container');
+      }
+
+      
+      renderGitment();
+      
+      </script>
+    
+
+
+
+
+
+
+
+  
+
+  <script type="text/javascript">
+    // Popup Window;
+    var isfetched = false;
+    var isXml = true;
+    // Search DB path;
+    var search_path = "search.xml";
+    if (search_path.length === 0) {
+      search_path = "search.xml";
+    } else if (/json$/i.test(search_path)) {
+      isXml = false;
+    }
+    var path = "/hexo/" + search_path;
+    // monitor main search box;
+
+    var onPopupClose = function (e) {
+      $('.popup').hide();
+      $('#local-search-input').val('');
+      $('.search-result-list').remove();
+      $('#no-result').remove();
+      $(".local-search-pop-overlay").remove();
+      $('body').css('overflow', '');
+    }
+
+    function proceedsearch() {
+      $("body")
+        .append('<div class="search-popup-overlay local-search-pop-overlay"></div>')
+        .css('overflow', 'hidden');
+      $('.search-popup-overlay').click(onPopupClose);
+      $('.popup').toggle();
+      var $localSearchInput = $('#local-search-input');
+      $localSearchInput.attr("autocapitalize", "none");
+      $localSearchInput.attr("autocorrect", "off");
+      $localSearchInput.focus();
+    }
+
+    // search function;
+    var searchFunc = function(path, search_id, content_id) {
+      'use strict';
+
+      // start loading animation
+      $("body")
+        .append('<div class="search-popup-overlay local-search-pop-overlay">' +
+          '<div id="search-loading-icon">' +
+          '<i class="fa fa-spinner fa-pulse fa-5x fa-fw"></i>' +
+          '</div>' +
+          '</div>')
+        .css('overflow', 'hidden');
+      $("#search-loading-icon").css('margin', '20% auto 0 auto').css('text-align', 'center');
+
+      $.ajax({
+        url: path,
+        dataType: isXml ? "xml" : "json",
+        async: true,
+        success: function(res) {
+          // get the contents from search data
+          isfetched = true;
+          $('.popup').detach().appendTo('.header-inner');
+          var datas = isXml ? $("entry", res).map(function() {
+            return {
+              title: $("title", this).text(),
+              content: $("content",this).text(),
+              url: $("url" , this).text()
+            };
+          }).get() : res;
+          var input = document.getElementById(search_id);
+          var resultContent = document.getElementById(content_id);
+          var inputEventFunction = function() {
+            var searchText = input.value.trim().toLowerCase();
+            var keywords = searchText.split(/[\s\-]+/);
+            if (keywords.length > 1) {
+              keywords.push(searchText);
+            }
+            var resultItems = [];
+            if (searchText.length > 0) {
+              // perform local searching
+              datas.forEach(function(data) {
+                var isMatch = false;
+                var hitCount = 0;
+                var searchTextCount = 0;
+                var title = data.title.trim();
+                var titleInLowerCase = title.toLowerCase();
+                var content = data.content.trim().replace(/<[^>]+>/g,"");
+                var contentInLowerCase = content.toLowerCase();
+                var articleUrl = decodeURIComponent(data.url);
+                var indexOfTitle = [];
+                var indexOfContent = [];
+                // only match articles with not empty titles
+                if(title != '') {
+                  keywords.forEach(function(keyword) {
+                    function getIndexByWord(word, text, caseSensitive) {
+                      var wordLen = word.length;
+                      if (wordLen === 0) {
+                        return [];
+                      }
+                      var startPosition = 0, position = [], index = [];
+                      if (!caseSensitive) {
+                        text = text.toLowerCase();
+                        word = word.toLowerCase();
+                      }
+                      while ((position = text.indexOf(word, startPosition)) > -1) {
+                        index.push({position: position, word: word});
+                        startPosition = position + wordLen;
+                      }
+                      return index;
+                    }
+
+                    indexOfTitle = indexOfTitle.concat(getIndexByWord(keyword, titleInLowerCase, false));
+                    indexOfContent = indexOfContent.concat(getIndexByWord(keyword, contentInLowerCase, false));
+                  });
+                  if (indexOfTitle.length > 0 || indexOfContent.length > 0) {
+                    isMatch = true;
+                    hitCount = indexOfTitle.length + indexOfContent.length;
+                  }
+                }
+
+                // show search results
+
+                if (isMatch) {
+                  // sort index by position of keyword
+
+                  [indexOfTitle, indexOfContent].forEach(function (index) {
+                    index.sort(function (itemLeft, itemRight) {
+                      if (itemRight.position !== itemLeft.position) {
+                        return itemRight.position - itemLeft.position;
+                      } else {
+                        return itemLeft.word.length - itemRight.word.length;
+                      }
+                    });
+                  });
+
+                  // merge hits into slices
+
+                  function mergeIntoSlice(text, start, end, index) {
+                    var item = index[index.length - 1];
+                    var position = item.position;
+                    var word = item.word;
+                    var hits = [];
+                    var searchTextCountInSlice = 0;
+                    while (position + word.length <= end && index.length != 0) {
+                      if (word === searchText) {
+                        searchTextCountInSlice++;
+                      }
+                      hits.push({position: position, length: word.length});
+                      var wordEnd = position + word.length;
+
+                      // move to next position of hit
+
+                      index.pop();
+                      while (index.length != 0) {
+                        item = index[index.length - 1];
+                        position = item.position;
+                        word = item.word;
+                        if (wordEnd > position) {
+                          index.pop();
+                        } else {
+                          break;
+                        }
+                      }
+                    }
+                    searchTextCount += searchTextCountInSlice;
+                    return {
+                      hits: hits,
+                      start: start,
+                      end: end,
+                      searchTextCount: searchTextCountInSlice
+                    };
+                  }
+
+                  var slicesOfTitle = [];
+                  if (indexOfTitle.length != 0) {
+                    slicesOfTitle.push(mergeIntoSlice(title, 0, title.length, indexOfTitle));
+                  }
+
+                  var slicesOfContent = [];
+                  while (indexOfContent.length != 0) {
+                    var item = indexOfContent[indexOfContent.length - 1];
+                    var position = item.position;
+                    var word = item.word;
+                    // cut out 100 characters
+                    var start = position - 20;
+                    var end = position + 80;
+                    if(start < 0){
+                      start = 0;
+                    }
+                    if (end < position + word.length) {
+                      end = position + word.length;
+                    }
+                    if(end > content.length){
+                      end = content.length;
+                    }
+                    slicesOfContent.push(mergeIntoSlice(content, start, end, indexOfContent));
+                  }
+
+                  // sort slices in content by search text's count and hits' count
+
+                  slicesOfContent.sort(function (sliceLeft, sliceRight) {
+                    if (sliceLeft.searchTextCount !== sliceRight.searchTextCount) {
+                      return sliceRight.searchTextCount - sliceLeft.searchTextCount;
+                    } else if (sliceLeft.hits.length !== sliceRight.hits.length) {
+                      return sliceRight.hits.length - sliceLeft.hits.length;
+                    } else {
+                      return sliceLeft.start - sliceRight.start;
+                    }
+                  });
+
+                  // select top N slices in content
+
+                  var upperBound = parseInt('1');
+                  if (upperBound >= 0) {
+                    slicesOfContent = slicesOfContent.slice(0, upperBound);
+                  }
+
+                  // highlight title and content
+
+                  function highlightKeyword(text, slice) {
+                    var result = '';
+                    var prevEnd = slice.start;
+                    slice.hits.forEach(function (hit) {
+                      result += text.substring(prevEnd, hit.position);
+                      var end = hit.position + hit.length;
+                      result += '<b class="search-keyword">' + text.substring(hit.position, end) + '</b>';
+                      prevEnd = end;
+                    });
+                    result += text.substring(prevEnd, slice.end);
+                    return result;
+                  }
+
+                  var resultItem = '';
+
+                  if (slicesOfTitle.length != 0) {
+                    resultItem += "<li><a href='" + articleUrl + "' class='search-result-title'>" + highlightKeyword(title, slicesOfTitle[0]) + "</a>";
+                  } else {
+                    resultItem += "<li><a href='" + articleUrl + "' class='search-result-title'>" + title + "</a>";
+                  }
+
+                  slicesOfContent.forEach(function (slice) {
+                    resultItem += "<a href='" + articleUrl + "'>" +
+                      "<p class=\"search-result\">" + highlightKeyword(content, slice) +
+                      "...</p>" + "</a>";
+                  });
+
+                  resultItem += "</li>";
+                  resultItems.push({
+                    item: resultItem,
+                    searchTextCount: searchTextCount,
+                    hitCount: hitCount,
+                    id: resultItems.length
+                  });
+                }
+              })
+            };
+            if (keywords.length === 1 && keywords[0] === "") {
+              resultContent.innerHTML = '<div id="no-result"><i class="fa fa-search fa-5x" /></div>'
+            } else if (resultItems.length === 0) {
+              resultContent.innerHTML = '<div id="no-result"><i class="fa fa-frown-o fa-5x" /></div>'
+            } else {
+              resultItems.sort(function (resultLeft, resultRight) {
+                if (resultLeft.searchTextCount !== resultRight.searchTextCount) {
+                  return resultRight.searchTextCount - resultLeft.searchTextCount;
+                } else if (resultLeft.hitCount !== resultRight.hitCount) {
+                  return resultRight.hitCount - resultLeft.hitCount;
+                } else {
+                  return resultRight.id - resultLeft.id;
+                }
+              });
+              var searchResultList = '<ul class=\"search-result-list\">';
+              resultItems.forEach(function (result) {
+                searchResultList += result.item;
+              })
+              searchResultList += "</ul>";
+              resultContent.innerHTML = searchResultList;
+            }
+          }
+
+          if ('auto' === 'auto') {
+            input.addEventListener('input', inputEventFunction);
+          } else {
+            $('.search-icon').click(inputEventFunction);
+            input.addEventListener('keypress', function (event) {
+              if (event.keyCode === 13) {
+                inputEventFunction();
+              }
+            });
+          }
+
+          // remove loading animation
+          $(".local-search-pop-overlay").remove();
+          $('body').css('overflow', '');
+
+          proceedsearch();
+        }
+      });
+    }
+
+    // handle and trigger popup window;
+    $('.popup-trigger').click(function(e) {
+      e.stopPropagation();
+      if (isfetched === false) {
+        searchFunc(path, 'local-search-input', 'local-search-result');
+      } else {
+        proceedsearch();
+      };
+    });
+
+    $('.popup-btn-close').click(onPopupClose);
+    $('.popup').click(function(e){
+      e.stopPropagation();
+    });
+    $(document).on('keyup', function (event) {
+      var shouldDismissSearchPopup = event.which === 27 &&
+        $('.search-popup').is(':visible');
+      if (shouldDismissSearchPopup) {
+        onPopupClose();
+      }
+    });
+  </script>
+
+
+
+
+
+  
+
+  
+
+  
+
+  
+  
+
+  
+
+  
+
+  
+
+</body>
+</html>

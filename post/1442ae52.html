@@ -1,0 +1,1490 @@
+<!DOCTYPE html>
+
+
+
+  
+
+
+<html class="theme-next mist use-motion" lang="zh-Hans">
+<head><meta name="generator" content="Hexo 3.9.0">
+  <meta charset="UTF-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+<meta name="theme-color" content="#222">
+
+
+
+
+
+
+
+
+
+<meta http-equiv="Cache-Control" content="no-transform">
+<meta http-equiv="Cache-Control" content="no-siteapp">
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+  <link href="/hexo/lib/fancybox/source/jquery.fancybox.css?v=2.1.5" rel="stylesheet" type="text/css">
+
+
+
+
+
+
+
+<link href="/hexo/lib/font-awesome/css/font-awesome.min.css?v=4.6.2" rel="stylesheet" type="text/css">
+
+<link href="/hexo/css/main.css?v=5.1.4" rel="stylesheet" type="text/css">
+
+
+  <link rel="apple-touch-icon" sizes="180x180" href="/hexo/images/apple-touch-icon-next.png?v=5.1.4">
+
+
+  <link rel="icon" type="image/png" sizes="32x32" href="/hexo/images/favicon-32x32-next.png?v=5.1.4">
+
+
+  <link rel="icon" type="image/png" sizes="16x16" href="/hexo/images/favicon-16x16-next.png?v=5.1.4">
+
+
+  <link rel="mask-icon" href="/hexo/images/logo.svg?v=5.1.4" color="#222">
+
+
+
+
+
+  <meta name="keywords" content="sharding-jdbc,sharding-sphere,">
+
+
+
+
+
+  <link rel="alternate" href="/hexo/atom.xml" title="Absurd博客" type="application/atom+xml">
+
+
+
+
+
+
+<meta name="description" content="简介Sharding-JDBC是一个开源的分布式数据库中间件解决方案。它在Java的JDBC层以对业务应用零侵入的方式额外提供数据分片，读写分离，柔性事务和分布式治理能力。并在其基础上提供封装了MySQL协议的服务端版本，用于完成对异构语言的支持。 (还没写完这个系列的时候就已经更名成sharding-sphere了) 官方文档：http://shardingjdbc.io/docs_cn/00-">
+<meta name="keywords" content="sharding-jdbc,sharding-sphere">
+<meta property="og:type" content="article">
+<meta property="og:title" content="sharding-jdbc源码解析-入门使用（序言）">
+<meta property="og:url" content="https://www1350.github.io/hexo/post/1442ae52.html">
+<meta property="og:site_name" content="Absurd博客">
+<meta property="og:description" content="简介Sharding-JDBC是一个开源的分布式数据库中间件解决方案。它在Java的JDBC层以对业务应用零侵入的方式额外提供数据分片，读写分离，柔性事务和分布式治理能力。并在其基础上提供封装了MySQL协议的服务端版本，用于完成对异构语言的支持。 (还没写完这个系列的时候就已经更名成sharding-sphere了) 官方文档：http://shardingjdbc.io/docs_cn/00-">
+<meta property="og:locale" content="zh-Hans">
+<meta property="og:image" content="https://user-images.githubusercontent.com/7789698/39663686-51e91372-50aa-11e8-96b5-d383f1b02f55.png">
+<meta property="og:image" content="https://user-images.githubusercontent.com/7789698/39663693-8c4d6266-50aa-11e8-939a-e8779641a35b.png">
+<meta property="og:image" content="https://user-images.githubusercontent.com/7789698/39663709-c6aa7d68-50aa-11e8-8052-b3b86afba760.png">
+<meta property="og:image" content="https://user-images.githubusercontent.com/7789698/39670535-9ee904f4-5139-11e8-9d60-e485f3c50f54.png">
+<meta property="og:updated_time" content="2018-05-19T13:11:52.000Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="sharding-jdbc源码解析-入门使用（序言）">
+<meta name="twitter:description" content="简介Sharding-JDBC是一个开源的分布式数据库中间件解决方案。它在Java的JDBC层以对业务应用零侵入的方式额外提供数据分片，读写分离，柔性事务和分布式治理能力。并在其基础上提供封装了MySQL协议的服务端版本，用于完成对异构语言的支持。 (还没写完这个系列的时候就已经更名成sharding-sphere了) 官方文档：http://shardingjdbc.io/docs_cn/00-">
+<meta name="twitter:image" content="https://user-images.githubusercontent.com/7789698/39663686-51e91372-50aa-11e8-96b5-d383f1b02f55.png">
+
+
+
+<script type="text/javascript" id="hexo.configurations">
+  var NexT = window.NexT || {};
+  var CONFIG = {
+    root: '/hexo/',
+    scheme: 'Mist',
+    version: '5.1.4',
+    sidebar: {"position":"left","display":"post","offset":12,"b2t":false,"scrollpercent":false,"onmobile":false},
+    fancybox: true,
+    tabs: true,
+    motion: {"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},
+    duoshuo: {
+      userId: '0',
+      author: '博主'
+    },
+    algolia: {
+      applicationID: '',
+      apiKey: '',
+      indexName: '',
+      hits: {"per_page":10},
+      labels: {"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}
+    }
+  };
+</script>
+
+
+
+  <link rel="canonical" href="https://www1350.github.io/hexo/post/1442ae52.html">
+
+
+
+
+
+  <title>sharding-jdbc源码解析-入门使用（序言） | Absurd博客</title>
+  
+
+
+
+
+
+
+
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage" lang="zh-Hans">
+
+  
+  
+    
+  
+
+  <div class="container sidebar-position-left page-post-detail">
+    <div class="headband"></div>
+
+    <header id="header" class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-wrapper">
+  <div class="site-meta ">
+    
+
+    <div class="custom-logo-site-title">
+      <a href="/hexo/" class="brand" rel="start">
+        <span class="logo-line-before"><i></i></span>
+        <span class="site-title">Absurd博客</span>
+        <span class="logo-line-after"><i></i></span>
+      </a>
+    </div>
+      
+        <p class="site-subtitle"></p>
+      
+  </div>
+
+  <div class="site-nav-toggle">
+    <button>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+    </button>
+  </div>
+</div>
+
+<nav class="site-nav">
+  
+
+  
+    <ul id="menu" class="menu">
+      
+        
+        <li class="menu-item menu-item-home">
+          <a href="/hexo/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-home"></i> <br>
+            
+            首页
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-about">
+          <a href="/hexo/about/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-user"></i> <br>
+            
+            关于
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-tags">
+          <a href="/hexo/tags/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-tags"></i> <br>
+            
+            标签
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-categories">
+          <a href="/hexo/categories/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-th"></i> <br>
+            
+            分类
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-archives">
+          <a href="/hexo/archives/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-archive"></i> <br>
+            
+            归档
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-bookmarks">
+          <a href="/hexo/bookmarks/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-archive"></i> <br>
+            
+            bookmarks
+          </a>
+        </li>
+      
+
+      
+        <li class="menu-item menu-item-search">
+          
+            <a href="javascript:;" class="popup-trigger">
+          
+            
+              <i class="menu-item-icon fa fa-search fa-fw"></i> <br>
+            
+            搜索
+          </a>
+        </li>
+      
+    </ul>
+  
+
+  
+    <div class="site-search">
+      
+  <div class="popup search-popup local-search-popup">
+  <div class="local-search-header clearfix">
+    <span class="search-icon">
+      <i class="fa fa-search"></i>
+    </span>
+    <span class="popup-btn-close">
+      <i class="fa fa-times-circle"></i>
+    </span>
+    <div class="local-search-input-wrapper">
+      <input autocomplete="off" placeholder="搜索..." spellcheck="false" type="text" id="local-search-input">
+    </div>
+  </div>
+  <div id="local-search-result"></div>
+</div>
+
+
+
+    </div>
+  
+</nav>
+
+
+
+ </div>
+    </header>
+
+    <main id="main" class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          <div id="content" class="content">
+            
+
+  <div id="posts" class="posts-expand">
+    
+
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal" itemscope itemtype="http://schema.org/Article">
+  
+  
+  
+  <div class="post-block">
+    <link itemprop="mainEntityOfPage" href="https://www1350.github.io/hexo/hexo/post/1442ae52.html">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="Absurd">
+      <meta itemprop="description" content>
+      <meta itemprop="image" content="/hexo/images/avatar.gif">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Absurd博客">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">sharding-jdbc源码解析-入门使用（序言）</h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">发表于</span>
+              
+              <time title="创建于" itemprop="dateCreated datePublished" datetime="2018-05-05T21:04:06+08:00">
+                2018-05-05
+              </time>
+            
+
+            
+
+            
+          </span>
+
+          
+            <span class="post-category">
+            
+              <span class="post-meta-divider">|</span>
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">分类于</span>
+              
+              
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/hexo/categories/中间件/" itemprop="url" rel="index">
+                    <span itemprop="name">中间件</span>
+                  </a>
+                </span>
+
+                
+                
+                  ， 
+                
+              
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/hexo/categories/中间件/数据库/" itemprop="url" rel="index">
+                    <span itemprop="name">数据库</span>
+                  </a>
+                </span>
+
+                
+                
+              
+            </span>
+          
+
+          
+            
+              <span class="post-comments-count">
+                <span class="post-meta-divider">|</span>
+                <span class="post-meta-item-icon">
+                  <i class="fa fa-comment-o"></i>
+                </span>
+                <a href="/hexo/post/1442ae52.html#comments" itemprop="discussionUrl">
+                  <span class="post-comments-count gitment-comments-count" data-xid="/hexo/post/1442ae52.html" itemprop="commentsCount"></span>
+                </a>
+              </span>
+            
+          
+
+          
+          
+
+          
+            <span class="post-meta-divider">|</span>
+            <span class="page-pv"><i class="fa fa-file-o"></i>
+            <span class="busuanzi-value" id="busuanzi_value_page_pv"></span>
+            </span>
+          
+
+          
+
+          
+
+        </div>
+      </header>
+    
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        <h2 id="简介"><a href="#简介" class="headerlink" title="简介"></a>简介</h2><p>Sharding-JDBC是一个开源的分布式数据库中间件解决方案。它在Java的JDBC层以对业务应用零侵入的方式额外提供数据分片，读写分离，柔性事务和分布式治理能力。并在其基础上提供封装了MySQL协议的服务端版本，用于完成对异构语言的支持。</p>
+<p>(还没写完这个系列的时候就已经更名成sharding-sphere了)</p>
+<p>官方文档：<a href="http://shardingjdbc.io/docs_cn/00-overview/" target="_blank" rel="noopener">http://shardingjdbc.io/docs_cn/00-overview/</a></p>
+<p><a href="http://shardingsphere.io/document/cn/overview/" target="_blank" rel="noopener">http://shardingsphere.io/document/cn/overview/</a></p>
+<p>官方github地址：<a href="https://github.com/shardingjdbc/sharding-jdbc" target="_blank" rel="noopener">https://github.com/shardingjdbc/sharding-jdbc</a></p>
+<p><a href="https://github.com/sharding-sphere/sharding-sphere" target="_blank" rel="noopener">https://github.com/sharding-sphere/sharding-sphere</a></p>
+<h3 id="功能列表"><a href="#功能列表" class="headerlink" title="功能列表"></a>功能列表</h3><h4 id="1-数据分片"><a href="#1-数据分片" class="headerlink" title="1. 数据分片"></a>1. 数据分片</h4><ul>
+<li>支持分库 + 分表</li>
+<li>支持聚合，分组，排序，分页，关联查询等复杂查询语句</li>
+<li>支持常见的DML，DDL，TCL以及数据库管理语句</li>
+<li>支持=，BETWEEN，IN的分片操作符</li>
+<li>自定义的灵活分片策略，支持多分片键共用，支持inline表达式</li>
+<li>基于Hint的强制路由</li>
+<li>支持分布式主键</li>
+</ul>
+<h4 id="2-读写分离"><a href="#2-读写分离" class="headerlink" title="2. 读写分离"></a>2. 读写分离</h4><ul>
+<li>支持一主多从的读写分离</li>
+<li>支持同一线程内的数据一致性</li>
+<li>支持分库分表与读写分离共同使用</li>
+<li>支持基于Hint的强制主库路由</li>
+</ul>
+<h4 id="3-柔性事务"><a href="#3-柔性事务" class="headerlink" title="3. 柔性事务"></a>3. 柔性事务</h4><ul>
+<li>最大努力送达型事务</li>
+<li>TCC型事务(TBD)</li>
+</ul>
+<h4 id="4-分布式治理"><a href="#4-分布式治理" class="headerlink" title="4. 分布式治理"></a>4. 分布式治理</h4><ul>
+<li>支持配置中心，可动态修改配置</li>
+<li>支持客户端熔断和失效转移</li>
+<li>支持Open Tracing协议</li>
+</ul>
+<a id="more"></a>
+<h3 id="部署架构"><a href="#部署架构" class="headerlink" title="部署架构"></a>部署架构</h3><h4 id="Sharding-JDBC-Driver"><a href="#Sharding-JDBC-Driver" class="headerlink" title="Sharding-JDBC-Driver"></a>Sharding-JDBC-Driver</h4><p>通过客户端分片的方式由应用程序直连数据库，减少二次转发成本，性能最高，适合线上程序使用。</p>
+<ul>
+<li><p>可适用于任何基于Java的ORM框架，如：JPA, Hibernate, Mybatis, Spring JDBC Template或直接使用JDBC。</p>
+</li>
+<li><p>可基于任何第三方的数据库连接池，如：DBCP, C3P0, BoneCP, Druid等。</p>
+</li>
+<li><p>可支持任意实现JDBC规范的数据库。目前支持MySQL，Oracle，SQLServer和PostgreSQL。</p>
+</li>
+</ul>
+<p><img src="https://user-images.githubusercontent.com/7789698/39663686-51e91372-50aa-11e8-96b5-d383f1b02f55.png" alt="image"></p>
+<h4 id="Sharding-JDBC-Server"><a href="#Sharding-JDBC-Server" class="headerlink" title="Sharding-JDBC-Server"></a>Sharding-JDBC-Server</h4><p>通过代理服务器连接数据库(目前仅支持MySQL)，适合其他开发语言或MySQL客户端操作数据。</p>
+<ul>
+<li>向应用程序完全透明，可直接当做MySQL使用。</li>
+<li>可适用于任何兼容MySQL协议的的客户端。</li>
+</ul>
+<p><img src="https://user-images.githubusercontent.com/7789698/39663693-8c4d6266-50aa-11e8-939a-e8779641a35b.png" alt="image"></p>
+<h4 id="Sharding-JDBC-Sidecar-TBD"><a href="#Sharding-JDBC-Sidecar-TBD" class="headerlink" title="Sharding-JDBC-Sidecar(TBD)"></a>Sharding-JDBC-Sidecar(TBD)</h4><p>通过sidecar分片的方式，由IPC代替RPC，自动代理SQL分片，适合与Kubernetes或Mesos配合使用。</p>
+<p><img src="https://user-images.githubusercontent.com/7789698/39663709-c6aa7d68-50aa-11e8-8052-b3b86afba760.png" alt="image"></p>
+<h3 id="快速入门"><a href="#快速入门" class="headerlink" title="快速入门"></a>快速入门</h3><h4 id="读写分离"><a href="#读写分离" class="headerlink" title="读写分离"></a>读写分离</h4><p>为了缓解数据库压力，将写入和读取操作分离为不同数据源，写库称为主库，读库称为从库，一主库可配置多从库。</p>
+<p>一主两从，读写分离。</p>
+<figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">CREATE</span> <span class="keyword">SCHEMA</span> <span class="keyword">IF</span> <span class="keyword">NOT</span> <span class="keyword">EXISTS</span> demo_ds_master;</span><br><span class="line"><span class="keyword">CREATE</span> <span class="keyword">SCHEMA</span> <span class="keyword">IF</span> <span class="keyword">NOT</span> <span class="keyword">EXISTS</span> demo_ds_slave_0;</span><br><span class="line"><span class="keyword">CREATE</span> <span class="keyword">SCHEMA</span> <span class="keyword">IF</span> <span class="keyword">NOT</span> <span class="keyword">EXISTS</span> demo_ds_slave_1;</span><br></pre></td></tr></table></figure>
+<figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">CREATE</span> <span class="keyword">TABLE</span> <span class="string">`t_order`</span> (</span><br><span class="line">  <span class="string">`order_id`</span> <span class="built_in">bigint</span>(<span class="number">20</span>) <span class="keyword">NOT</span> <span class="literal">NULL</span> AUTO_INCREMENT,</span><br><span class="line">  <span class="string">`user_id`</span> <span class="built_in">int</span>(<span class="number">11</span>) <span class="keyword">NOT</span> <span class="literal">NULL</span>,</span><br><span class="line">  <span class="string">`status`</span> <span class="built_in">varchar</span>(<span class="number">50</span>) <span class="keyword">DEFAULT</span> <span class="literal">NULL</span>,</span><br><span class="line">  PRIMARY <span class="keyword">KEY</span> (<span class="string">`order_id`</span>)</span><br><span class="line">) <span class="keyword">ENGINE</span>=<span class="keyword">InnoDB</span> <span class="keyword">DEFAULT</span> <span class="keyword">CHARSET</span>=utf8;</span><br><span class="line"></span><br><span class="line"><span class="keyword">CREATE</span> <span class="keyword">TABLE</span> <span class="string">`t_order_item`</span> (</span><br><span class="line">  <span class="string">`item_id`</span> <span class="built_in">bigint</span>(<span class="number">20</span>) <span class="keyword">NOT</span> <span class="literal">NULL</span> AUTO_INCREMENT,</span><br><span class="line">  <span class="string">`order_id`</span> <span class="built_in">bigint</span>(<span class="number">20</span>) <span class="keyword">NOT</span> <span class="literal">NULL</span>,</span><br><span class="line">  <span class="string">`user_id`</span> <span class="built_in">int</span>(<span class="number">11</span>) <span class="keyword">NOT</span> <span class="literal">NULL</span>,</span><br><span class="line">  PRIMARY <span class="keyword">KEY</span> (<span class="string">`item_id`</span>)</span><br><span class="line">) <span class="keyword">ENGINE</span>=<span class="keyword">InnoDB</span> <span class="keyword">DEFAULT</span> <span class="keyword">CHARSET</span>=utf8;</span><br></pre></td></tr></table></figure>
+<p>java:</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">private</span> <span class="keyword">static</span> DataSource <span class="title">getMasterSlaveDataSource</span><span class="params">()</span> <span class="keyword">throws</span> SQLException </span>&#123;</span><br><span class="line">    MasterSlaveRuleConfiguration masterSlaveRuleConfig = <span class="keyword">new</span> MasterSlaveRuleConfiguration();</span><br><span class="line">    masterSlaveRuleConfig.setName(<span class="string">"demo_ds_master_slave"</span>);</span><br><span class="line">    <span class="comment">//主数据源</span></span><br><span class="line">    masterSlaveRuleConfig.setMasterDataSourceName(<span class="string">"demo_ds_master"</span>);</span><br><span class="line">    <span class="comment">//从数据源</span></span><br><span class="line">    masterSlaveRuleConfig.setSlaveDataSourceNames(Arrays.asList(<span class="string">"demo_ds_slave_0"</span>, <span class="string">"demo_ds_slave_1"</span>));</span><br><span class="line">    <span class="comment">//随机</span></span><br><span class="line">    masterSlaveRuleConfig	.setLoadBalanceAlgorithmType(MasterSlaveLoadBalanceAlgorithmType.RANDOM);      </span><br><span class="line">    <span class="keyword">return</span> MasterSlaveDataSourceFactory.createDataSource(createDataSourceMap(), masterSlaveRuleConfig);</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">private</span> <span class="keyword">static</span> Map&lt;String, DataSource&gt; <span class="title">createDataSourceMap</span><span class="params">()</span> </span>&#123;</span><br><span class="line">    <span class="keyword">final</span> Map&lt;String, DataSource&gt; result = <span class="keyword">new</span> HashMap&lt;&gt;(<span class="number">3</span>, <span class="number">1</span>);</span><br><span class="line">    result.put(<span class="string">"demo_ds_master"</span>, DataSourceUtil.createDataSource(<span class="string">"demo_ds_master"</span>));</span><br><span class="line">    result.put(<span class="string">"demo_ds_slave_0"</span>, DataSourceUtil.createDataSource(<span class="string">"demo_ds_slave_0"</span>));</span><br><span class="line">    result.put(<span class="string">"demo_ds_slave_1"</span>, DataSourceUtil.createDataSource(<span class="string">"demo_ds_slave_1"</span>));</span><br><span class="line">    <span class="keyword">return</span> result;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>spring:</p>
+<figure class="highlight xml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br></pre></td><td class="code"><pre><span class="line"><span class="tag">&lt;<span class="name">context:component-scan</span> <span class="attr">base-package</span>=<span class="string">"io.shardingjdbc.example.spring.namespace.mybatis"</span> /&gt;</span></span><br><span class="line"></span><br><span class="line"><span class="tag">&lt;<span class="name">bean</span> <span class="attr">id</span>=<span class="string">"demo_ds_master"</span> <span class="attr">class</span>=<span class="string">"org.apache.commons.dbcp.BasicDataSource"</span> <span class="attr">destroy-method</span>=<span class="string">"close"</span>&gt;</span></span><br><span class="line">    <span class="tag">&lt;<span class="name">property</span> <span class="attr">name</span>=<span class="string">"driverClassName"</span> <span class="attr">value</span>=<span class="string">"com.mysql.jdbc.Driver"</span>/&gt;</span></span><br><span class="line">    <span class="tag">&lt;<span class="name">property</span> <span class="attr">name</span>=<span class="string">"url"</span> <span class="attr">value</span>=<span class="string">"jdbc:mysql://localhost:3306/demo_ds_master"</span>/&gt;</span></span><br><span class="line">    <span class="tag">&lt;<span class="name">property</span> <span class="attr">name</span>=<span class="string">"username"</span> <span class="attr">value</span>=<span class="string">"root"</span>/&gt;</span></span><br><span class="line">    <span class="tag">&lt;<span class="name">property</span> <span class="attr">name</span>=<span class="string">"password"</span> <span class="attr">value</span>=<span class="string">"123456"</span>/&gt;</span></span><br><span class="line"><span class="tag">&lt;/<span class="name">bean</span>&gt;</span></span><br><span class="line"></span><br><span class="line"><span class="tag">&lt;<span class="name">bean</span> <span class="attr">id</span>=<span class="string">"demo_ds_slave_0"</span> <span class="attr">class</span>=<span class="string">"org.apache.commons.dbcp.BasicDataSource"</span> <span class="attr">destroy-method</span>=<span class="string">"close"</span>&gt;</span></span><br><span class="line">    <span class="tag">&lt;<span class="name">property</span> <span class="attr">name</span>=<span class="string">"driverClassName"</span> <span class="attr">value</span>=<span class="string">"com.mysql.jdbc.Driver"</span>/&gt;</span></span><br><span class="line">    <span class="tag">&lt;<span class="name">property</span> <span class="attr">name</span>=<span class="string">"url"</span> <span class="attr">value</span>=<span class="string">"jdbc:mysql://localhost:3306/demo_ds_slave_0"</span>/&gt;</span></span><br><span class="line">    <span class="tag">&lt;<span class="name">property</span> <span class="attr">name</span>=<span class="string">"username"</span> <span class="attr">value</span>=<span class="string">"root"</span>/&gt;</span></span><br><span class="line">    <span class="tag">&lt;<span class="name">property</span> <span class="attr">name</span>=<span class="string">"password"</span> <span class="attr">value</span>=<span class="string">"123456"</span>/&gt;</span></span><br><span class="line"><span class="tag">&lt;/<span class="name">bean</span>&gt;</span></span><br><span class="line"></span><br><span class="line"><span class="tag">&lt;<span class="name">bean</span> <span class="attr">id</span>=<span class="string">"demo_ds_slave_1"</span> <span class="attr">class</span>=<span class="string">"org.apache.commons.dbcp.BasicDataSource"</span> <span class="attr">destroy-method</span>=<span class="string">"close"</span>&gt;</span></span><br><span class="line">    <span class="tag">&lt;<span class="name">property</span> <span class="attr">name</span>=<span class="string">"driverClassName"</span> <span class="attr">value</span>=<span class="string">"com.mysql.jdbc.Driver"</span>/&gt;</span></span><br><span class="line">    <span class="tag">&lt;<span class="name">property</span> <span class="attr">name</span>=<span class="string">"url"</span> <span class="attr">value</span>=<span class="string">"jdbc:mysql://localhost:3306/demo_ds_slave_1"</span>/&gt;</span></span><br><span class="line">    <span class="tag">&lt;<span class="name">property</span> <span class="attr">name</span>=<span class="string">"username"</span> <span class="attr">value</span>=<span class="string">"root"</span>/&gt;</span></span><br><span class="line">    <span class="tag">&lt;<span class="name">property</span> <span class="attr">name</span>=<span class="string">"password"</span> <span class="attr">value</span>=<span class="string">"123456"</span>/&gt;</span></span><br><span class="line"><span class="tag">&lt;/<span class="name">bean</span>&gt;</span></span><br><span class="line"></span><br><span class="line"><span class="tag">&lt;<span class="name">bean</span> <span class="attr">id</span>=<span class="string">"randomStrategy"</span> <span class="attr">class</span>=<span class="string">"io.shardingjdbc.core.api.algorithm.masterslave.RandomMasterSlaveLoadBalanceAlgorithm"</span> /&gt;</span></span><br><span class="line"></span><br><span class="line"><span class="tag">&lt;<span class="name">master-slave:data-source</span> <span class="attr">id</span>=<span class="string">"masterSlaveDataSource"</span> <span class="attr">master-data-source-name</span>=<span class="string">"demo_ds_master"</span> <span class="attr">slave-data-source-names</span>=<span class="string">"demo_ds_slave_0, demo_ds_slave_1"</span> <span class="attr">strategy-ref</span>=<span class="string">"randomStrategy"</span> /&gt;</span></span><br></pre></td></tr></table></figure>
+<p>yaml:</p>
+<figure class="highlight yaml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br></pre></td><td class="code"><pre><span class="line"><span class="attr">dataSources:</span></span><br><span class="line">  <span class="attr">ds_master:</span> <span class="type">!!org</span><span class="string">.apache.commons.dbcp.BasicDataSource</span></span><br><span class="line">    <span class="attr">driverClassName:</span> <span class="string">com.mysql.jdbc.Driver</span></span><br><span class="line">    <span class="attr">url:</span> <span class="string">jdbc:mysql://localhost:3306/demo_ds_master</span></span><br><span class="line">    <span class="attr">username:</span> <span class="string">root</span></span><br><span class="line">    <span class="attr">password:</span> <span class="number">123456</span></span><br><span class="line">  <span class="attr">ds_slave_0:</span> <span class="type">!!org</span><span class="string">.apache.commons.dbcp.BasicDataSource</span></span><br><span class="line">    <span class="attr">driverClassName:</span> <span class="string">com.mysql.jdbc.Driver</span></span><br><span class="line">    <span class="attr">url:</span> <span class="string">jdbc:mysql://localhost:3306/demo_ds_slave_0</span></span><br><span class="line">    <span class="attr">username:</span> <span class="string">root</span></span><br><span class="line">    <span class="attr">password:</span> <span class="number">123456</span></span><br><span class="line">  <span class="attr">ds_slave_1:</span> <span class="type">!!org</span><span class="string">.apache.commons.dbcp.BasicDataSource</span></span><br><span class="line">    <span class="attr">driverClassName:</span> <span class="string">com.mysql.jdbc.Driver</span></span><br><span class="line">    <span class="attr">url:</span> <span class="string">jdbc:mysql://localhost:3306/demo_ds_slave_1</span></span><br><span class="line">    <span class="attr">username:</span> <span class="string">root</span></span><br><span class="line">    <span class="attr">password:</span> <span class="number">123456</span></span><br><span class="line"></span><br><span class="line"><span class="attr">masterSlaveRule:</span></span><br><span class="line">  <span class="attr">name:</span> </span><br><span class="line">    <span class="string">ds_ms</span></span><br><span class="line">  <span class="attr">masterDataSourceName:</span></span><br><span class="line">    <span class="string">ds_master</span></span><br><span class="line">  <span class="attr">slaveDataSourceNames:</span> <span class="string">[ds_slave_0,</span> <span class="string">ds_slave_1]</span></span><br></pre></td></tr></table></figure>
+<p>springboot:</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br></pre></td><td class="code"><pre><span class="line">sharding.jdbc.datasource.names=ds_master,ds_slave_0,ds_slave_1</span><br><span class="line"></span><br><span class="line">sharding.jdbc.datasource.ds_master.type=org.apache.commons.dbcp.BasicDataSource</span><br><span class="line">sharding.jdbc.datasource.ds_master.driverClassName=com.mysql.jdbc.Driver</span><br><span class="line">sharding.jdbc.datasource.ds_master.url=jdbc:mysql://localhost:3306/demo_ds_master</span><br><span class="line">sharding.jdbc.datasource.ds_master.username=root</span><br><span class="line">sharding.jdbc.datasource.ds_master.password=123456</span><br><span class="line"></span><br><span class="line">sharding.jdbc.datasource.ds_slave_0.type=org.apache.commons.dbcp.BasicDataSource</span><br><span class="line">sharding.jdbc.datasource.ds_slave_0.driverClassName=com.mysql.jdbc.Driver</span><br><span class="line">sharding.jdbc.datasource.ds_slave_0.url=jdbc:mysql://localhost:3306/demo_ds_slave_0</span><br><span class="line">sharding.jdbc.datasource.ds_slave_0.username=root</span><br><span class="line">sharding.jdbc.datasource.ds_slave_0.password=123456</span><br><span class="line"></span><br><span class="line">sharding.jdbc.datasource.ds_slave_1.type=org.apache.commons.dbcp.BasicDataSource</span><br><span class="line">sharding.jdbc.datasource.ds_slave_1.driverClassName=com.mysql.jdbc.Driver</span><br><span class="line">sharding.jdbc.datasource.ds_slave_1.url=jdbc:mysql://localhost:3306/demo_ds_slave_1</span><br><span class="line">sharding.jdbc.datasource.ds_slave_1.username=root</span><br><span class="line">sharding.jdbc.datasource.ds_slave_1.password=123456</span><br><span class="line"></span><br><span class="line">sharding.jdbc.config.masterslave.load-balance-algorithm-type=round_robin</span><br><span class="line">sharding.jdbc.config.masterslave.name=ds_ms</span><br><span class="line">sharding.jdbc.config.masterslave.master-data-source-name=ds_master</span><br><span class="line">sharding.jdbc.config.masterslave.slave-data-source-names=ds_slave_0,ds_slave_1</span><br></pre></td></tr></table></figure>
+<h4 id="分库分表"><a href="#分库分表" class="headerlink" title="分库分表"></a>分库分表</h4><ul>
+<li><p>数据源分片策略DatabaseShardingStrategy：数据被分配的目标数据源</p>
+</li>
+<li><p>表分片策略TableShardingStrategy：数据被分配的目标表，该目标表存在与该数据的目标数据源内</p>
+</li>
+<li><p>分片键  分片键是分片策略的第一个参数。分片键表示的是SQL语句中WHERE中的条件列。分片键可以配置多个。</p>
+</li>
+<li><p>分片算法</p>
+<p>Sharding-JDBC提供了5种分片策略。由于分片算法和业务实现紧密相关，因此Sharding-JDBC并未提供内置分片算法，而是通过分片策略将各种场景提炼出来，提供更高层级的抽象，并提供接口让应用开发者自行实现分片算法。</p>
+<ul>
+<li>StandardShardingStrategy</li>
+</ul>
+<p>标准分片策略。提供对SQL语句中的=, IN和BETWEEN AND的分片操作支持。StandardShardingStrategy<strong>只支持单分片键</strong>，提供<strong>PreciseShardingAlgorithm</strong>和<strong>RangeShardingAlgorithm</strong>两个分片算法。PreciseShardingAlgorithm是必选的，用于处理<strong>=和IN</strong>的分片。RangeShardingAlgorithm是可选的，用于处理<strong>BETWEEN AND</strong>分片，如果不配置RangeShardingAlgorithm，SQL中的BETWEEN AND将按照全库路由处理。</p>
+<ul>
+<li>ComplexShardingStrategy</li>
+</ul>
+<p>复合分片策略。提供对SQL语句中的=, IN和BETWEEN AND的分片操作支持。ComplexShardingStrategy支持多分片键，由于多分片键之间的关系复杂，因此Sharding-JDBC并未做过多的封装，而是直接将分片键值组合以及分片操作符交于算法接口，完全由应用开发者实现，提供最大的灵活度。</p>
+<ul>
+<li>InlineShardingStrategy</li>
+</ul>
+<p>Inline<strong>表达式</strong>分片策略。使用<strong>Groovy</strong>的Inline表达式，提供对SQL语句中的=和IN的分片操作支持。InlineShardingStrategy只支持单分片键，对于简单的分片算法，可以通过简单的配置使用，从而避免繁琐的Java代码开发，如: t<em>user</em>${user_id % 8} 表示t_user表按照user_id按8取模分成8个表，表名称为t_user_0到t_user_7。</p>
+<ul>
+<li>HintShardingStrategy</li>
+</ul>
+<p>通过Hint而非SQL解析的方式分片的策略。</p>
+<ul>
+<li>NoneShardingStrategy</li>
+</ul>
+<p>不分片的策略。</p>
+</li>
+<li><p>级联绑定表</p>
+<p>级联绑定表代表一组表，这组表的逻辑表与实际表之间的映射关系是相同的。比如t_order与t_order_item就是这样一组绑定表关系，它们的分库与分表策略是完全相同的,那么可以使用它们的表规则将它们配置成级联绑定表。</p>
+<p>那么在进行SQL路由时，如果SQL为：</p>
+<figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">SELECT</span> i.* <span class="keyword">FROM</span> t_order o <span class="keyword">JOIN</span> t_order_item i <span class="keyword">ON</span> o.order_id=i.order_id <span class="keyword">WHERE</span> o.user_id=? <span class="keyword">AND</span> o.order_id=?</span><br></pre></td></tr></table></figure>
+<p>其中t_order在FROM的最左侧，Sharding-JDBC将会以它作为整个绑定表的主表。所有路由计算将会只使用主表的策略，那么t_order_item表的分片计算将会使用t_order的条件。故绑定表之间的分区键要完全相同。</p>
+</li>
+</ul>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">private</span> <span class="keyword">static</span> DataSource <span class="title">getShardingDataSource</span><span class="params">()</span> <span class="keyword">throws</span> SQLException </span>&#123;</span><br><span class="line">    ShardingRuleConfiguration shardingRuleConfig = <span class="keyword">new</span> ShardingRuleConfiguration();</span><br><span class="line">    shardingRuleConfig.getTableRuleConfigs().add(getOrderTableRuleConfiguration());</span><br><span class="line">    shardingRuleConfig.getTableRuleConfigs().add(getOrderItemTableRuleConfiguration());</span><br><span class="line">    shardingRuleConfig.getBindingTableGroups().add(<span class="string">"t_order, t_order_item"</span>);</span><br><span class="line">    <span class="comment">//按user_id模2分库，demo_ds_0、demo_ds_1</span></span><br><span class="line">    shardingRuleConfig.setDefaultDatabaseShardingStrategyConfig(<span class="keyword">new</span> InlineShardingStrategyConfiguration(<span class="string">"user_id"</span>, <span class="string">"demo_ds_$&#123;user_id % 2&#125;"</span>));</span><br><span class="line">    <span class="comment">//按order_id模2分表，实现PreciseShardingAlgorithm</span></span><br><span class="line">    shardingRuleConfig.setDefaultTableShardingStrategyConfig(<span class="keyword">new</span> StandardShardingStrategyConfiguration(<span class="string">"order_id"</span>, ModuloShardingTableAlgorithm<span class="class">.<span class="keyword">class</span>.<span class="title">getName</span>()))</span>;</span><br><span class="line">    <span class="comment">//构造ShardingDataSource</span></span><br><span class="line">    <span class="keyword">return</span> ShardingDataSourceFactory.createDataSource(createDataSourceMap(), shardingRuleConfig);</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">private</span> <span class="keyword">static</span> TableRuleConfiguration <span class="title">getOrderTableRuleConfiguration</span><span class="params">()</span> </span>&#123;</span><br><span class="line">    TableRuleConfiguration orderTableRuleConfig = <span class="keyword">new</span> TableRuleConfiguration();</span><br><span class="line">    orderTableRuleConfig.setLogicTable(<span class="string">"t_order"</span>);</span><br><span class="line">    orderTableRuleConfig.setActualDataNodes(<span class="string">"demo_ds_$&#123;0..1&#125;.t_order_$&#123;[0, 1]&#125;"</span>);</span><br><span class="line">    <span class="comment">//配置自增列</span></span><br><span class="line">    orderTableRuleConfig.setKeyGeneratorColumnName(<span class="string">"order_id"</span>);</span><br><span class="line">    <span class="keyword">return</span> orderTableRuleConfig;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">private</span> <span class="keyword">static</span> TableRuleConfiguration <span class="title">getOrderItemTableRuleConfiguration</span><span class="params">()</span> </span>&#123;</span><br><span class="line">    TableRuleConfiguration orderItemTableRuleConfig = <span class="keyword">new</span> TableRuleConfiguration();</span><br><span class="line">    orderItemTableRuleConfig.setLogicTable(<span class="string">"t_order_item"</span>);</span><br><span class="line">    orderItemTableRuleConfig.setActualDataNodes(<span class="string">"demo_ds_$&#123;0..1&#125;.t_order_item_$&#123;[0, 1]&#125;"</span>);</span><br><span class="line">    <span class="keyword">return</span> orderItemTableRuleConfig;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">private</span> <span class="keyword">static</span> Map&lt;String, DataSource&gt; <span class="title">createDataSourceMap</span><span class="params">()</span> </span>&#123;</span><br><span class="line">    Map&lt;String, DataSource&gt; result = <span class="keyword">new</span> HashMap&lt;&gt;(<span class="number">2</span>, <span class="number">1</span>);</span><br><span class="line">    result.put(<span class="string">"demo_ds_0"</span>, DataSourceUtil.createDataSource(<span class="string">"demo_ds_0"</span>));</span><br><span class="line">    result.put(<span class="string">"demo_ds_1"</span>, DataSourceUtil.createDataSource(<span class="string">"demo_ds_1"</span>));</span><br><span class="line">    <span class="keyword">return</span> result;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="keyword">final</span> <span class="class"><span class="keyword">class</span> <span class="title">ModuloShardingTableAlgorithm</span> <span class="keyword">implements</span> <span class="title">PreciseShardingAlgorithm</span>&lt;<span class="title">Long</span>&gt; </span>&#123;</span><br><span class="line">    </span><br><span class="line">    <span class="meta">@Override</span></span><br><span class="line">    <span class="function"><span class="keyword">public</span> String <span class="title">doSharding</span><span class="params">(<span class="keyword">final</span> Collection&lt;String&gt; tableNames, <span class="keyword">final</span> PreciseShardingValue&lt;Long&gt; shardingValue)</span> </span>&#123;</span><br><span class="line">        <span class="keyword">for</span> (String each : tableNames) &#123;</span><br><span class="line">            <span class="comment">//分片键</span></span><br><span class="line">            <span class="keyword">if</span> (each.endsWith(shardingValue.getValue() % <span class="number">2</span> + <span class="string">""</span>)) &#123;</span><br><span class="line">                <span class="keyword">return</span> each;</span><br><span class="line">            &#125;</span><br><span class="line">        &#125;</span><br><span class="line">        <span class="keyword">throw</span> <span class="keyword">new</span> UnsupportedOperationException();</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>想要同时读写分离，只要加入</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">shardingRuleConfig.setMasterSlaveRuleConfigs(</span><br><span class="line">	Lists.newArrayList(masterSlaveRuleConfig1, masterSlaveRuleConfig2)</span><br><span class="line">);</span><br></pre></td></tr></table></figure>
+<p>spring:</p>
+<figure class="highlight xml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br></pre></td><td class="code"><pre><span class="line"><span class="tag">&lt;<span class="name">context:component-scan</span> <span class="attr">base-package</span>=<span class="string">"io.shardingjdbc.example.spring.namespace.mybatis"</span> /&gt;</span></span><br><span class="line"></span><br><span class="line"><span class="tag">&lt;<span class="name">bean</span> <span class="attr">id</span>=<span class="string">"demo_ds_0"</span> <span class="attr">class</span>=<span class="string">"org.apache.commons.dbcp.BasicDataSource"</span> <span class="attr">destroy-method</span>=<span class="string">"close"</span>&gt;</span></span><br><span class="line">    <span class="tag">&lt;<span class="name">property</span> <span class="attr">name</span>=<span class="string">"driverClassName"</span> <span class="attr">value</span>=<span class="string">"com.mysql.jdbc.Driver"</span>/&gt;</span></span><br><span class="line">    <span class="tag">&lt;<span class="name">property</span> <span class="attr">name</span>=<span class="string">"url"</span> <span class="attr">value</span>=<span class="string">"jdbc:mysql://localhost:3306/demo_ds_0"</span>/&gt;</span></span><br><span class="line">    <span class="tag">&lt;<span class="name">property</span> <span class="attr">name</span>=<span class="string">"username"</span> <span class="attr">value</span>=<span class="string">"root"</span>/&gt;</span></span><br><span class="line">    <span class="tag">&lt;<span class="name">property</span> <span class="attr">name</span>=<span class="string">"password"</span> <span class="attr">value</span>=<span class="string">"123456"</span>/&gt;</span></span><br><span class="line"><span class="tag">&lt;/<span class="name">bean</span>&gt;</span></span><br><span class="line"></span><br><span class="line"><span class="tag">&lt;<span class="name">bean</span> <span class="attr">id</span>=<span class="string">"demo_ds_1"</span> <span class="attr">class</span>=<span class="string">"org.apache.commons.dbcp.BasicDataSource"</span> <span class="attr">destroy-method</span>=<span class="string">"close"</span>&gt;</span></span><br><span class="line">    <span class="tag">&lt;<span class="name">property</span> <span class="attr">name</span>=<span class="string">"driverClassName"</span> <span class="attr">value</span>=<span class="string">"com.mysql.jdbc.Driver"</span>/&gt;</span></span><br><span class="line">    <span class="tag">&lt;<span class="name">property</span> <span class="attr">name</span>=<span class="string">"url"</span> <span class="attr">value</span>=<span class="string">"jdbc:mysql://localhost:3306/demo_ds_1"</span>/&gt;</span></span><br><span class="line">    <span class="tag">&lt;<span class="name">property</span> <span class="attr">name</span>=<span class="string">"username"</span> <span class="attr">value</span>=<span class="string">"root"</span>/&gt;</span></span><br><span class="line">    <span class="tag">&lt;<span class="name">property</span> <span class="attr">name</span>=<span class="string">"password"</span> <span class="attr">value</span>=<span class="string">"123456"</span>/&gt;</span></span><br><span class="line"><span class="tag">&lt;/<span class="name">bean</span>&gt;</span></span><br><span class="line"></span><br><span class="line"><span class="tag">&lt;<span class="name">sharding:standard-strategy</span> <span class="attr">id</span>=<span class="string">"databaseShardingStrategy"</span> <span class="attr">sharding-column</span>=<span class="string">"user_id"</span> <span class="attr">precise-algorithm-class</span>=<span class="string">"io.shardingjdbc.example.spring.namespace.mybatis.algorithm.PreciseModuloDatabaseShardingAlgorithm"</span>/&gt;</span></span><br><span class="line"><span class="tag">&lt;<span class="name">sharding:standard-strategy</span> <span class="attr">id</span>=<span class="string">"tableShardingStrategy"</span> <span class="attr">sharding-column</span>=<span class="string">"order_id"</span> <span class="attr">precise-algorithm-class</span>=<span class="string">"io.shardingjdbc.example.spring.namespace.mybatis.algorithm.PreciseModuloTableShardingAlgorithm"</span>/&gt;</span></span><br><span class="line"></span><br><span class="line"><span class="tag">&lt;<span class="name">sharding:data-source</span> <span class="attr">id</span>=<span class="string">"shardingDataSource"</span>&gt;</span></span><br><span class="line">    <span class="tag">&lt;<span class="name">sharding:sharding-rule</span> <span class="attr">data-source-names</span>=<span class="string">"demo_ds_0, demo_ds_1"</span>&gt;</span></span><br><span class="line">        <span class="tag">&lt;<span class="name">sharding:table-rules</span>&gt;</span></span><br><span class="line">            <span class="tag">&lt;<span class="name">sharding:table-rule</span> <span class="attr">logic-table</span>=<span class="string">"t_order"</span> <span class="attr">actual-data-nodes</span>=<span class="string">"demo_ds_$&#123;0..1&#125;.t_order_$&#123;0..1&#125;"</span> <span class="attr">database-strategy-ref</span>=<span class="string">"databaseShardingStrategy"</span> <span class="attr">table-strategy-ref</span>=<span class="string">"tableShardingStrategy"</span> <span class="attr">generate-key-column</span>=<span class="string">"order_id"</span> /&gt;</span></span><br><span class="line">            <span class="tag">&lt;<span class="name">sharding:table-rule</span> <span class="attr">logic-table</span>=<span class="string">"t_order_item"</span> <span class="attr">actual-data-nodes</span>=<span class="string">"demo_ds_$&#123;0..1&#125;.t_order_item_$&#123;0..1&#125;"</span> <span class="attr">database-strategy-ref</span>=<span class="string">"databaseShardingStrategy"</span> <span class="attr">table-strategy-ref</span>=<span class="string">"tableShardingStrategy"</span> <span class="attr">generate-key-column</span>=<span class="string">"order_item_id"</span> /&gt;</span></span><br><span class="line">        <span class="tag">&lt;/<span class="name">sharding:table-rules</span>&gt;</span></span><br><span class="line">    <span class="tag">&lt;/<span class="name">sharding:sharding-rule</span>&gt;</span></span><br><span class="line"><span class="tag">&lt;/<span class="name">sharding:data-source</span>&gt;</span></span><br></pre></td></tr></table></figure>
+<h4 id="分片管理器"><a href="#分片管理器" class="headerlink" title="分片管理器"></a>分片管理器</h4><p>com.dangdang.ddframe.rdb.sharding.api.HintManager使用ThreadLocal技术管理分片键值。</p>
+<ul>
+<li>使用hintManager.addDatabaseShardingValue来添加数据源分片键值</li>
+<li>使用hintManager.addTableShardingValue来添加表分片键值</li>
+<li>分片键值保存在ThreadLocal中，所以需要在操作结束时调用hintManager.close()来清除ThreadLocal中的内容。</li>
+</ul>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br></pre></td><td class="code"><pre><span class="line">String sql = <span class="string">"SELECT * FROM t_order"</span>;</span><br><span class="line">        </span><br><span class="line"><span class="keyword">try</span> (</span><br><span class="line">        HintManager hintManager = HintManager.getInstance();</span><br><span class="line">        Connection conn = dataSource.getConnection();</span><br><span class="line">        PreparedStatement preparedStatement = conn.prepareStatement(sql)) &#123;</span><br><span class="line">    hintManager.addDatabaseShardingValue(<span class="string">"t_order"</span>, <span class="string">"user_id"</span>, <span class="number">1</span>);</span><br><span class="line">    hintManager.addTableShardingValue(<span class="string">"t_order"</span>, <span class="string">"order_id"</span>, <span class="number">2</span>);</span><br><span class="line">    <span class="keyword">try</span> (ResultSet rs = preparedStatement.executeQuery()) &#123;</span><br><span class="line">        <span class="keyword">while</span> (rs.next()) &#123;</span><br><span class="line">            ...</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<h4 id="分布式主键"><a href="#分布式主键" class="headerlink" title="分布式主键"></a>分布式主键</h4><h5 id="设置自动生成键"><a href="#设置自动生成键" class="headerlink" title="设置自动生成键"></a>设置自动生成键</h5><ul>
+<li>配置自增列</li>
+</ul>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">TableRuleConfiguration tableRuleConfig = <span class="keyword">new</span> TableRuleConfiguration();</span><br><span class="line"> tableRuleConfig.setLogicTable(<span class="string">"t_order"</span>);</span><br><span class="line"> tableRuleConfig.setKeyGeneratorColumnName(<span class="string">"order_id"</span>);</span><br></pre></td></tr></table></figure>
+<ul>
+<li><p>设置Id生成器的实现类</p>
+<p>该类必须实现io.shardingjdbc.core.keygen.KeyGenerator接口。</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">interface</span> <span class="title">KeyGenerator</span> </span>&#123;</span><br><span class="line">    </span><br><span class="line">    <span class="comment">/**</span></span><br><span class="line"><span class="comment">     * Generate key.</span></span><br><span class="line"><span class="comment">     * </span></span><br><span class="line"><span class="comment">     * <span class="doctag">@return</span> generated key</span></span><br><span class="line"><span class="comment">     */</span></span><br><span class="line">    <span class="function">Number <span class="title">generateKey</span><span class="params">()</span></span>;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+</li>
+</ul>
+<p>配置全局生成器(com.xx.xx.KeyGenerator):</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">ShardingRuleConfiguration shardingRuleConfig = <span class="keyword">new</span> ShardingRuleConfiguration();</span><br><span class="line">shardingRuleConfig.setDefaultKeyGeneratorClass(<span class="string">"com.xx.xx.KeyGenerator"</span>);</span><br></pre></td></tr></table></figure>
+<h4 id="事务支持"><a href="#事务支持" class="headerlink" title="事务支持"></a>事务支持</h4><p>BASE理论</p>
+<p>（1）BA：Basic Available 基本可用</p>
+<p>整个系统在某些不可抗力的情况下，仍然能够保证“可用性”，即一定时间内仍然能够返回一个明确的结果。只不过“基本可用”和“高可用”的区别是：</p>
+<ul>
+<li>“一定时间”可以适当延长：当举行大促时，响应时间可以适当延长</li>
+<li>给部分用户返回一个降级页面：给部分用户直接返回一个降级页面，从而缓解服务器压力。但要注意，返回降级页面仍然是返回明确结果。</li>
+</ul>
+<p>（2）S：Soft State：柔性状态</p>
+<p>同一数据的不同副本的状态，可以不需要实时一致。</p>
+<p>（3）E：Eventual Consisstency：最终一致性</p>
+<p>同一数据的不同副本的状态，可以不需要实时一致，但一定要保证经过一定时间后仍然是一致的。</p>
+<h5 id="最大努力送达型"><a href="#最大努力送达型" class="headerlink" title="最大努力送达型"></a>最大努力送达型</h5><p>适用场景</p>
+<ul>
+<li>根据主键删除数据。</li>
+<li>更新记录永久状态，如更新通知送达状态。</li>
+</ul>
+<p>使用限制</p>
+<p>使用最大努力送达型柔性事务的SQL需要满足幂等性。</p>
+<ul>
+<li>INSERT语句要求必须包含主键，且不能是自增主键。</li>
+<li>UPDATE语句要求幂等，不能是UPDATE xxx SET x=x+1</li>
+<li>DELETE语句无要求。</li>
+</ul>
+<p>独立部署作业指南</p>
+<ul>
+<li>部署用于存储事务日志的数据库。</li>
+<li>部署用于异步作业使用的Zookeeper。</li>
+<li>配置YAML文件,参照示例。</li>
+<li>下载并解压文件sharding-jdbc-transaction-async-job-$VERSION.tar，通过start.sh脚本启动异步作业。</li>
+</ul>
+<p><img src="https://user-images.githubusercontent.com/7789698/39670535-9ee904f4-5139-11e8-9d60-e485f3c50f54.png" alt="image"></p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// 1. 配置SoftTransactionConfiguration	</span></span><br><span class="line">SoftTransactionConfiguration transactionConfig = <span class="keyword">new</span> SoftTransactionConfiguration(dataSource);</span><br><span class="line">   transactionConfig.setXXX();</span><br><span class="line">            </span><br><span class="line">   <span class="comment">// 2. 初始化SoftTransactionManager</span></span><br><span class="line">SoftTransactionManager transactionManager = <span class="keyword">new</span> SoftTransactionManager(transactionConfig);</span><br><span class="line">transactionManager.init();</span><br><span class="line">            </span><br><span class="line"><span class="comment">// 3. 获取BEDSoftTransaction</span></span><br><span class="line">BEDSoftTransaction transaction = (BEDSoftTransaction) transactionManager.getTransaction(SoftTransactionType.BestEffortsDelivery);</span><br><span class="line">            </span><br><span class="line"><span class="comment">// 4. 开启事务</span></span><br><span class="line">transaction.begin(connection);</span><br><span class="line">            </span><br><span class="line">           <span class="comment">// 5. 执行JDBC</span></span><br><span class="line">           <span class="comment">/* </span></span><br><span class="line"><span class="comment">               codes here</span></span><br><span class="line"><span class="comment">           */</span></span><br><span class="line"></span><br><span class="line"><span class="comment">// 6.关闭事务</span></span><br><span class="line">transaction.end();</span><br></pre></td></tr></table></figure>
+<p>异步作业YAML文件配置</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br></pre></td><td class="code"><pre><span class="line"># 目标数据库的数据源.</span><br><span class="line">targetDataSource:</span><br><span class="line">  ds_0: !!org.apache.commons.dbcp.BasicDataSource</span><br><span class="line">    driverClassName: com.mysql.jdbc.Driver</span><br><span class="line">    url: jdbc:mysql://localhost:3306/ds_0</span><br><span class="line">    username: root</span><br><span class="line">    password:</span><br><span class="line">  ds_1: !!org.apache.commons.dbcp.BasicDataSource</span><br><span class="line">    driverClassName: com.mysql.jdbc.Driver</span><br><span class="line">    url: jdbc:mysql://localhost:3306/ds_1</span><br><span class="line">    username: root</span><br><span class="line">    password: 123456</span><br><span class="line"></span><br><span class="line"># 事务日志的数据源.</span><br><span class="line">transactionLogDataSource:</span><br><span class="line">  ds_trans: !!org.apache.commons.dbcp.BasicDataSource</span><br><span class="line">    driverClassName: com.mysql.jdbc.Driver</span><br><span class="line">    url: jdbc:mysql://localhost:3306/trans_log</span><br><span class="line">    username: root</span><br><span class="line">    password: 123456</span><br><span class="line">    </span><br><span class="line"></span><br><span class="line">#注册中心配置</span><br><span class="line">zkConfig:</span><br><span class="line">  #注册中心的连接地址</span><br><span class="line">  connectionString: localhost:2181</span><br><span class="line">  #作业的命名空间</span><br><span class="line">  namespace: Best-Efforts-Delivery-Job</span><br><span class="line">  #注册中心的等待重试的间隔时间的初始值</span><br><span class="line">  baseSleepTimeMilliseconds: 1000</span><br><span class="line">  #注册中心的等待重试的间隔时间的最大值</span><br><span class="line">  maxSleepTimeMilliseconds: 3000</span><br><span class="line">  #注册中心的最大重试次数</span><br><span class="line">  maxRetries: 3</span><br><span class="line"></span><br><span class="line">#作业配置</span><br><span class="line">jobConfig:</span><br><span class="line">  #作业名称</span><br><span class="line">  name: bestEffortsDeliveryJob</span><br><span class="line">  #触发作业的cron表达式</span><br><span class="line">  cron: 0/5 * * * * ?</span><br><span class="line">  #每次作业获取的事务日志最大数量</span><br><span class="line">  transactionLogFetchDataCount: 100</span><br><span class="line">  #事务送达的最大尝试次数.</span><br><span class="line">  maxDeliveryTryTimes: 3</span><br><span class="line">  #执行送达事务的延迟毫秒数,早于此间隔时间的入库事务才会被作业执行</span><br><span class="line">  maxDeliveryTryDelayMillis: 60000</span><br></pre></td></tr></table></figure>
+<h5 id="SoftTransactionConfiguration配置"><a href="#SoftTransactionConfiguration配置" class="headerlink" title="SoftTransactionConfiguration配置"></a>SoftTransactionConfiguration配置</h5><p>用于配置事务管理器。</p>
+<table>
+<thead>
+<tr>
+<th><em>名称</em></th>
+<th><em>类型</em></th>
+<th><em>必填</em></th>
+<th><em>默认值</em></th>
+<th><em>说明</em></th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>shardingDataSource</td>
+<td>ShardingDataSource</td>
+<td>是</td>
+<td></td>
+<td>事务管理器管理的数据源</td>
+</tr>
+<tr>
+<td>syncMaxDeliveryTryTimes</td>
+<td>int</td>
+<td>否</td>
+<td>3</td>
+<td>同步的事务送达的最大尝试次数</td>
+</tr>
+<tr>
+<td>storageType</td>
+<td>enum</td>
+<td>否</td>
+<td>RDB</td>
+<td>事务日志存储类型。可选值: RDB,MEMORY。使用RDB类型将自动建表</td>
+</tr>
+<tr>
+<td>transactionLogDataSource</td>
+<td>DataSource</td>
+<td>否</td>
+<td>null</td>
+<td>存储事务日志的数据源，如果storageType为RDB则必填</td>
+</tr>
+<tr>
+<td>bestEffortsDeliveryJobConfiguration</td>
+<td>NestedBestEffortsDeliveryJobConfiguration</td>
+<td>否</td>
+<td>null</td>
+<td>最大努力送达型内嵌异步作业配置对象。如需使用，请参考NestedBestEffortsDeliveryJobConfiguration配置</td>
+</tr>
+</tbody>
+</table>
+<h5 id="NestedBestEffortsDeliveryJobConfiguration配置-仅开发环境"><a href="#NestedBestEffortsDeliveryJobConfiguration配置-仅开发环境" class="headerlink" title="NestedBestEffortsDeliveryJobConfiguration配置 (仅开发环境)"></a>NestedBestEffortsDeliveryJobConfiguration配置 (仅开发环境)</h5><p>用于配置内嵌的异步作业，仅用于开发环境。生产环境应使用独立部署的作业版本。</p>
+<table>
+<thead>
+<tr>
+<th><em>名称</em></th>
+<th><em>类型</em></th>
+<th><em>必填</em></th>
+<th><em>默认值</em></th>
+<th><em>说明</em></th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>zookeeperPort</td>
+<td>int</td>
+<td>否</td>
+<td>4181</td>
+<td>内嵌的注册中心端口号</td>
+</tr>
+<tr>
+<td>zookeeperDataDir</td>
+<td>String</td>
+<td>否</td>
+<td>target/test_zk_data/nano/</td>
+<td>内嵌的注册中心的数据存放目录</td>
+</tr>
+<tr>
+<td>asyncMaxDeliveryTryTimes</td>
+<td>int</td>
+<td>否</td>
+<td>3</td>
+<td>异步的事务送达的最大尝试次数</td>
+</tr>
+<tr>
+<td>asyncMaxDeliveryTryDelayMillis</td>
+<td>long</td>
+<td>否</td>
+<td>60000</td>
+<td>执行异步送达事务的延迟毫秒数，早于此间隔时间的入库事务才会被异步作业执行</td>
+</tr>
+</tbody>
+</table>
+
+      
+    </div>
+    
+    
+    
+
+    
+
+    
+      <div>
+        <div style="padding: 10px 0; margin: 20px auto; width: 90%; text-align: center;">
+  <div>Donate comment here</div>
+  <button id="rewardButton" disable="enable" onclick="var qr = document.getElementById('QR'); if (qr.style.display === 'none') {qr.style.display='block';} else {qr.style.display='none'}">
+    <span>打赏</span>
+  </button>
+  <div id="QR" style="display: none;">
+
+    
+      <div id="wechat" style="display: inline-block">
+        <img id="wechat_qr" src="/hexo/images/wechatpay.jpg" alt="Absurd 微信支付">
+        <p>微信支付</p>
+      </div>
+    
+
+    
+
+    
+
+  </div>
+</div>
+
+      </div>
+    
+
+    
+
+    <footer class="post-footer">
+      
+        <div class="post-tags">
+          
+            <a href="/hexo/tags/sharding-jdbc/" rel="tag"># sharding-jdbc</a>
+          
+            <a href="/hexo/tags/sharding-sphere/" rel="tag"># sharding-sphere</a>
+          
+        </div>
+      
+
+      
+      
+      
+
+      
+        <div class="post-nav">
+          <div class="post-nav-next post-nav-item">
+            
+              <a href="/hexo/post/a362c3af.html" rel="next" title="自定义spring xml配置">
+                <i class="fa fa-chevron-left"></i> 自定义spring xml配置
+              </a>
+            
+          </div>
+
+          <span class="post-nav-divider"></span>
+
+          <div class="post-nav-prev post-nav-item">
+            
+              <a href="/hexo/post/b792e0dc.html" rel="prev" title="sharding-jdbc源码解析-JDBC实现（一）">
+                sharding-jdbc源码解析-JDBC实现（一） <i class="fa fa-chevron-right"></i>
+              </a>
+            
+          </div>
+        </div>
+      
+
+      
+      
+    </footer>
+  </div>
+  
+  
+  
+  </article>
+
+
+
+    <div class="post-spread">
+      
+    </div>
+  </div>
+
+
+          </div>
+          
+
+
+          
+
+  
+    <div class="comments" id="comments">
+      
+        <div id="gitment-container"></div>
+      
+    </div>
+
+  
+
+
+
+        </div>
+        
+          
+  
+  <div class="sidebar-toggle">
+    <div class="sidebar-toggle-line-wrap">
+      <span class="sidebar-toggle-line sidebar-toggle-line-first"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-middle"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-last"></span>
+    </div>
+  </div>
+
+  <aside id="sidebar" class="sidebar">
+    
+    <div class="sidebar-inner">
+
+      
+
+      
+        <ul class="sidebar-nav motion-element">
+          <li class="sidebar-nav-toc sidebar-nav-active" data-target="post-toc-wrap">
+            文章目录
+          </li>
+          <li class="sidebar-nav-overview" data-target="site-overview-wrap">
+            站点概览
+          </li>
+        </ul>
+      
+
+      <section class="site-overview-wrap sidebar-panel">
+        <div class="site-overview">
+          <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+            
+              <img class="site-author-image" itemprop="image" src="/hexo/images/avatar.gif" alt="Absurd">
+            
+              <p class="site-author-name" itemprop="name">Absurd</p>
+              <p class="site-description motion-element" itemprop="description"></p>
+          </div>
+
+          <nav class="site-state motion-element">
+
+            
+              <div class="site-state-item site-state-posts">
+              
+                <a href="/hexo/archives/">
+              
+                  <span class="site-state-item-count">74</span>
+                  <span class="site-state-item-name">日志</span>
+                </a>
+              </div>
+            
+
+            
+              
+              
+              <div class="site-state-item site-state-categories">
+                <a href="/hexo/categories/index.html">
+                  <span class="site-state-item-count">17</span>
+                  <span class="site-state-item-name">分类</span>
+                </a>
+              </div>
+            
+
+            
+              
+              
+              <div class="site-state-item site-state-tags">
+                <a href="/hexo/tags/index.html">
+                  <span class="site-state-item-count">46</span>
+                  <span class="site-state-item-name">标签</span>
+                </a>
+              </div>
+            
+
+          </nav>
+
+          
+            <div class="feed-link motion-element">
+              <a href="/hexo/atom.xml" rel="alternate">
+                <i class="fa fa-rss"></i>
+                RSS
+              </a>
+            </div>
+          
+
+          
+            <div class="links-of-author motion-element">
+                
+                  <span class="links-of-author-item">
+                    <a href="https://github.com/www1350" target="_blank" title="GitHub">
+                      
+                        <i class="fa fa-fw fa-github"></i>GitHub</a>
+                  </span>
+                
+                  <span class="links-of-author-item">
+                    <a href="mailto:www_1350@163.com" target="_blank" title="E-Mail">
+                      
+                        <i class="fa fa-fw fa-envelope"></i>E-Mail</a>
+                  </span>
+                
+            </div>
+          
+
+          
+          
+
+          
+          
+
+          
+
+        </div>
+      </section>
+
+      
+      <!--noindex-->
+        <section class="post-toc-wrap motion-element sidebar-panel sidebar-panel-active">
+          <div class="post-toc">
+
+            
+              
+            
+
+            
+              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#简介"><span class="nav-number">1.</span> <span class="nav-text">简介</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#功能列表"><span class="nav-number">1.1.</span> <span class="nav-text">功能列表</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#1-数据分片"><span class="nav-number">1.1.1.</span> <span class="nav-text">1. 数据分片</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#2-读写分离"><span class="nav-number">1.1.2.</span> <span class="nav-text">2. 读写分离</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#3-柔性事务"><span class="nav-number">1.1.3.</span> <span class="nav-text">3. 柔性事务</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#4-分布式治理"><span class="nav-number">1.1.4.</span> <span class="nav-text">4. 分布式治理</span></a></li></ol></li><li class="nav-item nav-level-3"><a class="nav-link" href="#部署架构"><span class="nav-number">1.2.</span> <span class="nav-text">部署架构</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#Sharding-JDBC-Driver"><span class="nav-number">1.2.1.</span> <span class="nav-text">Sharding-JDBC-Driver</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#Sharding-JDBC-Server"><span class="nav-number">1.2.2.</span> <span class="nav-text">Sharding-JDBC-Server</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#Sharding-JDBC-Sidecar-TBD"><span class="nav-number">1.2.3.</span> <span class="nav-text">Sharding-JDBC-Sidecar(TBD)</span></a></li></ol></li><li class="nav-item nav-level-3"><a class="nav-link" href="#快速入门"><span class="nav-number">1.3.</span> <span class="nav-text">快速入门</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#读写分离"><span class="nav-number">1.3.1.</span> <span class="nav-text">读写分离</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#分库分表"><span class="nav-number">1.3.2.</span> <span class="nav-text">分库分表</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#分片管理器"><span class="nav-number">1.3.3.</span> <span class="nav-text">分片管理器</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#分布式主键"><span class="nav-number">1.3.4.</span> <span class="nav-text">分布式主键</span></a><ol class="nav-child"><li class="nav-item nav-level-5"><a class="nav-link" href="#设置自动生成键"><span class="nav-number">1.3.4.1.</span> <span class="nav-text">设置自动生成键</span></a></li></ol></li><li class="nav-item nav-level-4"><a class="nav-link" href="#事务支持"><span class="nav-number">1.3.5.</span> <span class="nav-text">事务支持</span></a><ol class="nav-child"><li class="nav-item nav-level-5"><a class="nav-link" href="#最大努力送达型"><span class="nav-number">1.3.5.1.</span> <span class="nav-text">最大努力送达型</span></a></li><li class="nav-item nav-level-5"><a class="nav-link" href="#SoftTransactionConfiguration配置"><span class="nav-number">1.3.5.2.</span> <span class="nav-text">SoftTransactionConfiguration配置</span></a></li><li class="nav-item nav-level-5"><a class="nav-link" href="#NestedBestEffortsDeliveryJobConfiguration配置-仅开发环境"><span class="nav-number">1.3.5.3.</span> <span class="nav-text">NestedBestEffortsDeliveryJobConfiguration配置 (仅开发环境)</span></a></li></ol></li></ol></li></ol></li></ol></div>
+            
+
+          </div>
+        </section>
+      <!--/noindex-->
+      
+
+      
+
+    </div>
+  </aside>
+
+
+        
+      </div>
+    </main>
+
+    <footer id="footer" class="footer">
+      <div class="footer-inner">
+        <div class="copyright">&copy; <span itemprop="copyrightYear">2021</span>
+  <span class="with-love">
+    <i class="fa fa-user"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">Absurd</span>
+
+  
+</div>
+
+
+  <div class="powered-by">由 <a class="theme-link" target="_blank" href="https://hexo.io">Hexo</a> 强力驱动</div>
+
+
+
+  <span class="post-meta-divider">|</span>
+
+
+
+  <div class="theme-info">主题 &mdash; <a class="theme-link" target="_blank" href="https://github.com/iissnan/hexo-theme-next">NexT.Mist</a> v5.1.4</div>
+
+
+
+
+        
+<div class="busuanzi-count">
+  <script async src="https://dn-lbstatics.qbox.me/busuanzi/2.3/busuanzi.pure.mini.js"></script>
+
+  
+    <span class="site-uv">
+      <i class="fa fa-user"></i>
+      <span class="busuanzi-value" id="busuanzi_value_site_uv"></span>
+      
+    </span>
+  
+
+  
+    <span class="site-pv">
+      <i class="fa fa-eye"></i>
+      <span class="busuanzi-value" id="busuanzi_value_site_pv"></span>
+      
+    </span>
+  
+</div>
+
+
+
+
+
+
+
+
+        
+      </div>
+    </footer>
+
+    
+      <div class="back-to-top">
+        <i class="fa fa-arrow-up"></i>
+        
+      </div>
+    
+
+    
+
+  </div>
+
+  
+
+<script type="text/javascript">
+  if (Object.prototype.toString.call(window.Promise) !== '[object Function]') {
+    window.Promise = null;
+  }
+</script>
+
+
+
+
+
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+    <script type="text/javascript" src="/hexo/lib/jquery/index.js?v=2.1.3"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/hexo/lib/fastclick/lib/fastclick.min.js?v=1.0.6"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/hexo/lib/jquery_lazyload/jquery.lazyload.js?v=1.9.7"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/hexo/lib/velocity/velocity.min.js?v=1.2.1"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/hexo/lib/velocity/velocity.ui.min.js?v=1.2.1"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/hexo/lib/fancybox/source/jquery.fancybox.pack.js?v=2.1.5"></script>
+  
+
+
+  
+
+
+  <script type="text/javascript" src="/hexo/js/src/utils.js?v=5.1.4"></script>
+
+  <script type="text/javascript" src="/hexo/js/src/motion.js?v=5.1.4"></script>
+
+
+
+  
+  
+
+  
+  <script type="text/javascript" src="/hexo/js/src/scrollspy.js?v=5.1.4"></script>
+<script type="text/javascript" src="/hexo/js/src/post-details.js?v=5.1.4"></script>
+
+
+
+  
+
+
+  <script type="text/javascript" src="/hexo/js/src/bootstrap.js?v=5.1.4"></script>
+
+
+
+  
+
+
+  
+
+
+
+
+	
+
+
+
+
+
+  
+
+
+
+
+
+  
+
+
+
+
+
+
+
+<!-- LOCAL: You can save these files to your site and update links -->
+    
+        
+        <link rel="stylesheet" href="https://aimingoo.github.io/gitmint/style/default.css">
+        <script src="https://aimingoo.github.io/gitmint/dist/gitmint.browser.js"></script>
+    
+<!-- END LOCAL -->
+
+    
+
+    
+      <script type="text/javascript">
+      function renderGitment(){
+        var gitment = new Gitmint({
+            id: window.location.pathname, 
+            owner: 'www1350',
+            repo: 'hexo',
+            
+            lang: "" || navigator.language || navigator.systemLanguage || navigator.userLanguage,
+            
+            oauth: {
+            
+            
+                client_secret: '471214f79bbafcfc2101577ba8b4e2439e6aab72',
+            
+                client_id: 'deb8b8a893a7e72bbf7c'
+            }});
+        gitment.render('gitment-container');
+      }
+
+      
+      renderGitment();
+      
+      </script>
+    
+
+
+
+
+
+
+
+  
+
+  <script type="text/javascript">
+    // Popup Window;
+    var isfetched = false;
+    var isXml = true;
+    // Search DB path;
+    var search_path = "search.xml";
+    if (search_path.length === 0) {
+      search_path = "search.xml";
+    } else if (/json$/i.test(search_path)) {
+      isXml = false;
+    }
+    var path = "/hexo/" + search_path;
+    // monitor main search box;
+
+    var onPopupClose = function (e) {
+      $('.popup').hide();
+      $('#local-search-input').val('');
+      $('.search-result-list').remove();
+      $('#no-result').remove();
+      $(".local-search-pop-overlay").remove();
+      $('body').css('overflow', '');
+    }
+
+    function proceedsearch() {
+      $("body")
+        .append('<div class="search-popup-overlay local-search-pop-overlay"></div>')
+        .css('overflow', 'hidden');
+      $('.search-popup-overlay').click(onPopupClose);
+      $('.popup').toggle();
+      var $localSearchInput = $('#local-search-input');
+      $localSearchInput.attr("autocapitalize", "none");
+      $localSearchInput.attr("autocorrect", "off");
+      $localSearchInput.focus();
+    }
+
+    // search function;
+    var searchFunc = function(path, search_id, content_id) {
+      'use strict';
+
+      // start loading animation
+      $("body")
+        .append('<div class="search-popup-overlay local-search-pop-overlay">' +
+          '<div id="search-loading-icon">' +
+          '<i class="fa fa-spinner fa-pulse fa-5x fa-fw"></i>' +
+          '</div>' +
+          '</div>')
+        .css('overflow', 'hidden');
+      $("#search-loading-icon").css('margin', '20% auto 0 auto').css('text-align', 'center');
+
+      $.ajax({
+        url: path,
+        dataType: isXml ? "xml" : "json",
+        async: true,
+        success: function(res) {
+          // get the contents from search data
+          isfetched = true;
+          $('.popup').detach().appendTo('.header-inner');
+          var datas = isXml ? $("entry", res).map(function() {
+            return {
+              title: $("title", this).text(),
+              content: $("content",this).text(),
+              url: $("url" , this).text()
+            };
+          }).get() : res;
+          var input = document.getElementById(search_id);
+          var resultContent = document.getElementById(content_id);
+          var inputEventFunction = function() {
+            var searchText = input.value.trim().toLowerCase();
+            var keywords = searchText.split(/[\s\-]+/);
+            if (keywords.length > 1) {
+              keywords.push(searchText);
+            }
+            var resultItems = [];
+            if (searchText.length > 0) {
+              // perform local searching
+              datas.forEach(function(data) {
+                var isMatch = false;
+                var hitCount = 0;
+                var searchTextCount = 0;
+                var title = data.title.trim();
+                var titleInLowerCase = title.toLowerCase();
+                var content = data.content.trim().replace(/<[^>]+>/g,"");
+                var contentInLowerCase = content.toLowerCase();
+                var articleUrl = decodeURIComponent(data.url);
+                var indexOfTitle = [];
+                var indexOfContent = [];
+                // only match articles with not empty titles
+                if(title != '') {
+                  keywords.forEach(function(keyword) {
+                    function getIndexByWord(word, text, caseSensitive) {
+                      var wordLen = word.length;
+                      if (wordLen === 0) {
+                        return [];
+                      }
+                      var startPosition = 0, position = [], index = [];
+                      if (!caseSensitive) {
+                        text = text.toLowerCase();
+                        word = word.toLowerCase();
+                      }
+                      while ((position = text.indexOf(word, startPosition)) > -1) {
+                        index.push({position: position, word: word});
+                        startPosition = position + wordLen;
+                      }
+                      return index;
+                    }
+
+                    indexOfTitle = indexOfTitle.concat(getIndexByWord(keyword, titleInLowerCase, false));
+                    indexOfContent = indexOfContent.concat(getIndexByWord(keyword, contentInLowerCase, false));
+                  });
+                  if (indexOfTitle.length > 0 || indexOfContent.length > 0) {
+                    isMatch = true;
+                    hitCount = indexOfTitle.length + indexOfContent.length;
+                  }
+                }
+
+                // show search results
+
+                if (isMatch) {
+                  // sort index by position of keyword
+
+                  [indexOfTitle, indexOfContent].forEach(function (index) {
+                    index.sort(function (itemLeft, itemRight) {
+                      if (itemRight.position !== itemLeft.position) {
+                        return itemRight.position - itemLeft.position;
+                      } else {
+                        return itemLeft.word.length - itemRight.word.length;
+                      }
+                    });
+                  });
+
+                  // merge hits into slices
+
+                  function mergeIntoSlice(text, start, end, index) {
+                    var item = index[index.length - 1];
+                    var position = item.position;
+                    var word = item.word;
+                    var hits = [];
+                    var searchTextCountInSlice = 0;
+                    while (position + word.length <= end && index.length != 0) {
+                      if (word === searchText) {
+                        searchTextCountInSlice++;
+                      }
+                      hits.push({position: position, length: word.length});
+                      var wordEnd = position + word.length;
+
+                      // move to next position of hit
+
+                      index.pop();
+                      while (index.length != 0) {
+                        item = index[index.length - 1];
+                        position = item.position;
+                        word = item.word;
+                        if (wordEnd > position) {
+                          index.pop();
+                        } else {
+                          break;
+                        }
+                      }
+                    }
+                    searchTextCount += searchTextCountInSlice;
+                    return {
+                      hits: hits,
+                      start: start,
+                      end: end,
+                      searchTextCount: searchTextCountInSlice
+                    };
+                  }
+
+                  var slicesOfTitle = [];
+                  if (indexOfTitle.length != 0) {
+                    slicesOfTitle.push(mergeIntoSlice(title, 0, title.length, indexOfTitle));
+                  }
+
+                  var slicesOfContent = [];
+                  while (indexOfContent.length != 0) {
+                    var item = indexOfContent[indexOfContent.length - 1];
+                    var position = item.position;
+                    var word = item.word;
+                    // cut out 100 characters
+                    var start = position - 20;
+                    var end = position + 80;
+                    if(start < 0){
+                      start = 0;
+                    }
+                    if (end < position + word.length) {
+                      end = position + word.length;
+                    }
+                    if(end > content.length){
+                      end = content.length;
+                    }
+                    slicesOfContent.push(mergeIntoSlice(content, start, end, indexOfContent));
+                  }
+
+                  // sort slices in content by search text's count and hits' count
+
+                  slicesOfContent.sort(function (sliceLeft, sliceRight) {
+                    if (sliceLeft.searchTextCount !== sliceRight.searchTextCount) {
+                      return sliceRight.searchTextCount - sliceLeft.searchTextCount;
+                    } else if (sliceLeft.hits.length !== sliceRight.hits.length) {
+                      return sliceRight.hits.length - sliceLeft.hits.length;
+                    } else {
+                      return sliceLeft.start - sliceRight.start;
+                    }
+                  });
+
+                  // select top N slices in content
+
+                  var upperBound = parseInt('1');
+                  if (upperBound >= 0) {
+                    slicesOfContent = slicesOfContent.slice(0, upperBound);
+                  }
+
+                  // highlight title and content
+
+                  function highlightKeyword(text, slice) {
+                    var result = '';
+                    var prevEnd = slice.start;
+                    slice.hits.forEach(function (hit) {
+                      result += text.substring(prevEnd, hit.position);
+                      var end = hit.position + hit.length;
+                      result += '<b class="search-keyword">' + text.substring(hit.position, end) + '</b>';
+                      prevEnd = end;
+                    });
+                    result += text.substring(prevEnd, slice.end);
+                    return result;
+                  }
+
+                  var resultItem = '';
+
+                  if (slicesOfTitle.length != 0) {
+                    resultItem += "<li><a href='" + articleUrl + "' class='search-result-title'>" + highlightKeyword(title, slicesOfTitle[0]) + "</a>";
+                  } else {
+                    resultItem += "<li><a href='" + articleUrl + "' class='search-result-title'>" + title + "</a>";
+                  }
+
+                  slicesOfContent.forEach(function (slice) {
+                    resultItem += "<a href='" + articleUrl + "'>" +
+                      "<p class=\"search-result\">" + highlightKeyword(content, slice) +
+                      "...</p>" + "</a>";
+                  });
+
+                  resultItem += "</li>";
+                  resultItems.push({
+                    item: resultItem,
+                    searchTextCount: searchTextCount,
+                    hitCount: hitCount,
+                    id: resultItems.length
+                  });
+                }
+              })
+            };
+            if (keywords.length === 1 && keywords[0] === "") {
+              resultContent.innerHTML = '<div id="no-result"><i class="fa fa-search fa-5x" /></div>'
+            } else if (resultItems.length === 0) {
+              resultContent.innerHTML = '<div id="no-result"><i class="fa fa-frown-o fa-5x" /></div>'
+            } else {
+              resultItems.sort(function (resultLeft, resultRight) {
+                if (resultLeft.searchTextCount !== resultRight.searchTextCount) {
+                  return resultRight.searchTextCount - resultLeft.searchTextCount;
+                } else if (resultLeft.hitCount !== resultRight.hitCount) {
+                  return resultRight.hitCount - resultLeft.hitCount;
+                } else {
+                  return resultRight.id - resultLeft.id;
+                }
+              });
+              var searchResultList = '<ul class=\"search-result-list\">';
+              resultItems.forEach(function (result) {
+                searchResultList += result.item;
+              })
+              searchResultList += "</ul>";
+              resultContent.innerHTML = searchResultList;
+            }
+          }
+
+          if ('auto' === 'auto') {
+            input.addEventListener('input', inputEventFunction);
+          } else {
+            $('.search-icon').click(inputEventFunction);
+            input.addEventListener('keypress', function (event) {
+              if (event.keyCode === 13) {
+                inputEventFunction();
+              }
+            });
+          }
+
+          // remove loading animation
+          $(".local-search-pop-overlay").remove();
+          $('body').css('overflow', '');
+
+          proceedsearch();
+        }
+      });
+    }
+
+    // handle and trigger popup window;
+    $('.popup-trigger').click(function(e) {
+      e.stopPropagation();
+      if (isfetched === false) {
+        searchFunc(path, 'local-search-input', 'local-search-result');
+      } else {
+        proceedsearch();
+      };
+    });
+
+    $('.popup-btn-close').click(onPopupClose);
+    $('.popup').click(function(e){
+      e.stopPropagation();
+    });
+    $(document).on('keyup', function (event) {
+      var shouldDismissSearchPopup = event.which === 27 &&
+        $('.search-popup').is(':visible');
+      if (shouldDismissSearchPopup) {
+        onPopupClose();
+      }
+    });
+  </script>
+
+
+
+
+
+  
+
+  
+
+  
+
+  
+  
+
+  
+
+  
+
+  
+
+</body>
+</html>
