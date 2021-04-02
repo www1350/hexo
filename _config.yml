@@ -102,5 +102,5 @@ feed:
 
 backup:
     type: git
-    repository:
-       github: git@github.com:www1350/hexo.git,backup
+    branch: backup
+    repo: git@github.com:www1350/hexo.git
