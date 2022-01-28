@@ -1,0 +1,404 @@
+<!DOCTYPE html>
+<html lang="zh-Hans">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width">
+<meta name="theme-color" content="#222" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#222" media="(prefers-color-scheme: dark)">
+<meta name="generator" content="Hexo 6.0.0">
+
+
+  <link rel="apple-touch-icon" sizes="180x180" href="/hexo/images/apple-touch-icon-next.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/hexo/images/favicon-32x32-next.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/hexo/images/favicon-16x16-next.png">
+  <link rel="mask-icon" href="/hexo/images/logo.svg" color="#222">
+
+<link rel="stylesheet" href="/hexo/css/main.css">
+
+
+
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@5.15.4/css/all.min.css" integrity="sha256-mUZM63G8m73Mcidfrv5E+Y61y7a12O5mW4ezU3bxqW4=" crossorigin="anonymous">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/animate.css@3.1.1/animate.min.css" integrity="sha256-PR7ttpcvz8qrF57fur/yAx1qXMFJeJFiA6pSzWi0OIE=" crossorigin="anonymous">
+
+<script class="next-config" data-name="main" type="application/json">{"hostname":"www1350.github.io","root":"/hexo/","images":"/hexo/images","scheme":"Mist","darkmode":true,"version":"8.9.0","exturl":false,"sidebar":{"position":"left","display":"post","padding":18,"offset":12},"copycode":false,"bookmark":{"enable":false,"color":"#222","save":"auto"},"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"stickytabs":false,"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"fadeInDown","post_body":"fadeInDown","coll_header":"fadeInLeft","sidebar":"fadeInUp"}},"prism":false,"i18n":{"placeholder":"Searching...","empty":"We didn't find any results for the search: ${query}","hits_time":"${hits} results found in ${time} ms","hits":"${hits} results found"},"path":"/hexo/search.xml","localsearch":{"enable":true,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":true}}</script><script src="/hexo/js/config.js"></script>
+<meta name="description" content="我们看到最早的解析，是解析xml 123456789101112131415161718192021222324252627282930313233343536373839404142434445464748495051525354555657585960616263646566676869707172737475767778798081828384858687888990919293949596">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Tomcat 源码解析（三）--各组件init start">
+<meta property="og:url" content="https://www1350.github.io/hexo/post/50d0f6b3.html">
+<meta property="og:site_name" content="Absurd博客">
+<meta property="og:description" content="我们看到最早的解析，是解析xml 123456789101112131415161718192021222324252627282930313233343536373839404142434445464748495051525354555657585960616263646566676869707172737475767778798081828384858687888990919293949596">
+<meta property="og:locale">
+<meta property="og:image" content="https://user-images.githubusercontent.com/7789698/37250854-7eee792e-2540-11e8-908d-9a3ed3205c72.png">
+<meta property="og:image" content="https://user-images.githubusercontent.com/7789698/37251128-77badb12-2544-11e8-906d-92071230aac8.png">
+<meta property="article:published_time" content="2018-03-11T14:43:00.000Z">
+<meta property="article:modified_time" content="2022-01-28T07:09:17.728Z">
+<meta property="article:author" content="Absurd">
+<meta property="article:tag" content="tomcat">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="https://user-images.githubusercontent.com/7789698/37250854-7eee792e-2540-11e8-908d-9a3ed3205c72.png">
+
+
+<link rel="canonical" href="https://www1350.github.io/hexo/post/50d0f6b3.html">
+
+
+
+<script class="next-config" data-name="page" type="application/json">{"sidebar":"","isHome":false,"isPost":true,"lang":"zh-Hans","comments":true,"permalink":"https://www1350.github.io/hexo/post/50d0f6b3.html","path":"post/50d0f6b3.html","title":"Tomcat 源码解析（三）--各组件init start"}</script>
+
+<script class="next-config" data-name="calendar" type="application/json">""</script>
+<title>Tomcat 源码解析（三）--各组件init start | Absurd博客</title>
+  
+
+
+
+
+  <noscript>
+    <link rel="stylesheet" href="/hexo/css/noscript.css">
+  </noscript>
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage" class="use-motion">
+  <div class="headband"></div>
+
+  <main class="main">
+    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="Toggle navigation bar" role="button">
+        <span class="toggle-line"></span>
+        <span class="toggle-line"></span>
+        <span class="toggle-line"></span>
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/hexo/" class="brand" rel="start">
+      <i class="logo-line"></i>
+      <p class="site-title">Absurd博客</p>
+      <i class="logo-line"></i>
+    </a>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger">
+        <i class="fa fa-search fa-fw fa-lg"></i>
+    </div>
+  </div>
+</div>
+
+
+
+<nav class="site-nav">
+  <ul class="main-menu menu">
+        <li class="menu-item menu-item-home"><a href="/hexo/" rel="section"><i class="fa fa-home fa-fw"></i>Home</a></li>
+        <li class="menu-item menu-item-about"><a href="/hexo/about/" rel="section"><i class="fa fa-user fa-fw"></i>About</a></li>
+        <li class="menu-item menu-item-tags"><a href="/hexo/tags/" rel="section"><i class="fa fa-tags fa-fw"></i>Tags</a></li>
+        <li class="menu-item menu-item-categories"><a href="/hexo/categories/" rel="section"><i class="fa fa-th fa-fw"></i>Categories</a></li>
+        <li class="menu-item menu-item-archives"><a href="/hexo/archives/" rel="section"><i class="fa fa-archive fa-fw"></i>Archives</a></li>
+        <li class="menu-item menu-item-bookmarks"><a href="/hexo/bookmarks/" rel="section"><i class="fa fa-archive fa-fw"></i>bookmarks</a></li>
+      <li class="menu-item menu-item-search">
+        <a role="button" class="popup-trigger"><i class="fa fa-search fa-fw"></i>Search
+        </a>
+      </li>
+  </ul>
+</nav>
+
+
+
+  <div class="search-pop-overlay">
+    <div class="popup search-popup"><div class="search-header">
+  <span class="search-icon">
+    <i class="fa fa-search"></i>
+  </span>
+  <div class="search-input-container">
+    <input autocomplete="off" autocapitalize="off" maxlength="80"
+           placeholder="Searching..." spellcheck="false"
+           type="search" class="search-input">
+  </div>
+  <span class="popup-btn-close" role="button">
+    <i class="fa fa-times-circle"></i>
+  </span>
+</div>
+<div class="search-result-container no-result">
+  <div class="search-result-icon">
+    <i class="fa fa-spinner fa-pulse fa-5x"></i>
+  </div>
+</div>
+
+    </div>
+  </div>
+
+</div>
+        
+  
+  <div class="toggle sidebar-toggle" role="button">
+    <span class="toggle-line"></span>
+    <span class="toggle-line"></span>
+    <span class="toggle-line"></span>
+  </div>
+
+  <aside class="sidebar">
+
+    <div class="sidebar-inner sidebar-nav-active sidebar-toc-active">
+      <ul class="sidebar-nav">
+        <li class="sidebar-nav-toc">
+          Table of Contents
+        </li>
+        <li class="sidebar-nav-overview">
+          Overview
+        </li>
+      </ul>
+
+      <div class="sidebar-panel-container">
+        <!--noindex-->
+        <div class="post-toc-wrap sidebar-panel">
+            <div class="post-toc animated"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#StandardServer"><span class="nav-number">1.</span> <span class="nav-text">StandardServer</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#StandardServer-LifecycleBase-%E7%9A%84init"><span class="nav-number">1.1.</span> <span class="nav-text">StandardServer(LifecycleBase)的init</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#StandardServer-LifecycleBase-%E7%9A%84setStateInternal%EF%BC%8CfireLifecycleEvent%E6%98%AFLifecycleSupport%E7%9A%84fireLifecycleEvent"><span class="nav-number">1.2.</span> <span class="nav-text">StandardServer(LifecycleBase)的setStateInternal，fireLifecycleEvent是LifecycleSupport的fireLifecycleEvent</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#StandardServer-LifecycleBase-%E7%9A%84start"><span class="nav-number">1.3.</span> <span class="nav-text">StandardServer(LifecycleBase)的start</span></a></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#StandardService"><span class="nav-number">2.</span> <span class="nav-text">StandardService</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#StandardEngine"><span class="nav-number">3.</span> <span class="nav-text">StandardEngine</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#StandardHost"><span class="nav-number">4.</span> <span class="nav-text">StandardHost</span></a></li></ol></div>
+        </div>
+        <!--/noindex-->
+
+        <div class="site-overview-wrap sidebar-panel">
+          <div class="site-author site-overview-item animated" itemprop="author" itemscope itemtype="http://schema.org/Person">
+    <img class="site-author-image" itemprop="image" alt="Absurd"
+      src="/hexo/images/avatar.gif">
+  <p class="site-author-name" itemprop="name">Absurd</p>
+  <div class="site-description" itemprop="description"></div>
+</div>
+<div class="site-state-wrap site-overview-item animated">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+        <a href="/hexo/archives/">
+          <span class="site-state-item-count">75</span>
+          <span class="site-state-item-name">posts</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+          <a href="/hexo/categories/">
+        <span class="site-state-item-count">17</span>
+        <span class="site-state-item-name">categories</span></a>
+      </div>
+      <div class="site-state-item site-state-tags">
+          <a href="/hexo/tags/">
+        <span class="site-state-item-count">46</span>
+        <span class="site-state-item-name">tags</span></a>
+      </div>
+  </nav>
+</div>
+  <div class="links-of-author site-overview-item animated">
+      <span class="links-of-author-item">
+        <a href="https://github.com/www1350" title="GitHub → https:&#x2F;&#x2F;github.com&#x2F;www1350" rel="noopener" target="_blank"><i class="fab fa-github fa-fw"></i>GitHub</a>
+      </span>
+      <span class="links-of-author-item">
+        <a href="mailto:www_1350@163.com" title="E-Mail → mailto:www_1350@163.com" rel="noopener" target="_blank"><i class="fa fa-envelope fa-fw"></i>E-Mail</a>
+      </span>
+  </div>
+
+
+
+        </div>
+      </div>
+    </div>
+  </aside>
+  <div class="sidebar-dimmer"></div>
+
+
+    </header>
+
+    
+  <div class="back-to-top" role="button" aria-label="Back to top">
+    <i class="fa fa-arrow-up"></i>
+    <span>0%</span>
+  </div>
+
+<noscript>
+  <div class="noscript-warning">Theme NexT works best with JavaScript enabled</div>
+</noscript>
+
+
+    <div class="main-inner post posts-expand">
+
+
+  
+
+
+<div class="post-block">
+  
+  
+
+  <article itemscope itemtype="http://schema.org/Article" class="post-content" lang="zh-Hans">
+    <link itemprop="mainEntityOfPage" href="https://www1350.github.io/hexo/post/50d0f6b3.html">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/hexo/images/avatar.gif">
+      <meta itemprop="name" content="Absurd">
+      <meta itemprop="description" content="">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Absurd博客">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          Tomcat 源码解析（三）--各组件init start
+        </h1>
+
+        <div class="post-meta-container">
+          <div class="post-meta">
+    <span class="post-meta-item">
+      <span class="post-meta-item-icon">
+        <i class="far fa-calendar"></i>
+      </span>
+      <span class="post-meta-item-text">Posted on</span>
+
+      <time title="Created: 2018-03-11 22:43:00" itemprop="dateCreated datePublished" datetime="2018-03-11T22:43:00+08:00">2018-03-11</time>
+    </span>
+    <span class="post-meta-item">
+      <span class="post-meta-item-icon">
+        <i class="far fa-calendar-check"></i>
+      </span>
+      <span class="post-meta-item-text">Edited on</span>
+      <time title="Modified: 2022-01-28 15:09:17" itemprop="dateModified" datetime="2022-01-28T15:09:17+08:00">2022-01-28</time>
+    </span>
+    <span class="post-meta-item">
+      <span class="post-meta-item-icon">
+        <i class="far fa-folder"></i>
+      </span>
+      <span class="post-meta-item-text">In</span>
+        <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+          <a href="/hexo/categories/%E6%BA%90%E7%A0%81/" itemprop="url" rel="index"><span itemprop="name">源码</span></a>
+        </span>
+    </span>
+
+  
+</div>
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+        <p>我们看到最早的解析，是解析xml</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br><span class="line">65</span><br><span class="line">66</span><br><span class="line">67</span><br><span class="line">68</span><br><span class="line">69</span><br><span class="line">70</span><br><span class="line">71</span><br><span class="line">72</span><br><span class="line">73</span><br><span class="line">74</span><br><span class="line">75</span><br><span class="line">76</span><br><span class="line">77</span><br><span class="line">78</span><br><span class="line">79</span><br><span class="line">80</span><br><span class="line">81</span><br><span class="line">82</span><br><span class="line">83</span><br><span class="line">84</span><br><span class="line">85</span><br><span class="line">86</span><br><span class="line">87</span><br><span class="line">88</span><br><span class="line">89</span><br><span class="line">90</span><br><span class="line">91</span><br><span class="line">92</span><br><span class="line">93</span><br><span class="line">94</span><br><span class="line">95</span><br><span class="line">96</span><br><span class="line">97</span><br><span class="line">98</span><br><span class="line">99</span><br><span class="line">100</span><br><span class="line">101</span><br><span class="line">102</span><br><span class="line">103</span><br><span class="line">104</span><br><span class="line">105</span><br><span class="line">106</span><br><span class="line">107</span><br><span class="line">108</span><br><span class="line">109</span><br><span class="line">110</span><br><span class="line">111</span><br><span class="line">112</span><br><span class="line">113</span><br><span class="line">114</span><br><span class="line">115</span><br><span class="line">116</span><br><span class="line">117</span><br><span class="line">118</span><br><span class="line">119</span><br></pre></td><td class="code"><pre><span class="line">&lt;Server port=&quot;8005&quot; shutdown=&quot;SHUTDOWN&quot;&gt;</span><br><span class="line">  &lt;!-- Security listener. Documentation at /docs/config/listeners.html</span><br><span class="line">  &lt;Listener className=&quot;org.apache.catalina.security.SecurityListener&quot; /&gt;</span><br><span class="line">  --&gt;</span><br><span class="line">  &lt;!--APR library loader. Documentation at /docs/apr.html --&gt;</span><br><span class="line">  &lt;Listener className=&quot;org.apache.catalina.core.AprLifecycleListener&quot; SSLEngine=&quot;on&quot; /&gt;</span><br><span class="line">  &lt;!-- Prevent memory leaks due to use of particular java/javax APIs--&gt;</span><br><span class="line">  &lt;Listener className=&quot;org.apache.catalina.core.JreMemoryLeakPreventionListener&quot; /&gt;</span><br><span class="line">  &lt;Listener className=&quot;org.apache.catalina.mbeans.GlobalResourcesLifecycleListener&quot; /&gt;</span><br><span class="line">  &lt;Listener className=&quot;org.apache.catalina.core.ThreadLocalLeakPreventionListener&quot; /&gt;</span><br><span class="line"></span><br><span class="line">  &lt;!-- Global JNDI resources</span><br><span class="line">       Documentation at /docs/jndi-resources-howto.html</span><br><span class="line">  --&gt;</span><br><span class="line">  &lt;GlobalNamingResources&gt;</span><br><span class="line">    &lt;!-- Editable user database that can also be used by</span><br><span class="line">         UserDatabaseRealm to authenticate users</span><br><span class="line">    --&gt;</span><br><span class="line">    &lt;Resource name=&quot;UserDatabase&quot; auth=&quot;Container&quot;</span><br><span class="line">              type=&quot;org.apache.catalina.UserDatabase&quot;</span><br><span class="line">              description=&quot;User database that can be updated and saved&quot;</span><br><span class="line">              factory=&quot;org.apache.catalina.users.MemoryUserDatabaseFactory&quot;</span><br><span class="line">              pathname=&quot;conf/tomcat-users.xml&quot; /&gt;</span><br><span class="line">  &lt;/GlobalNamingResources&gt;</span><br><span class="line"></span><br><span class="line">  &lt;!-- A &quot;Service&quot; is a collection of one or more &quot;Connectors&quot; that share</span><br><span class="line">       a single &quot;Container&quot; Note:  A &quot;Service&quot; is not itself a &quot;Container&quot;,</span><br><span class="line">       so you may not define subcomponents such as &quot;Valves&quot; at this level.</span><br><span class="line">       Documentation at /docs/config/service.html</span><br><span class="line">   --&gt;</span><br><span class="line">  &lt;Service name=&quot;Catalina&quot;&gt;</span><br><span class="line"></span><br><span class="line">    &lt;!--The connectors can use a shared executor, you can define one or more named thread pools--&gt;</span><br><span class="line">    &lt;!--</span><br><span class="line">    &lt;Executor name=&quot;tomcatThreadPool&quot; namePrefix=&quot;catalina-exec-&quot;</span><br><span class="line">        maxThreads=&quot;150&quot; minSpareThreads=&quot;4&quot;/&gt;</span><br><span class="line">    --&gt;</span><br><span class="line"></span><br><span class="line"></span><br><span class="line">    &lt;!-- A &quot;Connector&quot; represents an endpoint by which requests are received</span><br><span class="line">         and responses are returned. Documentation at :</span><br><span class="line">         Java HTTP Connector: /docs/config/http.html (blocking &amp; non-blocking)</span><br><span class="line">         Java AJP  Connector: /docs/config/ajp.html</span><br><span class="line">         APR (HTTP/AJP) Connector: /docs/apr.html</span><br><span class="line">         Define a non-SSL HTTP/1.1 Connector on port 8080</span><br><span class="line">    --&gt;</span><br><span class="line">    &lt;Connector port=&quot;8080&quot; protocol=&quot;HTTP/1.1&quot;</span><br><span class="line">               connectionTimeout=&quot;20000&quot;</span><br><span class="line">               redirectPort=&quot;8443&quot; /&gt;</span><br><span class="line">    &lt;!-- A &quot;Connector&quot; using the shared thread pool--&gt;</span><br><span class="line">    &lt;!--</span><br><span class="line">    &lt;Connector executor=&quot;tomcatThreadPool&quot;</span><br><span class="line">               port=&quot;8080&quot; protocol=&quot;HTTP/1.1&quot;</span><br><span class="line">               connectionTimeout=&quot;20000&quot;</span><br><span class="line">               redirectPort=&quot;8443&quot; /&gt;</span><br><span class="line">    --&gt;</span><br><span class="line">    &lt;!-- Define a SSL HTTP/1.1 Connector on port 8443</span><br><span class="line">         This connector uses the JSSE configuration, when using APR, the</span><br><span class="line">         connector should be using the OpenSSL style configuration</span><br><span class="line">         described in the APR documentation --&gt;</span><br><span class="line">    &lt;!--</span><br><span class="line">    &lt;Connector port=&quot;8443&quot; protocol=&quot;HTTP/1.1&quot; SSLEnabled=&quot;true&quot;</span><br><span class="line">               maxThreads=&quot;150&quot; scheme=&quot;https&quot; secure=&quot;true&quot;</span><br><span class="line">               clientAuth=&quot;false&quot; sslProtocol=&quot;TLS&quot; /&gt;</span><br><span class="line">    --&gt;</span><br><span class="line"></span><br><span class="line">    &lt;!-- Define an AJP 1.3 Connector on port 8009 --&gt;</span><br><span class="line">    &lt;Connector port=&quot;8009&quot; protocol=&quot;AJP/1.3&quot; redirectPort=&quot;8443&quot; /&gt;</span><br><span class="line"></span><br><span class="line"></span><br><span class="line">    &lt;!-- An Engine represents the entry point (within Catalina) that processes</span><br><span class="line">         every request.  The Engine implementation for Tomcat stand alone</span><br><span class="line">         analyzes the HTTP headers included with the request, and passes them</span><br><span class="line">         on to the appropriate Host (virtual host).</span><br><span class="line">         Documentation at /docs/config/engine.html --&gt;</span><br><span class="line"></span><br><span class="line">    &lt;!-- You should set jvmRoute to support load-balancing via AJP ie :</span><br><span class="line">    &lt;Engine name=&quot;Catalina&quot; defaultHost=&quot;localhost&quot; jvmRoute=&quot;jvm1&quot;&gt;</span><br><span class="line">    --&gt;</span><br><span class="line">    &lt;Engine name=&quot;Catalina&quot; defaultHost=&quot;localhost&quot;&gt;</span><br><span class="line"></span><br><span class="line">      &lt;!--For clustering, please take a look at documentation at:</span><br><span class="line">          /docs/cluster-howto.html  (simple how to)</span><br><span class="line">          /docs/config/cluster.html (reference documentation) --&gt;</span><br><span class="line">      &lt;!--</span><br><span class="line">      &lt;Cluster className=&quot;org.apache.catalina.ha.tcp.SimpleTcpCluster&quot;/&gt;</span><br><span class="line">      --&gt;</span><br><span class="line"></span><br><span class="line">      &lt;!-- Use the LockOutRealm to prevent attempts to guess user passwords</span><br><span class="line">           via a brute-force attack --&gt;</span><br><span class="line">      &lt;Realm className=&quot;org.apache.catalina.realm.LockOutRealm&quot;&gt;</span><br><span class="line">        &lt;!-- This Realm uses the UserDatabase configured in the global JNDI</span><br><span class="line">             resources under the key &quot;UserDatabase&quot;.  Any edits</span><br><span class="line">             that are performed against this UserDatabase are immediately</span><br><span class="line">             available for use by the Realm.  --&gt;</span><br><span class="line">        &lt;Realm className=&quot;org.apache.catalina.realm.UserDatabaseRealm&quot;</span><br><span class="line">               resourceName=&quot;UserDatabase&quot;/&gt;</span><br><span class="line">      &lt;/Realm&gt;</span><br><span class="line"></span><br><span class="line">      &lt;Host name=&quot;localhost&quot;  appBase=&quot;webapps&quot;</span><br><span class="line">            unpackWARs=&quot;true&quot; autoDeploy=&quot;true&quot;&gt;</span><br><span class="line"></span><br><span class="line">        &lt;!-- SingleSignOn valve, share authentication between web applications</span><br><span class="line">             Documentation at: /docs/config/valve.html --&gt;</span><br><span class="line">        &lt;!--</span><br><span class="line">        &lt;Valve className=&quot;org.apache.catalina.authenticator.SingleSignOn&quot; /&gt;</span><br><span class="line">        --&gt;</span><br><span class="line"></span><br><span class="line">        &lt;!-- Access log processes all example.</span><br><span class="line">             Documentation at: /docs/config/valve.html</span><br><span class="line">             Note: The pattern used is equivalent to using pattern=&quot;common&quot; --&gt;</span><br><span class="line">        &lt;Valve className=&quot;org.apache.catalina.valves.AccessLogValve&quot; directory=&quot;logs&quot;</span><br><span class="line">               prefix=&quot;localhost_access_log&quot; suffix=&quot;.txt&quot;</span><br><span class="line">               pattern=&quot;%h %l %u %t &amp;quot;%r&amp;quot; %s %b&quot; /&gt;</span><br><span class="line"></span><br><span class="line">      &lt;/Host&gt;</span><br><span class="line">    &lt;/Engine&gt;</span><br><span class="line">  &lt;/Service&gt;</span><br><span class="line">&lt;/Server&gt;</span><br></pre></td></tr></table></figure>
+
+<h1 id="StandardServer"><a href="#StandardServer" class="headerlink" title="StandardServer"></a>StandardServer</h1><p><img src="https://user-images.githubusercontent.com/7789698/37250854-7eee792e-2540-11e8-908d-9a3ed3205c72.png" alt="image"></p>
+<h2 id="StandardServer-LifecycleBase-的init"><a href="#StandardServer-LifecycleBase-的init" class="headerlink" title="StandardServer(LifecycleBase)的init"></a>StandardServer(LifecycleBase)的init</h2><figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br></pre></td><td class="code"><pre><span class="line">@Override</span><br><span class="line">    public final synchronized void init() throws LifecycleException &#123;</span><br><span class="line">        if (!state.equals(LifecycleState.NEW)) &#123;</span><br><span class="line">            invalidTransition(Lifecycle.BEFORE_INIT_EVENT);</span><br><span class="line">        &#125;</span><br><span class="line">        setStateInternal(LifecycleState.INITIALIZING, null, false);</span><br><span class="line"></span><br><span class="line">        try &#123;</span><br><span class="line">            initInternal();</span><br><span class="line">        &#125; catch (Throwable t) &#123;</span><br><span class="line">            ExceptionUtils.handleThrowable(t);</span><br><span class="line">            setStateInternal(LifecycleState.FAILED, null, false);</span><br><span class="line">            throw new LifecycleException(</span><br><span class="line">                    sm.getString(&quot;lifecycleBase.initFail&quot;,toString()), t);</span><br><span class="line">        &#125;</span><br><span class="line"></span><br><span class="line">        setStateInternal(LifecycleState.INITIALIZED, null, false);</span><br><span class="line">    &#125;</span><br></pre></td></tr></table></figure>
+
+<p>initInternal</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br></pre></td><td class="code"><pre><span class="line">@Override</span><br><span class="line">    protected void initInternal() throws LifecycleException &#123;</span><br><span class="line"></span><br><span class="line">        super.initInternal();</span><br><span class="line"></span><br><span class="line">        // Register global String cache</span><br><span class="line">        // Note although the cache is global, if there are multiple Servers</span><br><span class="line">        // present in the JVM (may happen when embedding) then the same cache</span><br><span class="line">        // will be registered under multiple names</span><br><span class="line">        onameStringCache = register(new StringCache(), &quot;type=StringCache&quot;);</span><br><span class="line"></span><br><span class="line">        // Register the MBeanFactory</span><br><span class="line">        MBeanFactory factory = new MBeanFactory();</span><br><span class="line">        factory.setContainer(this);</span><br><span class="line">        onameMBeanFactory = register(factory, &quot;type=MBeanFactory&quot;);</span><br><span class="line"></span><br><span class="line">        // Register the naming resources</span><br><span class="line">        globalNamingResources.init();</span><br><span class="line"></span><br><span class="line">        // Populate the extension validator with JARs from common and shared</span><br><span class="line">        // class loaders</span><br><span class="line">        if (getCatalina() != null) &#123;</span><br><span class="line">            ClassLoader cl = getCatalina().getParentClassLoader();</span><br><span class="line">            // Walk the class loader hierarchy. Stop at the system class loader.</span><br><span class="line">            // This will add the shared (if present) and common class loaders</span><br><span class="line">            while (cl != null &amp;&amp; cl != ClassLoader.getSystemClassLoader()) &#123;</span><br><span class="line">                if (cl instanceof URLClassLoader) &#123;</span><br><span class="line">                    URL[] urls = ((URLClassLoader) cl).getURLs();</span><br><span class="line">                    for (URL url : urls) &#123;</span><br><span class="line">                        if (url.getProtocol().equals(&quot;file&quot;)) &#123;</span><br><span class="line">                            try &#123;</span><br><span class="line">                                File f = new File (url.toURI());</span><br><span class="line">                                if (f.isFile() &amp;&amp;</span><br><span class="line">                                        f.getName().endsWith(&quot;.jar&quot;)) &#123;</span><br><span class="line">                                    ExtensionValidator.addSystemResource(f);</span><br><span class="line">                                &#125;</span><br><span class="line">                            &#125; catch (URISyntaxException e) &#123;</span><br><span class="line">                                // Ignore</span><br><span class="line">                            &#125; catch (IOException e) &#123;</span><br><span class="line">                                // Ignore</span><br><span class="line">                            &#125;</span><br><span class="line">                        &#125;</span><br><span class="line">                    &#125;</span><br><span class="line">                &#125;</span><br><span class="line">                cl = cl.getParent();</span><br><span class="line">            &#125;</span><br><span class="line">        &#125;</span><br><span class="line">        // 初始化每个services</span><br><span class="line">        for (int i = 0; i &lt; services.length; i++) &#123;</span><br><span class="line">            services[i].init();</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br></pre></td></tr></table></figure>
+
+<h2 id="StandardServer-LifecycleBase-的setStateInternal，fireLifecycleEvent是LifecycleSupport的fireLifecycleEvent"><a href="#StandardServer-LifecycleBase-的setStateInternal，fireLifecycleEvent是LifecycleSupport的fireLifecycleEvent" class="headerlink" title="StandardServer(LifecycleBase)的setStateInternal，fireLifecycleEvent是LifecycleSupport的fireLifecycleEvent"></a>StandardServer(LifecycleBase)的setStateInternal，fireLifecycleEvent是LifecycleSupport的fireLifecycleEvent</h2><figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br></pre></td><td class="code"><pre><span class="line">private synchronized void setStateInternal(LifecycleState state,</span><br><span class="line">            Object data, boolean check) throws LifecycleException &#123;</span><br><span class="line"></span><br><span class="line">        if (log.isDebugEnabled()) &#123;</span><br><span class="line">            log.debug(sm.getString(&quot;lifecycleBase.setState&quot;, this, state));</span><br><span class="line">        &#125;</span><br><span class="line"></span><br><span class="line">        if (check) &#123;</span><br><span class="line">            // Must have been triggered by one of the abstract methods (assume</span><br><span class="line">            // code in this class is correct)</span><br><span class="line">            // null is never a valid state</span><br><span class="line">            if (state == null) &#123;</span><br><span class="line">                invalidTransition(&quot;null&quot;);</span><br><span class="line">                // Unreachable code - here to stop eclipse complaining about</span><br><span class="line">                // a possible NPE further down the method</span><br><span class="line">                return;</span><br><span class="line">            &#125;</span><br><span class="line"></span><br><span class="line">            // Any method can transition to failed</span><br><span class="line">            // startInternal() permits STARTING_PREP to STARTING</span><br><span class="line">            // stopInternal() permits STOPPING_PREP to STOPPING and FAILED to</span><br><span class="line">            // STOPPING</span><br><span class="line">            if (!(state == LifecycleState.FAILED ||</span><br><span class="line">                    (this.state == LifecycleState.STARTING_PREP &amp;&amp;</span><br><span class="line">                            state == LifecycleState.STARTING) ||</span><br><span class="line">                    (this.state == LifecycleState.STOPPING_PREP &amp;&amp;</span><br><span class="line">                            state == LifecycleState.STOPPING) ||</span><br><span class="line">                    (this.state == LifecycleState.FAILED &amp;&amp;</span><br><span class="line">                            state == LifecycleState.STOPPING))) &#123;</span><br><span class="line">                // No other transition permitted</span><br><span class="line">                invalidTransition(state.name());</span><br><span class="line">            &#125;</span><br><span class="line">        &#125;</span><br><span class="line">//将入参 LifecycleState 实例赋值给本类中的实例变量保存起来</span><br><span class="line">        this.state = state;</span><br><span class="line">        String lifecycleEvent = state.getLifecycleEvent();</span><br><span class="line">        if (lifecycleEvent != null) &#123;</span><br><span class="line">//发布事件</span><br><span class="line">            fireLifecycleEvent(lifecycleEvent, data);</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br></pre></td></tr></table></figure>
+
+
+
+<h2 id="StandardServer-LifecycleBase-的start"><a href="#StandardServer-LifecycleBase-的start" class="headerlink" title="StandardServer(LifecycleBase)的start"></a>StandardServer(LifecycleBase)的start</h2><figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br></pre></td><td class="code"><pre><span class="line">@Override</span><br><span class="line">    public final synchronized void start() throws LifecycleException &#123;</span><br><span class="line">//如果已经调用过start，返回</span><br><span class="line">        if (LifecycleState.STARTING_PREP.equals(state) ||</span><br><span class="line">                LifecycleState.STARTING.equals(state) ||</span><br><span class="line">                LifecycleState.STARTED.equals(state)) &#123;</span><br><span class="line"></span><br><span class="line">            if (log.isDebugEnabled()) &#123;</span><br><span class="line">                Exception e = new LifecycleException();</span><br><span class="line">                log.debug(sm.getString(&quot;lifecycleBase.alreadyStarted&quot;,</span><br><span class="line">                        toString()), e);</span><br><span class="line">            &#125; else if (log.isInfoEnabled()) &#123;</span><br><span class="line">                log.info(sm.getString(&quot;lifecycleBase.alreadyStarted&quot;,</span><br><span class="line">                        toString()));</span><br><span class="line">            &#125;</span><br><span class="line"></span><br><span class="line">            return;</span><br><span class="line">        &#125;</span><br><span class="line">//调用init</span><br><span class="line">        if (state.equals(LifecycleState.NEW)) &#123;</span><br><span class="line">            init();</span><br><span class="line">        &#125; else if (state.equals(LifecycleState.FAILED))&#123;</span><br><span class="line">//stop</span><br><span class="line">            stop();</span><br><span class="line">        &#125; else if (!state.equals(LifecycleState.INITIALIZED) &amp;&amp;</span><br><span class="line">                !state.equals(LifecycleState.STOPPED)) &#123;</span><br><span class="line">            invalidTransition(Lifecycle.BEFORE_START_EVENT);</span><br><span class="line">        &#125;</span><br><span class="line"></span><br><span class="line">        setStateInternal(LifecycleState.STARTING_PREP, null, false);</span><br><span class="line"></span><br><span class="line">        try &#123;</span><br><span class="line">//重要</span><br><span class="line">            startInternal();</span><br><span class="line">        &#125; catch (Throwable t) &#123;</span><br><span class="line">            ExceptionUtils.handleThrowable(t);</span><br><span class="line">            setStateInternal(LifecycleState.FAILED, null, false);</span><br><span class="line">            throw new LifecycleException(</span><br><span class="line">                    sm.getString(&quot;lifecycleBase.startFail&quot;,toString()), t);</span><br><span class="line">        &#125;</span><br><span class="line"></span><br><span class="line">        if (state.equals(LifecycleState.FAILED) ||</span><br><span class="line">                state.equals(LifecycleState.MUST_STOP)) &#123;</span><br><span class="line">            stop();</span><br><span class="line">        &#125; else &#123;</span><br><span class="line">            // Shouldn&#x27;t be necessary but acts as a check that sub-classes are</span><br><span class="line">            // doing what they are supposed to.</span><br><span class="line">            if (!state.equals(LifecycleState.STARTING)) &#123;</span><br><span class="line">                invalidTransition(Lifecycle.AFTER_START_EVENT);</span><br><span class="line">            &#125;</span><br><span class="line"></span><br><span class="line">            setStateInternal(LifecycleState.STARTED, null, false);</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br></pre></td></tr></table></figure>
+
+<p>startInternal</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br></pre></td><td class="code"><pre><span class="line">@Override</span><br><span class="line">   protected void startInternal() throws LifecycleException &#123;</span><br><span class="line"></span><br><span class="line">       fireLifecycleEvent(CONFIGURE_START_EVENT, null);</span><br><span class="line">       setState(LifecycleState.STARTING);</span><br><span class="line"></span><br><span class="line">       globalNamingResources.start();</span><br><span class="line"></span><br><span class="line">       // Start所有service</span><br><span class="line">       synchronized (servicesLock) &#123;</span><br><span class="line">           for (int i = 0; i &lt; services.length; i++) &#123;</span><br><span class="line">               services[i].start();</span><br><span class="line">           &#125;</span><br><span class="line">       &#125;</span><br><span class="line">   &#125;</span><br></pre></td></tr></table></figure>
+
+
+
+<h1 id="StandardService"><a href="#StandardService" class="headerlink" title="StandardService"></a>StandardService</h1> <figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br><span class="line">65</span><br><span class="line">66</span><br><span class="line">67</span><br><span class="line">68</span><br><span class="line">69</span><br><span class="line">70</span><br><span class="line">71</span><br><span class="line">72</span><br><span class="line">73</span><br><span class="line">74</span><br><span class="line">75</span><br><span class="line">76</span><br><span class="line">77</span><br></pre></td><td class="code"><pre><span class="line">@Override</span><br><span class="line">    protected void initInternal() throws LifecycleException &#123;</span><br><span class="line"></span><br><span class="line">        super.initInternal();</span><br><span class="line"></span><br><span class="line">        if (container != null) &#123;</span><br><span class="line">            container.init();</span><br><span class="line">        &#125;</span><br><span class="line"></span><br><span class="line">        // Initialize any Executors</span><br><span class="line">        for (Executor executor : findExecutors()) &#123;</span><br><span class="line">            if (executor instanceof JmxEnabled) &#123;</span><br><span class="line">                ((JmxEnabled) executor).setDomain(getDomain());</span><br><span class="line">            &#125;</span><br><span class="line">            executor.init();</span><br><span class="line">        &#125;</span><br><span class="line"></span><br><span class="line">        // Initialize mapper listener</span><br><span class="line">        mapperListener.init();</span><br><span class="line"></span><br><span class="line">        // Initialize our defined Connectors</span><br><span class="line">        synchronized (connectorsLock) &#123;</span><br><span class="line">            for (Connector connector : connectors) &#123;</span><br><span class="line">                try &#123;</span><br><span class="line">                    connector.init();</span><br><span class="line">                &#125; catch (Exception e) &#123;</span><br><span class="line">                    String message = sm.getString(</span><br><span class="line">                            &quot;standardService.connector.initFailed&quot;, connector);</span><br><span class="line">                    log.error(message, e);</span><br><span class="line"></span><br><span class="line">                    if (Boolean.getBoolean(&quot;org.apache.catalina.startup.EXIT_ON_INIT_FAILURE&quot;))</span><br><span class="line">                        throw new LifecycleException(message);</span><br><span class="line">                &#125;</span><br><span class="line">            &#125;</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line"></span><br><span class="line"></span><br><span class="line">@Override</span><br><span class="line">    protected void startInternal() throws LifecycleException &#123;</span><br><span class="line"></span><br><span class="line">        //...</span><br><span class="line">        setState(LifecycleState.STARTING);</span><br><span class="line"></span><br><span class="line">        // 开启StandardEngine</span><br><span class="line">        if (container != null) &#123;</span><br><span class="line">            synchronized (container) &#123;</span><br><span class="line">                container.start();</span><br><span class="line">            &#125;</span><br><span class="line">        &#125;</span><br><span class="line"></span><br><span class="line">        synchronized (executors) &#123;</span><br><span class="line">            for (Executor executor: executors) &#123;</span><br><span class="line">                executor.start();</span><br><span class="line">            &#125;</span><br><span class="line">        &#125;</span><br><span class="line"></span><br><span class="line"></span><br><span class="line">        mapperListener.start();</span><br><span class="line"></span><br><span class="line">        // 开启Connector</span><br><span class="line">        synchronized (connectorsLock) &#123;</span><br><span class="line">            for (Connector connector: connectors) &#123;</span><br><span class="line">                try &#123;</span><br><span class="line">                    // If it has already failed, don&#x27;t try and start it</span><br><span class="line">                    if (connector.getState() != LifecycleState.FAILED) &#123;</span><br><span class="line">                        connector.start();</span><br><span class="line">                    &#125;</span><br><span class="line">                &#125; catch (Exception e) &#123;</span><br><span class="line">                    log.error(sm.getString(</span><br><span class="line">                            &quot;standardService.connector.startFailed&quot;,</span><br><span class="line">                            connector), e);</span><br><span class="line">                &#125;</span><br><span class="line">            &#125;</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br></pre></td></tr></table></figure>
+
+
+<h1 id="StandardEngine"><a href="#StandardEngine" class="headerlink" title="StandardEngine"></a>StandardEngine</h1><p>initInternal、startInternal是直接调用父类initInternal、startInternal</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br></pre></td><td class="code"><pre><span class="line">@Override</span><br><span class="line">    protected synchronized void startInternal() throws LifecycleException &#123;</span><br><span class="line"></span><br><span class="line">        // Start our subordinate components, if any</span><br><span class="line">        logger = null;</span><br><span class="line">        getLogger();</span><br><span class="line">        Cluster cluster = getClusterInternal();</span><br><span class="line">        if ((cluster != null) &amp;&amp; (cluster instanceof Lifecycle))</span><br><span class="line">            ((Lifecycle) cluster).start();</span><br><span class="line">        Realm realm = getRealmInternal();</span><br><span class="line">        if ((realm != null) &amp;&amp; (realm instanceof Lifecycle))</span><br><span class="line">            ((Lifecycle) realm).start();</span><br><span class="line"></span><br><span class="line">        // Start our child containers, if any</span><br><span class="line">        Container children[] = findChildren();</span><br><span class="line">        List&lt;Future&lt;Void&gt;&gt; results = new ArrayList&lt;&gt;();</span><br><span class="line">        for (int i = 0; i &lt; children.length; i++) &#123;</span><br><span class="line">//StartChild实现了Callable ，call里面其实就是Container#start</span><br><span class="line">            results.add(startStopExecutor.submit(new StartChild(children[i])));</span><br><span class="line">        &#125;</span><br><span class="line"></span><br><span class="line">        boolean fail = false;</span><br><span class="line">        for (Future&lt;Void&gt; result : results) &#123;</span><br><span class="line">            try &#123;</span><br><span class="line">                result.get();</span><br><span class="line">            &#125; catch (Exception e) &#123;</span><br><span class="line">                log.error(sm.getString(&quot;containerBase.threadedStartFailed&quot;), e);</span><br><span class="line">                fail = true;</span><br><span class="line">            &#125;</span><br><span class="line"></span><br><span class="line">        &#125;</span><br><span class="line">        if (fail) &#123;</span><br><span class="line">            throw new LifecycleException(</span><br><span class="line">                    sm.getString(&quot;containerBase.threadedStartFailed&quot;));</span><br><span class="line">        &#125;</span><br><span class="line"></span><br><span class="line">        // Start the Valves in our pipeline (including the basic), if any</span><br><span class="line">        if (pipeline instanceof Lifecycle)</span><br><span class="line">            ((Lifecycle) pipeline).start();</span><br><span class="line"></span><br><span class="line"></span><br><span class="line">        setState(LifecycleState.STARTING);</span><br><span class="line"></span><br><span class="line">        // Start our thread</span><br><span class="line">        threadStart();</span><br><span class="line"></span><br><span class="line">    &#125;</span><br></pre></td></tr></table></figure>
+
+<h1 id="StandardHost"><a href="#StandardHost" class="headerlink" title="StandardHost"></a>StandardHost</h1><figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br></pre></td><td class="code"><pre><span class="line"> @Override</span><br><span class="line">    protected synchronized void startInternal() throws LifecycleException &#123;</span><br><span class="line">        // Set error report valve</span><br><span class="line">        String errorValve = getErrorReportValveClass();</span><br><span class="line">        if ((errorValve != null) &amp;&amp; (!errorValve.equals(&quot;&quot;))) &#123;</span><br><span class="line">            try &#123;</span><br><span class="line">                boolean found = false;</span><br><span class="line">                Valve[] valves = getPipeline().getValves();</span><br><span class="line">                for (Valve valve : valves) &#123;</span><br><span class="line">                    if (errorValve.equals(valve.getClass().getName())) &#123;</span><br><span class="line">                        found = true;</span><br><span class="line">                        break;</span><br><span class="line">                    &#125;</span><br><span class="line">                &#125;</span><br><span class="line">                if(!found) &#123;</span><br><span class="line">                    Valve valve =</span><br><span class="line">                        (Valve) Class.forName(errorValve).getConstructor().newInstance();</span><br><span class="line">                    getPipeline().addValve(valve);</span><br><span class="line">                &#125;</span><br><span class="line">            &#125; catch (Throwable t) &#123;</span><br><span class="line">                ExceptionUtils.handleThrowable(t);</span><br><span class="line">//...</span><br><span class="line">            &#125;</span><br><span class="line">        &#125;</span><br><span class="line">        super.startInternal();</span><br><span class="line">    &#125;</span><br></pre></td></tr></table></figure>
+
+<p>Connector</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br></pre></td><td class="code"><pre><span class="line">    @Override</span><br><span class="line">    protected void startInternal() throws LifecycleException &#123;</span><br><span class="line"></span><br><span class="line">        // Validate settings before starting</span><br><span class="line">        if (getPort() &lt; 0) &#123;</span><br><span class="line">            throw new LifecycleException(sm.getString(</span><br><span class="line">                    &quot;coyoteConnector.invalidPort&quot;, Integer.valueOf(getPort())));</span><br><span class="line">        &#125;</span><br><span class="line"></span><br><span class="line">        setState(LifecycleState.STARTING);</span><br><span class="line"></span><br><span class="line">        try &#123;</span><br><span class="line">//其实就是Http11AprProtocol见后文</span><br><span class="line">            protocolHandler.start();</span><br><span class="line">        &#125; catch (Exception e) &#123;</span><br><span class="line">            throw new LifecycleException(</span><br><span class="line">                    sm.getString(&quot;coyoteConnector.protocolHandlerStartFailed&quot;), e);</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br></pre></td></tr></table></figure>
+
+<p>initInternal<br> <figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br></pre></td><td class="code"><pre><span class="line">@Override</span><br><span class="line">    protected void initInternal() throws LifecycleException &#123;</span><br><span class="line"></span><br><span class="line">        super.initInternal();</span><br><span class="line"></span><br><span class="line">        // Initialize adapter，后面处理service的时候用的就是这个</span><br><span class="line">        adapter = new CoyoteAdapter(this);</span><br><span class="line">        protocolHandler.setAdapter(adapter);</span><br><span class="line"></span><br><span class="line">        // Make sure parseBodyMethodsSet has a default</span><br><span class="line">        if (null == parseBodyMethodsSet) &#123;</span><br><span class="line">            setParseBodyMethods(getParseBodyMethods());</span><br><span class="line">        &#125;</span><br><span class="line"></span><br><span class="line">        if (protocolHandler.isAprRequired() &amp;&amp; !AprLifecycleListener.isAprAvailable()) &#123;</span><br><span class="line">            throw new LifecycleException(sm.getString(&quot;coyoteConnector.protocolHandlerNoApr&quot;,</span><br><span class="line">                    getProtocolHandlerClassName()));</span><br><span class="line">        &#125;</span><br><span class="line">        if (AprLifecycleListener.isAprAvailable() &amp;&amp; AprLifecycleListener.getUseOpenSSL() &amp;&amp;</span><br><span class="line">                protocolHandler instanceof AbstractHttp11JsseProtocol) &#123;</span><br><span class="line">            AbstractHttp11JsseProtocol&lt;?&gt; jsseProtocolHandler =</span><br><span class="line">                    (AbstractHttp11JsseProtocol&lt;?&gt;) protocolHandler;</span><br><span class="line">            if (jsseProtocolHandler.isSSLEnabled() &amp;&amp;</span><br><span class="line">                    jsseProtocolHandler.getSslImplementationName() == null) &#123;</span><br><span class="line">                // OpenSSL is compatible with the JSSE configuration, so use it if APR is available</span><br><span class="line">                jsseProtocolHandler.setSslImplementationName(OpenSSLImplementation.class.getName());</span><br><span class="line">            &#125;</span><br><span class="line">        &#125;</span><br><span class="line"></span><br><span class="line">        try &#123;</span><br><span class="line">            protocolHandler.init();</span><br><span class="line">        &#125; catch (Exception e) &#123;</span><br><span class="line">            throw new LifecycleException(</span><br><span class="line">                    sm.getString(&quot;coyoteConnector.protocolHandlerInitializationFailed&quot;), e);</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br></pre></td></tr></table></figure></p>
+<p><img src="https://user-images.githubusercontent.com/7789698/37251128-77badb12-2544-11e8-906d-92071230aac8.png" alt="image"></p>
+<p>参考：<a target="_blank" rel="noopener" href="https://juejin.im/post/5a6d6f6751882573520da54d">https://juejin.im/post/5a6d6f6751882573520da54d</a></p>
+
+    </div>
+
+    
+    
+    
+
+    <footer class="post-footer">
+          <div class="reward-container">
+  <div>Buy me a coffee</div>
+  <button>
+    Donate
+  </button>
+  <div class="post-reward">
+      <div>
+        <img src="/hexo/images/wechatpay.png" alt="Absurd WeChat Pay">
+        <span>WeChat Pay</span>
+      </div>
+
+  </div>
+</div>
+
+          <div class="post-tags">
+              <a href="/hexo/tags/tomcat/" rel="tag"># tomcat</a>
+          </div>
+
+        
+
+          <div class="post-nav">
+            <div class="post-nav-item">
+                <a href="/hexo/post/143b4ffc.html" rel="prev" title="Tomcat 源码解析（二）--Bootstrap.jar">
+                  <i class="fa fa-chevron-left"></i> Tomcat 源码解析（二）--Bootstrap.jar
+                </a>
+            </div>
+            <div class="post-nav-item">
+                <a href="/hexo/post/bf6044ee.html" rel="next" title="Tomcat 源码解析（四）--Lifecycle 机制和实现原理">
+                  Tomcat 源码解析（四）--Lifecycle 机制和实现原理 <i class="fa fa-chevron-right"></i>
+                </a>
+            </div>
+          </div>
+    </footer>
+  </article>
+</div>
+
+
+
+
+
+
+</div>
+  </main>
+
+  <footer class="footer">
+    <div class="footer-inner">
+
+
+<div class="copyright">
+  &copy; 
+  <span itemprop="copyrightYear">2022</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">Absurd</span>
+</div>
+  <div class="powered-by">Powered by <a href="https://hexo.io/" rel="noopener" target="_blank">Hexo</a> & <a href="https://theme-next.js.org/mist/" rel="noopener" target="_blank">NexT.Mist</a>
+  </div>
+
+    </div>
+  </footer>
+
+  
+  <script src="https://cdn.jsdelivr.net/npm/animejs@3.2.1/lib/anime.min.js" integrity="sha256-XL2inqUJaslATFnHdJOi9GfQ60on8Wx1C2H8DYiN1xY=" crossorigin="anonymous"></script>
+<script src="/hexo/js/comments.js"></script><script src="/hexo/js/utils.js"></script><script src="/hexo/js/motion.js"></script><script src="/hexo/js/schemes/muse.js"></script><script src="/hexo/js/next-boot.js"></script>
+
+  
+<script src="https://cdn.jsdelivr.net/npm/hexo-generator-searchdb@1.4.0/dist/search.js" integrity="sha256-vXZMYLEqsROAXkEw93GGIvaB2ab+QW6w3+1ahD9nXXA=" crossorigin="anonymous"></script>
+<script src="/hexo/js/third-party/search/local-search.js"></script>
+
+
+
+
+
+  
+
+
+
+
+
+</body>
+</html>

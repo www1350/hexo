@@ -1,0 +1,446 @@
+<!DOCTYPE html>
+<html lang="zh-Hans">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width">
+<meta name="theme-color" content="#222" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#222" media="(prefers-color-scheme: dark)">
+<meta name="generator" content="Hexo 6.0.0">
+
+
+  <link rel="apple-touch-icon" sizes="180x180" href="/hexo/images/apple-touch-icon-next.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/hexo/images/favicon-32x32-next.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/hexo/images/favicon-16x16-next.png">
+  <link rel="mask-icon" href="/hexo/images/logo.svg" color="#222">
+
+<link rel="stylesheet" href="/hexo/css/main.css">
+
+
+
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@5.15.4/css/all.min.css" integrity="sha256-mUZM63G8m73Mcidfrv5E+Y61y7a12O5mW4ezU3bxqW4=" crossorigin="anonymous">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/animate.css@3.1.1/animate.min.css" integrity="sha256-PR7ttpcvz8qrF57fur/yAx1qXMFJeJFiA6pSzWi0OIE=" crossorigin="anonymous">
+
+<script class="next-config" data-name="main" type="application/json">{"hostname":"www1350.github.io","root":"/hexo/","images":"/hexo/images","scheme":"Mist","darkmode":true,"version":"8.9.0","exturl":false,"sidebar":{"position":"left","display":"post","padding":18,"offset":12},"copycode":false,"bookmark":{"enable":false,"color":"#222","save":"auto"},"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"stickytabs":false,"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"fadeInDown","post_body":"fadeInDown","coll_header":"fadeInLeft","sidebar":"fadeInUp"}},"prism":false,"i18n":{"placeholder":"Searching...","empty":"We didn't find any results for the search: ${query}","hits_time":"${hits} results found in ${time} ms","hits":"${hits} results found"},"path":"/hexo/search.xml","localsearch":{"enable":true,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":true}}</script><script src="/hexo/js/config.js"></script>
+<meta name="description" content="关于java SPI和dubbo SPI的简单阐述https:&#x2F;&#x2F;www1350.github.io&#x2F;#post&#x2F;114 拿解析一的ServiceConfig的doExportUrlsFor1Protocol为例： 1Exporter&lt;?&gt; exporter &#x3D; protocol.export(wrapperInvoker);  这里的protocol来自 1private stati">
+<meta property="og:type" content="article">
+<meta property="og:title" content="dubbo源码解析（十一）SPI内核">
+<meta property="og:url" content="https://www1350.github.io/hexo/post/7583e99e.html">
+<meta property="og:site_name" content="Absurd博客">
+<meta property="og:description" content="关于java SPI和dubbo SPI的简单阐述https:&#x2F;&#x2F;www1350.github.io&#x2F;#post&#x2F;114 拿解析一的ServiceConfig的doExportUrlsFor1Protocol为例： 1Exporter&lt;?&gt; exporter &#x3D; protocol.export(wrapperInvoker);  这里的protocol来自 1private stati">
+<meta property="og:locale">
+<meta property="article:published_time" content="2018-07-12T06:38:29.000Z">
+<meta property="article:modified_time" content="2022-01-28T07:09:17.732Z">
+<meta property="article:author" content="Absurd">
+<meta property="article:tag" content="rpc">
+<meta property="article:tag" content="dubbo">
+<meta name="twitter:card" content="summary">
+
+
+<link rel="canonical" href="https://www1350.github.io/hexo/post/7583e99e.html">
+
+
+
+<script class="next-config" data-name="page" type="application/json">{"sidebar":"","isHome":false,"isPost":true,"lang":"zh-Hans","comments":true,"permalink":"https://www1350.github.io/hexo/post/7583e99e.html","path":"post/7583e99e.html","title":"dubbo源码解析（十一）SPI内核"}</script>
+
+<script class="next-config" data-name="calendar" type="application/json">""</script>
+<title>dubbo源码解析（十一）SPI内核 | Absurd博客</title>
+  
+
+
+
+
+  <noscript>
+    <link rel="stylesheet" href="/hexo/css/noscript.css">
+  </noscript>
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage" class="use-motion">
+  <div class="headband"></div>
+
+  <main class="main">
+    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="Toggle navigation bar" role="button">
+        <span class="toggle-line"></span>
+        <span class="toggle-line"></span>
+        <span class="toggle-line"></span>
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/hexo/" class="brand" rel="start">
+      <i class="logo-line"></i>
+      <p class="site-title">Absurd博客</p>
+      <i class="logo-line"></i>
+    </a>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger">
+        <i class="fa fa-search fa-fw fa-lg"></i>
+    </div>
+  </div>
+</div>
+
+
+
+<nav class="site-nav">
+  <ul class="main-menu menu">
+        <li class="menu-item menu-item-home"><a href="/hexo/" rel="section"><i class="fa fa-home fa-fw"></i>Home</a></li>
+        <li class="menu-item menu-item-about"><a href="/hexo/about/" rel="section"><i class="fa fa-user fa-fw"></i>About</a></li>
+        <li class="menu-item menu-item-tags"><a href="/hexo/tags/" rel="section"><i class="fa fa-tags fa-fw"></i>Tags</a></li>
+        <li class="menu-item menu-item-categories"><a href="/hexo/categories/" rel="section"><i class="fa fa-th fa-fw"></i>Categories</a></li>
+        <li class="menu-item menu-item-archives"><a href="/hexo/archives/" rel="section"><i class="fa fa-archive fa-fw"></i>Archives</a></li>
+        <li class="menu-item menu-item-bookmarks"><a href="/hexo/bookmarks/" rel="section"><i class="fa fa-archive fa-fw"></i>bookmarks</a></li>
+      <li class="menu-item menu-item-search">
+        <a role="button" class="popup-trigger"><i class="fa fa-search fa-fw"></i>Search
+        </a>
+      </li>
+  </ul>
+</nav>
+
+
+
+  <div class="search-pop-overlay">
+    <div class="popup search-popup"><div class="search-header">
+  <span class="search-icon">
+    <i class="fa fa-search"></i>
+  </span>
+  <div class="search-input-container">
+    <input autocomplete="off" autocapitalize="off" maxlength="80"
+           placeholder="Searching..." spellcheck="false"
+           type="search" class="search-input">
+  </div>
+  <span class="popup-btn-close" role="button">
+    <i class="fa fa-times-circle"></i>
+  </span>
+</div>
+<div class="search-result-container no-result">
+  <div class="search-result-icon">
+    <i class="fa fa-spinner fa-pulse fa-5x"></i>
+  </div>
+</div>
+
+    </div>
+  </div>
+
+</div>
+        
+  
+  <div class="toggle sidebar-toggle" role="button">
+    <span class="toggle-line"></span>
+    <span class="toggle-line"></span>
+    <span class="toggle-line"></span>
+  </div>
+
+  <aside class="sidebar">
+
+    <div class="sidebar-inner sidebar-overview-active">
+      <ul class="sidebar-nav">
+        <li class="sidebar-nav-toc">
+          Table of Contents
+        </li>
+        <li class="sidebar-nav-overview">
+          Overview
+        </li>
+      </ul>
+
+      <div class="sidebar-panel-container">
+        <!--noindex-->
+        <div class="post-toc-wrap sidebar-panel">
+        </div>
+        <!--/noindex-->
+
+        <div class="site-overview-wrap sidebar-panel">
+          <div class="site-author site-overview-item animated" itemprop="author" itemscope itemtype="http://schema.org/Person">
+    <img class="site-author-image" itemprop="image" alt="Absurd"
+      src="/hexo/images/avatar.gif">
+  <p class="site-author-name" itemprop="name">Absurd</p>
+  <div class="site-description" itemprop="description"></div>
+</div>
+<div class="site-state-wrap site-overview-item animated">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+        <a href="/hexo/archives/">
+          <span class="site-state-item-count">75</span>
+          <span class="site-state-item-name">posts</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+          <a href="/hexo/categories/">
+        <span class="site-state-item-count">17</span>
+        <span class="site-state-item-name">categories</span></a>
+      </div>
+      <div class="site-state-item site-state-tags">
+          <a href="/hexo/tags/">
+        <span class="site-state-item-count">46</span>
+        <span class="site-state-item-name">tags</span></a>
+      </div>
+  </nav>
+</div>
+  <div class="links-of-author site-overview-item animated">
+      <span class="links-of-author-item">
+        <a href="https://github.com/www1350" title="GitHub → https:&#x2F;&#x2F;github.com&#x2F;www1350" rel="noopener" target="_blank"><i class="fab fa-github fa-fw"></i>GitHub</a>
+      </span>
+      <span class="links-of-author-item">
+        <a href="mailto:www_1350@163.com" title="E-Mail → mailto:www_1350@163.com" rel="noopener" target="_blank"><i class="fa fa-envelope fa-fw"></i>E-Mail</a>
+      </span>
+  </div>
+
+
+
+        </div>
+      </div>
+    </div>
+  </aside>
+  <div class="sidebar-dimmer"></div>
+
+
+    </header>
+
+    
+  <div class="back-to-top" role="button" aria-label="Back to top">
+    <i class="fa fa-arrow-up"></i>
+    <span>0%</span>
+  </div>
+
+<noscript>
+  <div class="noscript-warning">Theme NexT works best with JavaScript enabled</div>
+</noscript>
+
+
+    <div class="main-inner post posts-expand">
+
+
+  
+
+
+<div class="post-block">
+  
+  
+
+  <article itemscope itemtype="http://schema.org/Article" class="post-content" lang="zh-Hans">
+    <link itemprop="mainEntityOfPage" href="https://www1350.github.io/hexo/post/7583e99e.html">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/hexo/images/avatar.gif">
+      <meta itemprop="name" content="Absurd">
+      <meta itemprop="description" content="">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Absurd博客">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          dubbo源码解析（十一）SPI内核
+        </h1>
+
+        <div class="post-meta-container">
+          <div class="post-meta">
+    <span class="post-meta-item">
+      <span class="post-meta-item-icon">
+        <i class="far fa-calendar"></i>
+      </span>
+      <span class="post-meta-item-text">Posted on</span>
+
+      <time title="Created: 2018-07-12 14:38:29" itemprop="dateCreated datePublished" datetime="2018-07-12T14:38:29+08:00">2018-07-12</time>
+    </span>
+    <span class="post-meta-item">
+      <span class="post-meta-item-icon">
+        <i class="far fa-calendar-check"></i>
+      </span>
+      <span class="post-meta-item-text">Edited on</span>
+      <time title="Modified: 2022-01-28 15:09:17" itemprop="dateModified" datetime="2022-01-28T15:09:17+08:00">2022-01-28</time>
+    </span>
+    <span class="post-meta-item">
+      <span class="post-meta-item-icon">
+        <i class="far fa-folder"></i>
+      </span>
+      <span class="post-meta-item-text">In</span>
+        <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+          <a href="/hexo/categories/%E4%B8%AD%E9%97%B4%E4%BB%B6/" itemprop="url" rel="index"><span itemprop="name">中间件</span></a>
+        </span>
+          , 
+        <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+          <a href="/hexo/categories/%E4%B8%AD%E9%97%B4%E4%BB%B6/%E6%BA%90%E7%A0%81/" itemprop="url" rel="index"><span itemprop="name">源码</span></a>
+        </span>
+    </span>
+
+  
+</div>
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+        <p>关于java SPI和dubbo SPI的简单阐述<a href="https://www1350.github.io/#post/114">https://www1350.github.io/#post/114</a></p>
+<p>拿解析一的ServiceConfig的doExportUrlsFor1Protocol为例：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">Exporter&lt;?&gt; exporter = protocol.export(wrapperInvoker);</span><br></pre></td></tr></table></figure>
+
+<p>这里的protocol来自</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">private</span> <span class="keyword">static</span> <span class="keyword">final</span> Protocol protocol = ExtensionLoader.getExtensionLoader(Protocol.class).getAdaptiveExtension();</span><br></pre></td></tr></table></figure>
+
+<p>但是我们debug的时候会发现这个protocol命名是com.alibaba.dubbo.rpc.Protocol$Adaptive,可见是动态生成的。</p>
+<p>通过ExtensionLoader的createAdaptiveExtensionClassCode方法。我们可以获取到这么一段代码。</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">package</span> com.alibaba.dubbo.rpc;</span><br><span class="line"></span><br><span class="line"><span class="keyword">import</span> com.alibaba.dubbo.common.extension.ExtensionLoader;</span><br><span class="line"></span><br><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">Protocol</span>$<span class="title">Adaptive</span> <span class="keyword">implements</span> <span class="title">com</span>.<span class="title">alibaba</span>.<span class="title">dubbo</span>.<span class="title">rpc</span>.<span class="title">Protocol</span> </span>&#123;</span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">destroy</span><span class="params">()</span> </span>&#123;</span><br><span class="line">        <span class="keyword">throw</span> <span class="keyword">new</span> UnsupportedOperationException(<span class="string">&quot;method public abstract void com.alibaba.dubbo.rpc.Protocol.destroy() of interface com.alibaba.dubbo.rpc.Protocol is not adaptive method!&quot;</span>);</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">int</span> <span class="title">getDefaultPort</span><span class="params">()</span> </span>&#123;</span><br><span class="line">        <span class="keyword">throw</span> <span class="keyword">new</span> UnsupportedOperationException(<span class="string">&quot;method public abstract int com.alibaba.dubbo.rpc.Protocol.getDefaultPort() of interface com.alibaba.dubbo.rpc.Protocol is not adaptive method!&quot;</span>);</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">public</span> com.alibaba.dubbo.rpc.<span class="function">Exporter <span class="title">export</span><span class="params">(com.alibaba.dubbo.rpc.Invoker arg0)</span> <span class="keyword">throws</span> com.alibaba.dubbo.rpc.RpcException </span>&#123;</span><br><span class="line">        <span class="keyword">if</span> (arg0 == <span class="keyword">null</span>) <span class="keyword">throw</span> <span class="keyword">new</span> IllegalArgumentException(<span class="string">&quot;com.alibaba.dubbo.rpc.Invoker argument == null&quot;</span>);</span><br><span class="line">        <span class="keyword">if</span> (arg0.getUrl() == <span class="keyword">null</span>)</span><br><span class="line">            <span class="keyword">throw</span> <span class="keyword">new</span> IllegalArgumentException(<span class="string">&quot;com.alibaba.dubbo.rpc.Invoker argument getUrl() == null&quot;</span>);</span><br><span class="line">        com.alibaba.dubbo.common.URL url = arg0.getUrl();</span><br><span class="line">        String extName = (url.getProtocol() == <span class="keyword">null</span> ? <span class="string">&quot;dubbo&quot;</span> : url.getProtocol());</span><br><span class="line">        <span class="keyword">if</span> (extName == <span class="keyword">null</span>)</span><br><span class="line">            <span class="keyword">throw</span> <span class="keyword">new</span> IllegalStateException(<span class="string">&quot;Fail to get extension(com.alibaba.dubbo.rpc.Protocol) name from url(&quot;</span> + url.toString() + <span class="string">&quot;) use keys([protocol])&quot;</span>);</span><br><span class="line">        com.alibaba.dubbo.rpc.Protocol extension = (com.alibaba.dubbo.rpc.Protocol) ExtensionLoader.getExtensionLoader(com.alibaba.dubbo.rpc.Protocol.class).getExtension(extName);</span><br><span class="line">        <span class="keyword">return</span> extension.export(arg0);</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">public</span> com.alibaba.dubbo.rpc.<span class="function">Invoker <span class="title">refer</span><span class="params">(java.lang.Class arg0, com.alibaba.dubbo.common.URL arg1)</span> <span class="keyword">throws</span> com.alibaba.dubbo.rpc.RpcException </span>&#123;</span><br><span class="line">        <span class="keyword">if</span> (arg1 == <span class="keyword">null</span>) <span class="keyword">throw</span> <span class="keyword">new</span> IllegalArgumentException(<span class="string">&quot;url == null&quot;</span>);</span><br><span class="line">        com.alibaba.dubbo.common.URL url = arg1;</span><br><span class="line">        String extName = (url.getProtocol() == <span class="keyword">null</span> ? <span class="string">&quot;dubbo&quot;</span> : url.getProtocol());</span><br><span class="line">        <span class="keyword">if</span> (extName == <span class="keyword">null</span>)</span><br><span class="line">            <span class="keyword">throw</span> <span class="keyword">new</span> IllegalStateException(<span class="string">&quot;Fail to get extension(com.alibaba.dubbo.rpc.Protocol) name from url(&quot;</span> + url.toString() + <span class="string">&quot;) use keys([protocol])&quot;</span>);</span><br><span class="line">        com.alibaba.dubbo.rpc.Protocol extension = (com.alibaba.dubbo.rpc.Protocol) ExtensionLoader.getExtensionLoader(com.alibaba.dubbo.rpc.Protocol.class).getExtension(extName);</span><br><span class="line">        <span class="keyword">return</span> extension.refer(arg0, arg1);</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+
+
+<p>接口如下：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">@SPI(&quot;dubbo&quot;)</span></span><br><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">interface</span> <span class="title">Protocol</span> </span>&#123;</span><br><span class="line">    </span><br><span class="line">    <span class="function"><span class="keyword">int</span> <span class="title">getDefaultPort</span><span class="params">()</span></span>;</span><br><span class="line"></span><br><span class="line">    <span class="meta">@Adaptive</span></span><br><span class="line">    &lt;T&gt; <span class="function">Exporter&lt;T&gt; <span class="title">export</span><span class="params">(Invoker&lt;T&gt; invoker)</span> <span class="keyword">throws</span> RpcException</span>;</span><br><span class="line"></span><br><span class="line">    <span class="meta">@Adaptive</span></span><br><span class="line">    &lt;T&gt; <span class="function">Invoker&lt;T&gt; <span class="title">refer</span><span class="params">(Class&lt;T&gt; type, URL url)</span> <span class="keyword">throws</span> RpcException</span>;</span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">void</span> <span class="title">destroy</span><span class="params">()</span></span>;</span><br><span class="line"></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>我们可以看到动态生成的代码里面，通过getAdaptiveExtension获取的时候，如果没有注解@Adaptive就会把实现类写成UnsupportedOperationException，而对于@Adaptive我们看下一个动态生成的代码：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">package</span> com.alibaba.dubbo.remoting;</span><br><span class="line"></span><br><span class="line"><span class="keyword">import</span> com.alibaba.dubbo.common.extension.ExtensionLoader;</span><br><span class="line"></span><br><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">Transporter</span>$<span class="title">Adaptive</span> <span class="keyword">implements</span> <span class="title">com</span>.<span class="title">alibaba</span>.<span class="title">dubbo</span>.<span class="title">remoting</span>.<span class="title">Transporter</span> </span>&#123;</span><br><span class="line">    <span class="keyword">public</span> com.alibaba.dubbo.remoting.<span class="function">Client <span class="title">connect</span><span class="params">(com.alibaba.dubbo.common.URL arg0, com.alibaba.dubbo.remoting.ChannelHandler arg1)</span> <span class="keyword">throws</span> com.alibaba.dubbo.remoting.RemotingException </span>&#123;</span><br><span class="line">        <span class="keyword">if</span> (arg0 == <span class="keyword">null</span>) <span class="keyword">throw</span> <span class="keyword">new</span> IllegalArgumentException(<span class="string">&quot;url == null&quot;</span>);</span><br><span class="line">        com.alibaba.dubbo.common.URL url = arg0;</span><br><span class="line">        String extName = url.getParameter(<span class="string">&quot;client&quot;</span>, url.getParameter(<span class="string">&quot;transporter&quot;</span>, <span class="string">&quot;netty&quot;</span>));</span><br><span class="line">        <span class="keyword">if</span> (extName == <span class="keyword">null</span>)</span><br><span class="line">            <span class="keyword">throw</span> <span class="keyword">new</span> IllegalStateException(<span class="string">&quot;Fail to get extension(com.alibaba.dubbo.remoting.Transporter) name from url(&quot;</span> + url.toString() + <span class="string">&quot;) use keys([client, transporter])&quot;</span>);</span><br><span class="line">        com.alibaba.dubbo.remoting.Transporter extension = (com.alibaba.dubbo.remoting.Transporter) ExtensionLoader.getExtensionLoader(com.alibaba.dubbo.remoting.Transporter.class).getExtension(extName);</span><br><span class="line">        <span class="keyword">return</span> extension.connect(arg0, arg1);</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">public</span> com.alibaba.dubbo.remoting.<span class="function">Server <span class="title">bind</span><span class="params">(com.alibaba.dubbo.common.URL arg0, com.alibaba.dubbo.remoting.ChannelHandler arg1)</span> <span class="keyword">throws</span> com.alibaba.dubbo.remoting.RemotingException </span>&#123;</span><br><span class="line">        <span class="keyword">if</span> (arg0 == <span class="keyword">null</span>) <span class="keyword">throw</span> <span class="keyword">new</span> IllegalArgumentException(<span class="string">&quot;url == null&quot;</span>);</span><br><span class="line">        com.alibaba.dubbo.common.URL url = arg0;</span><br><span class="line">        String extName = url.getParameter(<span class="string">&quot;server&quot;</span>, url.getParameter(<span class="string">&quot;transporter&quot;</span>, <span class="string">&quot;netty&quot;</span>));</span><br><span class="line">        <span class="keyword">if</span> (extName == <span class="keyword">null</span>)</span><br><span class="line">            <span class="keyword">throw</span> <span class="keyword">new</span> IllegalStateException(<span class="string">&quot;Fail to get extension(com.alibaba.dubbo.remoting.Transporter) name from url(&quot;</span> + url.toString() + <span class="string">&quot;) use keys([server, transporter])&quot;</span>);</span><br><span class="line">        com.alibaba.dubbo.remoting.Transporter extension = (com.alibaba.dubbo.remoting.Transporter) ExtensionLoader.getExtensionLoader(com.alibaba.dubbo.remoting.Transporter.class).getExtension(extName);</span><br><span class="line">        <span class="keyword">return</span> extension.bind(arg0, arg1);</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+
+
+<p>我们注意到所不同的地方在于</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">String extName = url.getParameter(<span class="string">&quot;client&quot;</span>, url.getParameter(<span class="string">&quot;transporter&quot;</span>, <span class="string">&quot;netty&quot;</span>));</span><br></pre></td></tr></table></figure>
+
+<p>和</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">com.alibaba.dubbo.common.URL url = arg0.getUrl(); </span><br><span class="line">String extName = (url.getProtocol() == <span class="keyword">null</span> ? <span class="string">&quot;dubbo&quot;</span> : url.getProtocol());</span><br></pre></td></tr></table></figure>
+
+
+
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">@SPI(&quot;netty&quot;)</span></span><br><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">interface</span> <span class="title">Transporter</span> </span>&#123;</span><br><span class="line">    <span class="meta">@Adaptive(&#123;Constants.SERVER_KEY, Constants.TRANSPORTER_KEY&#125;)</span></span><br><span class="line">    <span class="function">Server <span class="title">bind</span><span class="params">(URL url, ChannelHandler handler)</span> <span class="keyword">throws</span> RemotingException</span>;</span><br><span class="line"></span><br><span class="line">    <span class="comment">//client    transporter</span></span><br><span class="line">    <span class="meta">@Adaptive(&#123;Constants.CLIENT_KEY, Constants.TRANSPORTER_KEY&#125;)</span></span><br><span class="line">    <span class="function">Client <span class="title">connect</span><span class="params">(URL url, ChannelHandler handler)</span> <span class="keyword">throws</span> RemotingException</span>;</span><br><span class="line"></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>现在我们大胆猜测，@Adaptive如果没有设置参数，extName就会拿url.get+接口名；如果有设置参数，extName就会拿最后一个参数和SPI的name获取url.getParameter(最后一个参数名, SPI名)，得到的结果在用url.getParameter(倒数第二个参数名，上一个结果)，一直这样直到取完参数。另外还通过官方文档了解到，接口方法不注解@Adaptive，在实现类注解@Adaptive将会自动激活这个拓展。</p>
+<p>另外一点我们注意到不管参数顺序如何，都能拿到url，这里可能进行了类型判断。接下来我们就验证下想象。</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">public</span> T <span class="title">getAdaptiveExtension</span><span class="params">()</span> </span>&#123;</span><br><span class="line">    Object instance = cachedAdaptiveInstance.get();</span><br><span class="line">    <span class="keyword">if</span> (instance == <span class="keyword">null</span>) &#123;</span><br><span class="line">        <span class="comment">//单例double check</span></span><br><span class="line">        <span class="keyword">if</span> (createAdaptiveInstanceError == <span class="keyword">null</span>) &#123;</span><br><span class="line">            <span class="keyword">synchronized</span> (cachedAdaptiveInstance) &#123;</span><br><span class="line">                instance = cachedAdaptiveInstance.get();</span><br><span class="line">                <span class="keyword">if</span> (instance == <span class="keyword">null</span>) &#123;</span><br><span class="line">                    <span class="keyword">try</span> &#123;</span><br><span class="line">                        <span class="comment">//这里是关键</span></span><br><span class="line">                        instance = createAdaptiveExtension();</span><br><span class="line">                        cachedAdaptiveInstance.set(instance);</span><br><span class="line">                    &#125; <span class="keyword">catch</span> (Throwable t) &#123;</span><br><span class="line">                        createAdaptiveInstanceError = t;</span><br><span class="line">                        <span class="keyword">throw</span> <span class="keyword">new</span> IllegalStateException(<span class="string">&quot;fail to create adaptive instance: &quot;</span> + t.toString(), t);</span><br><span class="line">                    &#125;</span><br><span class="line">                &#125;</span><br><span class="line">            &#125;</span><br><span class="line">        &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">            <span class="keyword">throw</span> <span class="keyword">new</span> IllegalStateException(<span class="string">&quot;fail to create adaptive instance: &quot;</span> + createAdaptiveInstanceError.toString(), createAdaptiveInstanceError);</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">return</span> (T) instance;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+
+
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">private</span> Class&lt;?&gt; getAdaptiveExtensionClass() &#123;</span><br><span class="line">    getExtensionClasses();</span><br><span class="line">    <span class="comment">//实现类有注解Adaptive，就直接返回</span></span><br><span class="line">    <span class="keyword">if</span> (cachedAdaptiveClass != <span class="keyword">null</span>) &#123;</span><br><span class="line">        <span class="keyword">return</span> cachedAdaptiveClass;</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="comment">//没有实现类，类上注解Adaptive，动态生成</span></span><br><span class="line">    <span class="keyword">return</span> cachedAdaptiveClass = createAdaptiveExtensionClass();</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+
+
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">private</span> Map&lt;String, Class&lt;?&gt;&gt; getExtensionClasses() &#123;</span><br><span class="line">    Map&lt;String, Class&lt;?&gt;&gt; classes = cachedClasses.get();</span><br><span class="line">    <span class="comment">//DCL</span></span><br><span class="line">    <span class="keyword">if</span> (classes == <span class="keyword">null</span>) &#123;</span><br><span class="line">        <span class="keyword">synchronized</span> (cachedClasses) &#123;</span><br><span class="line">            classes = cachedClasses.get();</span><br><span class="line">            <span class="keyword">if</span> (classes == <span class="keyword">null</span>) &#123;</span><br><span class="line">                classes = loadExtensionClasses();</span><br><span class="line">                cachedClasses.set(classes);</span><br><span class="line">            &#125;</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="keyword">return</span> classes;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>获取SPI，并获取</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">private</span> Map&lt;String, Class&lt;?&gt;&gt; loadExtensionClasses() &#123;</span><br><span class="line">    <span class="keyword">final</span> SPI defaultAnnotation = type.getAnnotation(SPI.class);</span><br><span class="line">    <span class="keyword">if</span> (defaultAnnotation != <span class="keyword">null</span>) &#123;</span><br><span class="line">        String value = defaultAnnotation.value();</span><br><span class="line">        <span class="keyword">if</span> (value != <span class="keyword">null</span> &amp;&amp; (value = value.trim()).length() &gt; <span class="number">0</span>) &#123;</span><br><span class="line">            String[] names = NAME_SEPARATOR.split(value);</span><br><span class="line">            <span class="keyword">if</span> (names.length &gt; <span class="number">1</span>) &#123;</span><br><span class="line">                <span class="keyword">throw</span> <span class="keyword">new</span> IllegalStateException(<span class="string">&quot;more than 1 default extension name on extension &quot;</span> + type.getName()</span><br><span class="line">                        + <span class="string">&quot;: &quot;</span> + Arrays.toString(names));</span><br><span class="line">            &#125;</span><br><span class="line">            <span class="keyword">if</span> (names.length == <span class="number">1</span>) cachedDefaultName = names[<span class="number">0</span>];</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    Map&lt;String, Class&lt;?&gt;&gt; extensionClasses = <span class="keyword">new</span> HashMap&lt;String, Class&lt;?&gt;&gt;();</span><br><span class="line">    <span class="comment">// /META-INF/dubbo/internal/</span></span><br><span class="line">    loadFile(extensionClasses, DUBBO_INTERNAL_DIRECTORY);</span><br><span class="line">    <span class="comment">//   META-INF/dubbo/</span></span><br><span class="line">    loadFile(extensionClasses, DUBBO_DIRECTORY);</span><br><span class="line">    <span class="comment">//   META-INF/services/  因为这里是存到cache里面的，所以优先级自然是反过来services&gt;dubbo&gt;internal</span></span><br><span class="line">    loadFile(extensionClasses, SERVICES_DIRECTORY);</span><br><span class="line">    <span class="keyword">return</span> extensionClasses;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+
+
+<p>我们进入到了SPI机制的核心,通过loadFile可以加载到所有配置的类：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br><span class="line">65</span><br><span class="line">66</span><br><span class="line">67</span><br><span class="line">68</span><br><span class="line">69</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">private</span> <span class="keyword">void</span> <span class="title">loadFile</span><span class="params">(Map&lt;String, Class&lt;?&gt;&gt; extensionClasses, String dir)</span> </span>&#123;</span><br><span class="line">    String fileName = dir + type.getName();</span><br><span class="line">    <span class="keyword">try</span> &#123;</span><br><span class="line">        Enumeration&lt;java.net.URL&gt; urls;</span><br><span class="line">        ClassLoader classLoader = findClassLoader();</span><br><span class="line">        <span class="keyword">if</span> (classLoader != <span class="keyword">null</span>) &#123;</span><br><span class="line">            urls = classLoader.getResources(fileName);</span><br><span class="line">        &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">            urls = ClassLoader.getSystemResources(fileName);</span><br><span class="line">        &#125;</span><br><span class="line">        <span class="keyword">if</span> (urls != <span class="keyword">null</span>) &#123;</span><br><span class="line">            <span class="keyword">while</span> (urls.hasMoreElements()) &#123;</span><br><span class="line">                java.net.URL url = urls.nextElement();</span><br><span class="line">                <span class="keyword">try</span> &#123;</span><br><span class="line">                    BufferedReader reader = <span class="keyword">new</span> BufferedReader(<span class="keyword">new</span> InputStreamReader(url.openStream(), <span class="string">&quot;utf-8&quot;</span>));</span><br><span class="line">                    <span class="keyword">try</span> &#123;</span><br><span class="line">                        String line = <span class="keyword">null</span>;</span><br><span class="line">                        <span class="keyword">while</span> ((line = reader.readLine()) != <span class="keyword">null</span>) &#123;</span><br><span class="line">                            <span class="comment">//去除注释</span></span><br><span class="line">                            <span class="keyword">final</span> <span class="keyword">int</span> ci = line.indexOf(<span class="string">&#x27;#&#x27;</span>);</span><br><span class="line">                            <span class="keyword">if</span> (ci &gt;= <span class="number">0</span>) line = line.substring(<span class="number">0</span>, ci);</span><br><span class="line">                            line = line.trim();</span><br><span class="line">                            <span class="keyword">if</span> (line.length() &gt; <span class="number">0</span>) &#123;</span><br><span class="line">                                <span class="keyword">try</span> &#123;</span><br><span class="line">                                    String name = <span class="keyword">null</span>;</span><br><span class="line">                                    <span class="keyword">int</span> i = line.indexOf(<span class="string">&#x27;=&#x27;</span>);</span><br><span class="line">                                    <span class="keyword">if</span> (i &gt; <span class="number">0</span>) &#123;</span><br><span class="line">                                        <span class="comment">//获取name</span></span><br><span class="line">                                        name = line.substring(<span class="number">0</span>, i).trim();</span><br><span class="line">                                        <span class="comment">//获取class 全限定类名</span></span><br><span class="line">                                        line = line.substring(i + <span class="number">1</span>).trim();</span><br><span class="line">                                    &#125;</span><br><span class="line">                                    <span class="keyword">if</span> (line.length() &gt; <span class="number">0</span>) &#123;</span><br><span class="line">                                        Class&lt;?&gt; clazz = Class.forName(line, <span class="keyword">true</span>, classLoader);</span><br><span class="line">                         <span class="comment">//类上注解Adaptive，缓存到cachedAdaptiveClass</span></span><br><span class="line">                                        <span class="keyword">if</span> (clazz.isAnnotationPresent(Adaptive.class)) &#123;</span><br><span class="line">                                            <span class="keyword">if</span> (cachedAdaptiveClass == <span class="keyword">null</span>) &#123;</span><br><span class="line">                                                cachedAdaptiveClass = clazz;</span><br><span class="line">                                            &#125;  <span class="keyword">else</span> &#123;</span><br><span class="line">                                            <span class="keyword">try</span> &#123;</span><br><span class="line">                                                <span class="comment">//有构造方法是带一个参数且参数类型是接口</span></span><br><span class="line">                                                clazz.getConstructor(type);</span><br><span class="line">                                                Set&lt;Class&lt;?&gt;&gt; wrappers = cachedWrapperClasses;</span><br><span class="line">                                                <span class="keyword">if</span> (wrappers == <span class="keyword">null</span>) &#123;</span><br><span class="line">                          <span class="comment">//没有Adaptive注解，反射所有实现类带参构造放入cachedWrapperClasses</span></span><br><span class="line">                                                    cachedWrapperClasses = <span class="keyword">new</span> ConcurrentHashSet&lt;Class&lt;?&gt;&gt;();</span><br><span class="line">                                                    wrappers = cachedWrapperClasses;</span><br><span class="line">                                                &#125;</span><br><span class="line">                                                wrappers.add(clazz);</span><br><span class="line">                                            &#125; </span><br><span class="line">                                        &#125;</span><br><span class="line">                                    &#125;</span><br><span class="line">                                &#125;</span><br><span class="line">                            &#125;</span><br><span class="line">                        &#125; <span class="comment">// end of while read lines</span></span><br><span class="line">                    &#125; <span class="keyword">finally</span> &#123;</span><br><span class="line">                        reader.close();</span><br><span class="line">                    &#125;</span><br><span class="line">                &#125; <span class="keyword">catch</span> (Throwable t) &#123;</span><br><span class="line">                    logger.error(<span class="string">&quot;Exception when load extension class(interface: &quot;</span> +</span><br><span class="line">                            type + <span class="string">&quot;, class file: &quot;</span> + url + <span class="string">&quot;) in &quot;</span> + url, t);</span><br><span class="line">                &#125;</span><br><span class="line">            &#125; <span class="comment">// end of while urls</span></span><br><span class="line">        &#125;</span><br><span class="line">    &#125; <span class="keyword">catch</span> (Throwable t) &#123;</span><br><span class="line">        logger.error(<span class="string">&quot;Exception when load extension class(interface: &quot;</span> +</span><br><span class="line">                type + <span class="string">&quot;, description file: &quot;</span> + fileName + <span class="string">&quot;).&quot;</span>, t);</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+
+
+
+
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">@SuppressWarnings(&quot;unchecked&quot;)</span></span><br><span class="line"><span class="function"><span class="keyword">private</span> T <span class="title">createAdaptiveExtension</span><span class="params">()</span> </span>&#123;</span><br><span class="line">    <span class="keyword">try</span> &#123;</span><br><span class="line">        <span class="keyword">return</span> injectExtension((T) getAdaptiveExtensionClass().newInstance());</span><br><span class="line">    &#125; <span class="keyword">catch</span> (Exception e) &#123;</span><br><span class="line">        <span class="keyword">throw</span> <span class="keyword">new</span> IllegalStateException(<span class="string">&quot;Can not create adaptive extension &quot;</span> + type + <span class="string">&quot;, cause: &quot;</span> + e.getMessage(), e);</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+
+
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">private</span> Class&lt;?&gt; createAdaptiveExtensionClass() &#123;</span><br><span class="line">    <span class="comment">//生成拼接源码</span></span><br><span class="line">    String code = createAdaptiveExtensionClassCode();</span><br><span class="line">    <span class="comment">//获取自定义ClassLoader -&gt;ExtensionLoader</span></span><br><span class="line">    ClassLoader classLoader = findClassLoader();</span><br><span class="line">    <span class="comment">//获取到AdaptiveCompiler</span></span><br><span class="line">    com.alibaba.dubbo.common.compiler.Compiler compiler = ExtensionLoader.getExtensionLoader(com.alibaba.dubbo.common.compiler.Compiler.class).getAdaptiveExtension();</span><br><span class="line">    <span class="comment">//最终使用JavassistCompiler编译</span></span><br><span class="line">    <span class="keyword">return</span> compiler.compile(code, classLoader);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+
+<p>下面是$Adaptive类生成的代码：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br><span class="line">65</span><br><span class="line">66</span><br><span class="line">67</span><br><span class="line">68</span><br><span class="line">69</span><br><span class="line">70</span><br><span class="line">71</span><br><span class="line">72</span><br><span class="line">73</span><br><span class="line">74</span><br><span class="line">75</span><br><span class="line">76</span><br><span class="line">77</span><br><span class="line">78</span><br><span class="line">79</span><br><span class="line">80</span><br><span class="line">81</span><br><span class="line">82</span><br><span class="line">83</span><br><span class="line">84</span><br><span class="line">85</span><br><span class="line">86</span><br><span class="line">87</span><br><span class="line">88</span><br><span class="line">89</span><br><span class="line">90</span><br><span class="line">91</span><br><span class="line">92</span><br><span class="line">93</span><br><span class="line">94</span><br><span class="line">95</span><br><span class="line">96</span><br><span class="line">97</span><br><span class="line">98</span><br><span class="line">99</span><br><span class="line">100</span><br><span class="line">101</span><br><span class="line">102</span><br><span class="line">103</span><br><span class="line">104</span><br><span class="line">105</span><br><span class="line">106</span><br><span class="line">107</span><br><span class="line">108</span><br><span class="line">109</span><br><span class="line">110</span><br><span class="line">111</span><br><span class="line">112</span><br><span class="line">113</span><br><span class="line">114</span><br><span class="line">115</span><br><span class="line">116</span><br><span class="line">117</span><br><span class="line">118</span><br><span class="line">119</span><br><span class="line">120</span><br><span class="line">121</span><br><span class="line">122</span><br><span class="line">123</span><br><span class="line">124</span><br><span class="line">125</span><br><span class="line">126</span><br><span class="line">127</span><br><span class="line">128</span><br><span class="line">129</span><br><span class="line">130</span><br><span class="line">131</span><br><span class="line">132</span><br><span class="line">133</span><br><span class="line">134</span><br><span class="line">135</span><br><span class="line">136</span><br><span class="line">137</span><br><span class="line">138</span><br><span class="line">139</span><br><span class="line">140</span><br><span class="line">141</span><br><span class="line">142</span><br><span class="line">143</span><br><span class="line">144</span><br><span class="line">145</span><br><span class="line">146</span><br><span class="line">147</span><br><span class="line">148</span><br><span class="line">149</span><br><span class="line">150</span><br><span class="line">151</span><br><span class="line">152</span><br><span class="line">153</span><br><span class="line">154</span><br><span class="line">155</span><br><span class="line">156</span><br><span class="line">157</span><br><span class="line">158</span><br><span class="line">159</span><br><span class="line">160</span><br><span class="line">161</span><br><span class="line">162</span><br><span class="line">163</span><br><span class="line">164</span><br><span class="line">165</span><br><span class="line">166</span><br><span class="line">167</span><br><span class="line">168</span><br><span class="line">169</span><br><span class="line">170</span><br><span class="line">171</span><br><span class="line">172</span><br><span class="line">173</span><br><span class="line">174</span><br><span class="line">175</span><br><span class="line">176</span><br><span class="line">177</span><br><span class="line">178</span><br><span class="line">179</span><br><span class="line">180</span><br><span class="line">181</span><br><span class="line">182</span><br><span class="line">183</span><br><span class="line">184</span><br><span class="line">185</span><br><span class="line">186</span><br><span class="line">187</span><br><span class="line">188</span><br><span class="line">189</span><br><span class="line">190</span><br><span class="line">191</span><br><span class="line">192</span><br><span class="line">193</span><br><span class="line">194</span><br><span class="line">195</span><br><span class="line">196</span><br><span class="line">197</span><br><span class="line">198</span><br><span class="line">199</span><br><span class="line">200</span><br><span class="line">201</span><br><span class="line">202</span><br><span class="line">203</span><br><span class="line">204</span><br><span class="line">205</span><br><span class="line">206</span><br><span class="line">207</span><br><span class="line">208</span><br><span class="line">209</span><br><span class="line">210</span><br><span class="line">211</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">private</span> String <span class="title">createAdaptiveExtensionClassCode</span><span class="params">()</span> </span>&#123;</span><br><span class="line">    StringBuilder codeBuidler = <span class="keyword">new</span> StringBuilder();</span><br><span class="line">    Method[] methods = type.getMethods();</span><br><span class="line">    <span class="keyword">boolean</span> hasAdaptiveAnnotation = <span class="keyword">false</span>;</span><br><span class="line">    <span class="comment">//接口是否有@Adaptive注解</span></span><br><span class="line">    <span class="keyword">for</span> (Method m : methods) &#123;</span><br><span class="line">        <span class="keyword">if</span> (m.isAnnotationPresent(Adaptive.class)) &#123;</span><br><span class="line">            hasAdaptiveAnnotation = <span class="keyword">true</span>;</span><br><span class="line">            <span class="keyword">break</span>;</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="comment">// 没有Adaptive注解直接报错</span></span><br><span class="line">    <span class="keyword">if</span> (!hasAdaptiveAnnotation)</span><br><span class="line">        <span class="keyword">throw</span> <span class="keyword">new</span> IllegalStateException(<span class="string">&quot;No adaptive method on extension &quot;</span> + type.getName() + <span class="string">&quot;, refuse to create the adaptive class!&quot;</span>);</span><br><span class="line"><span class="comment">//接口所在包 &quot;package com.alibaba.dubbo.rpc;&quot;</span></span><br><span class="line">    codeBuidler.append(<span class="string">&quot;package &quot;</span> + type.getPackage().getName() + <span class="string">&quot;;&quot;</span>);</span><br><span class="line"><span class="comment">// &quot;import com.alibaba.dubbo.common.extension.ExtensionLoader;&quot;</span></span><br><span class="line">    codeBuidler.append(<span class="string">&quot;\nimport &quot;</span> + ExtensionLoader.class.getName() + <span class="string">&quot;;&quot;</span>);</span><br><span class="line"><span class="comment">// 接口名+$Adaptive生成类名   &quot;public class Protocol$Adaptive implements com.alibaba.dubbo.rpc.Protocol &#123;&quot;</span></span><br><span class="line">    codeBuidler.append(<span class="string">&quot;\npublic class &quot;</span> + type.getSimpleName() + <span class="string">&quot;$Adaptive&quot;</span> + <span class="string">&quot; implements &quot;</span> + type.getCanonicalName() + <span class="string">&quot; &#123;&quot;</span>);</span><br><span class="line"><span class="comment">//遍历方法</span></span><br><span class="line">    <span class="keyword">for</span> (Method method : methods) &#123;</span><br><span class="line">        <span class="comment">//返回</span></span><br><span class="line">        Class&lt;?&gt; rt = method.getReturnType();</span><br><span class="line">        <span class="comment">//入参</span></span><br><span class="line">        Class&lt;?&gt;[] pts = method.getParameterTypes();</span><br><span class="line">        <span class="comment">//异常</span></span><br><span class="line">        Class&lt;?&gt;[] ets = method.getExceptionTypes();</span><br><span class="line">        <span class="comment">//获取方法Adaptive注解</span></span><br><span class="line">        Adaptive adaptiveAnnotation = method.getAnnotation(Adaptive.class);</span><br><span class="line">        StringBuilder code = <span class="keyword">new</span> StringBuilder(<span class="number">512</span>);</span><br><span class="line">        <span class="comment">//没有Adaptive注解的 拼接实现为“throw new UnsupportedOperationException”</span></span><br><span class="line">        <span class="keyword">if</span> (adaptiveAnnotation == <span class="keyword">null</span>) &#123;</span><br><span class="line">            code.append(<span class="string">&quot;throw new UnsupportedOperationException(\&quot;method &quot;</span>)</span><br><span class="line">                    .append(method.toString()).append(<span class="string">&quot; of interface &quot;</span>)</span><br><span class="line">                    .append(type.getName()).append(<span class="string">&quot; is not adaptive method!\&quot;);&quot;</span>);</span><br><span class="line">        &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">            <span class="keyword">int</span> urlTypeIndex = -<span class="number">1</span>;</span><br><span class="line">            <span class="comment">//获取类型为url的参数</span></span><br><span class="line">            <span class="keyword">for</span> (<span class="keyword">int</span> i = <span class="number">0</span>; i &lt; pts.length; ++i) &#123;</span><br><span class="line">                <span class="keyword">if</span> (pts[i].equals(URL.class)) &#123;</span><br><span class="line">                    urlTypeIndex = i;</span><br><span class="line">                    <span class="keyword">break</span>;</span><br><span class="line">                &#125;</span><br><span class="line">            &#125;</span><br><span class="line">            <span class="comment">// 有url类型参数</span></span><br><span class="line">            <span class="keyword">if</span> (urlTypeIndex != -<span class="number">1</span>) &#123;</span><br><span class="line">                <span class="comment">// 判空 “if (arg0 == null) throw new IllegalArgumentException”</span></span><br><span class="line">                String s = String.format(<span class="string">&quot;\nif (arg%d == null) throw new IllegalArgumentException(\&quot;url == null\&quot;);&quot;</span>,</span><br><span class="line">                        urlTypeIndex);</span><br><span class="line">                code.append(s);</span><br><span class="line">                <span class="comment">//“Url url = ”</span></span><br><span class="line">                s = String.format(<span class="string">&quot;\n%s url = arg%d;&quot;</span>, URL.class.getName(), urlTypeIndex);</span><br><span class="line">                code.append(s);</span><br><span class="line">            &#125;</span><br><span class="line">            <span class="comment">// 参数里面没有url类型的参数，取每个参数里面getxxx看有没有getUrl</span></span><br><span class="line">            <span class="keyword">else</span> &#123;</span><br><span class="line">                String attribMethod = <span class="keyword">null</span>;</span><br><span class="line"></span><br><span class="line">                <span class="comment">// 找到getUrl，LBL_PTS为了一个break跳出两层循环</span></span><br><span class="line">                LBL_PTS:</span><br><span class="line">                <span class="keyword">for</span> (<span class="keyword">int</span> i = <span class="number">0</span>; i &lt; pts.length; ++i) &#123;</span><br><span class="line">                    Method[] ms = pts[i].getMethods();</span><br><span class="line">                    <span class="keyword">for</span> (Method m : ms) &#123;</span><br><span class="line">                        String name = m.getName();</span><br><span class="line">                        <span class="keyword">if</span> ((name.startsWith(<span class="string">&quot;get&quot;</span>) || name.length() &gt; <span class="number">3</span>)</span><br><span class="line">                                &amp;&amp; Modifier.isPublic(m.getModifiers())</span><br><span class="line">                                &amp;&amp; !Modifier.isStatic(m.getModifiers())</span><br><span class="line">                                &amp;&amp; m.getParameterTypes().length == <span class="number">0</span></span><br><span class="line">                                &amp;&amp; m.getReturnType() == URL.class) &#123;</span><br><span class="line">                            urlTypeIndex = i;</span><br><span class="line">                            attribMethod = name;</span><br><span class="line">                            <span class="keyword">break</span> LBL_PTS;</span><br><span class="line">                        &#125;</span><br><span class="line">                    &#125;</span><br><span class="line">                &#125;</span><br><span class="line">                <span class="keyword">if</span> (attribMethod == <span class="keyword">null</span>) &#123;</span><br><span class="line">                    <span class="keyword">throw</span> <span class="keyword">new</span> IllegalStateException(<span class="string">&quot;fail to create adaptive class for interface &quot;</span> + type.getName()</span><br><span class="line">                            + <span class="string">&quot;: not found url parameter or url attribute in parameters of method &quot;</span> + method.getName());</span><br><span class="line">                &#125;</span><br><span class="line"></span><br><span class="line">                <span class="comment">// 判空</span></span><br><span class="line">                String s = String.format(<span class="string">&quot;\nif (arg%d == null) throw new IllegalArgumentException(\&quot;%s argument == null\&quot;);&quot;</span>,</span><br><span class="line">                        urlTypeIndex, pts[urlTypeIndex].getName());</span><br><span class="line">                code.append(s);</span><br><span class="line">                s = String.format(<span class="string">&quot;\nif (arg%d.%s() == null) throw new IllegalArgumentException(\&quot;%s argument %s() == null\&quot;);&quot;</span>,</span><br><span class="line">                        urlTypeIndex, attribMethod, pts[urlTypeIndex].getName(), attribMethod);</span><br><span class="line">                code.append(s);</span><br><span class="line"></span><br><span class="line">                s = String.format(<span class="string">&quot;%s url = arg%d.%s();&quot;</span>, URL.class.getName(), urlTypeIndex, attribMethod);</span><br><span class="line">                code.append(s);</span><br><span class="line">            &#125;</span><br><span class="line"></span><br><span class="line">            String[] value = adaptiveAnnotation.value();</span><br><span class="line">            <span class="comment">// Adaptive注解没有参数get+接口名</span></span><br><span class="line">            <span class="keyword">if</span> (value.length == <span class="number">0</span>) &#123;</span><br><span class="line">                <span class="keyword">char</span>[] charArray = type.getSimpleName().toCharArray();</span><br><span class="line">                StringBuilder sb = <span class="keyword">new</span> StringBuilder(<span class="number">128</span>);</span><br><span class="line">                <span class="keyword">for</span> (<span class="keyword">int</span> i = <span class="number">0</span>; i &lt; charArray.length; i++) &#123;</span><br><span class="line">                    <span class="keyword">if</span> (Character.isUpperCase(charArray[i])) &#123;</span><br><span class="line">                        <span class="keyword">if</span> (i != <span class="number">0</span>) &#123;</span><br><span class="line">                            sb.append(<span class="string">&quot;.&quot;</span>);</span><br><span class="line">                        &#125;</span><br><span class="line">                        sb.append(Character.toLowerCase(charArray[i]));</span><br><span class="line">                    &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">                        sb.append(charArray[i]);</span><br><span class="line">                    &#125;</span><br><span class="line">                &#125;</span><br><span class="line">                value = <span class="keyword">new</span> String[]&#123;sb.toString()&#125;;</span><br><span class="line">            &#125;</span><br><span class="line"></span><br><span class="line">            <span class="keyword">boolean</span> hasInvocation = <span class="keyword">false</span>;</span><br><span class="line">            <span class="keyword">for</span> (<span class="keyword">int</span> i = <span class="number">0</span>; i &lt; pts.length; ++i) &#123;</span><br><span class="line">                <span class="keyword">if</span> (pts[i].getName().equals(<span class="string">&quot;com.alibaba.dubbo.rpc.Invocation&quot;</span>)) &#123;</span><br><span class="line">                    <span class="comment">// Invoker判空</span></span><br><span class="line">                    String s = String.format(<span class="string">&quot;\nif (arg%d == null) throw new IllegalArgumentException(\&quot;invocation == null\&quot;);&quot;</span>, i);</span><br><span class="line">                    code.append(s);</span><br><span class="line">                    s = String.format(<span class="string">&quot;\nString methodName = arg%d.getMethodName();&quot;</span>, i);</span><br><span class="line">                    code.append(s);</span><br><span class="line">                    hasInvocation = <span class="keyword">true</span>;</span><br><span class="line">                    <span class="keyword">break</span>;</span><br><span class="line">                &#125;</span><br><span class="line">            &#125;</span><br><span class="line"></span><br><span class="line">            String defaultExtName = cachedDefaultName;</span><br><span class="line">            String getNameCode = <span class="keyword">null</span>;</span><br><span class="line">            <span class="keyword">for</span> (<span class="keyword">int</span> i = value.length - <span class="number">1</span>; i &gt;= <span class="number">0</span>; --i) &#123;</span><br><span class="line">                <span class="keyword">if</span> (i == value.length - <span class="number">1</span>) &#123;</span><br><span class="line">                    <span class="keyword">if</span> (<span class="keyword">null</span> != defaultExtName) &#123;</span><br><span class="line">                        <span class="keyword">if</span> (!<span class="string">&quot;protocol&quot;</span>.equals(value[i]))</span><br><span class="line">                            <span class="keyword">if</span> (hasInvocation)</span><br><span class="line">                                getNameCode = String.format(<span class="string">&quot;url.getMethodParameter(methodName, \&quot;%s\&quot;, \&quot;%s\&quot;)&quot;</span>, value[i], defaultExtName);</span><br><span class="line">                            <span class="keyword">else</span></span><br><span class="line">                                getNameCode = String.format(<span class="string">&quot;url.getParameter(\&quot;%s\&quot;, \&quot;%s\&quot;)&quot;</span>, value[i], defaultExtName);</span><br><span class="line">                        <span class="keyword">else</span></span><br><span class="line">                            <span class="comment">//如果是protocol，取defaultExtName，也就是SPI的value</span></span><br><span class="line">                            getNameCode = String.format(<span class="string">&quot;( url.getProtocol() == null ? \&quot;%s\&quot; : url.getProtocol() )&quot;</span>, defaultExtName);</span><br><span class="line">                    &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">                        <span class="keyword">if</span> (!<span class="string">&quot;protocol&quot;</span>.equals(value[i]))</span><br><span class="line">                            <span class="keyword">if</span> (hasInvocation)</span><br><span class="line">                                getNameCode = String.format(<span class="string">&quot;url.getMethodParameter(methodName, \&quot;%s\&quot;, \&quot;%s\&quot;)&quot;</span>, value[i], defaultExtName);</span><br><span class="line">                            <span class="keyword">else</span></span><br><span class="line">                                getNameCode = String.format(<span class="string">&quot;url.getParameter(\&quot;%s\&quot;)&quot;</span>, value[i]);</span><br><span class="line">                        <span class="keyword">else</span></span><br><span class="line">                            getNameCode = <span class="string">&quot;url.getProtocol()&quot;</span>;</span><br><span class="line">                    &#125;</span><br><span class="line">                &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">                    <span class="keyword">if</span> (!<span class="string">&quot;protocol&quot;</span>.equals(value[i]))</span><br><span class="line">                        <span class="keyword">if</span> (hasInvocation)</span><br><span class="line">                            getNameCode = String.format(<span class="string">&quot;url.getMethodParameter(methodName, \&quot;%s\&quot;, \&quot;%s\&quot;)&quot;</span>, value[i], defaultExtName);</span><br><span class="line">                        <span class="keyword">else</span></span><br><span class="line">                            getNameCode = String.format(<span class="string">&quot;url.getParameter(\&quot;%s\&quot;, %s)&quot;</span>, value[i], getNameCode);</span><br><span class="line">                    <span class="keyword">else</span></span><br><span class="line">                        getNameCode = String.format(<span class="string">&quot;url.getProtocol() == null ? (%s) : url.getProtocol()&quot;</span>, getNameCode);</span><br><span class="line">                &#125;</span><br><span class="line">            &#125;</span><br><span class="line">            code.append(<span class="string">&quot;\nString extName = &quot;</span>).append(getNameCode).append(<span class="string">&quot;;&quot;</span>);</span><br><span class="line">            <span class="comment">// check extName == null?</span></span><br><span class="line">            String s = String.format(<span class="string">&quot;\nif(extName == null) &quot;</span> +</span><br><span class="line">                            <span class="string">&quot;throw new IllegalStateException(\&quot;Fail to get extension(%s) name from url(\&quot; + url.toString() + \&quot;) use keys(%s)\&quot;);&quot;</span>,</span><br><span class="line">                    type.getName(), Arrays.toString(value));</span><br><span class="line">            code.append(s);</span><br><span class="line"></span><br><span class="line">            s = String.format(<span class="string">&quot;\n%s extension = (%&lt;s)%s.getExtensionLoader(%s.class).getExtension(extName);&quot;</span>,</span><br><span class="line">                    type.getName(), ExtensionLoader.class.getSimpleName(), type.getName());</span><br><span class="line">            code.append(s);</span><br><span class="line"></span><br><span class="line">            <span class="comment">// return statement</span></span><br><span class="line">            <span class="keyword">if</span> (!rt.equals(<span class="keyword">void</span>.class)) &#123;</span><br><span class="line">                code.append(<span class="string">&quot;\nreturn &quot;</span>);</span><br><span class="line">            &#125;</span><br><span class="line"></span><br><span class="line">            s = String.format(<span class="string">&quot;extension.%s(&quot;</span>, method.getName());</span><br><span class="line">            code.append(s);</span><br><span class="line">            <span class="keyword">for</span> (<span class="keyword">int</span> i = <span class="number">0</span>; i &lt; pts.length; i++) &#123;</span><br><span class="line">                <span class="keyword">if</span> (i != <span class="number">0</span>)</span><br><span class="line">                    code.append(<span class="string">&quot;, &quot;</span>);</span><br><span class="line">                code.append(<span class="string">&quot;arg&quot;</span>).append(i);</span><br><span class="line">            &#125;</span><br><span class="line">            code.append(<span class="string">&quot;);&quot;</span>);</span><br><span class="line">        &#125;</span><br><span class="line"></span><br><span class="line">        codeBuidler.append(<span class="string">&quot;\npublic &quot;</span> + rt.getCanonicalName() + <span class="string">&quot; &quot;</span> + method.getName() + <span class="string">&quot;(&quot;</span>);</span><br><span class="line">        <span class="keyword">for</span> (<span class="keyword">int</span> i = <span class="number">0</span>; i &lt; pts.length; i++) &#123;</span><br><span class="line">            <span class="keyword">if</span> (i &gt; <span class="number">0</span>) &#123;</span><br><span class="line">                codeBuidler.append(<span class="string">&quot;, &quot;</span>);</span><br><span class="line">            &#125;</span><br><span class="line">            codeBuidler.append(pts[i].getCanonicalName());</span><br><span class="line">            codeBuidler.append(<span class="string">&quot; &quot;</span>);</span><br><span class="line">            codeBuidler.append(<span class="string">&quot;arg&quot;</span> + i);</span><br><span class="line">        &#125;</span><br><span class="line">        codeBuidler.append(<span class="string">&quot;)&quot;</span>);</span><br><span class="line">        <span class="keyword">if</span> (ets.length &gt; <span class="number">0</span>) &#123;</span><br><span class="line">            codeBuidler.append(<span class="string">&quot; throws &quot;</span>);</span><br><span class="line">            <span class="keyword">for</span> (<span class="keyword">int</span> i = <span class="number">0</span>; i &lt; ets.length; i++) &#123;</span><br><span class="line">                <span class="keyword">if</span> (i &gt; <span class="number">0</span>) &#123;</span><br><span class="line">                    codeBuidler.append(<span class="string">&quot;, &quot;</span>);</span><br><span class="line">                &#125;</span><br><span class="line">                codeBuidler.append(ets[i].getCanonicalName());</span><br><span class="line">            &#125;</span><br><span class="line">        &#125;</span><br><span class="line">        codeBuidler.append(<span class="string">&quot; &#123;&quot;</span>);</span><br><span class="line">        codeBuidler.append(code.toString());</span><br><span class="line">        codeBuidler.append(<span class="string">&quot;\n&#125;&quot;</span>);</span><br><span class="line">    &#125;</span><br><span class="line">    codeBuidler.append(<span class="string">&quot;\n&#125;&quot;</span>);</span><br><span class="line">    <span class="keyword">if</span> (logger.isDebugEnabled()) &#123;</span><br><span class="line">        logger.debug(codeBuidler.toString());</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="keyword">return</span> codeBuidler.toString();</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+
+
+
+
+
+
+<p>现在我们还有个疑问？如果只分析这些代码,会认为最开始的解析一例子，暴露的是RegistryProtocol，然而外面又包裹了两层：ProtocolListenerWrapper和ProtocolFilterWrapper，这是如何实现的呢？</p>
+<p><code> com.alibaba.dubbo.rpc.Protocol extension = (com.alibaba.dubbo.rpc.Protocol) ExtensionLoader.getExtensionLoader(com.alibaba.dubbo.rpc.Protocol.class).getExtension(extName);</code></p>
+<p>拿到的是ProtocolListenerWrapper，下面我们分析下getExtension，他最终通过createExtension创建对象实例</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">private</span> T <span class="title">createExtension</span><span class="params">(String name)</span> </span>&#123;</span><br><span class="line">    <span class="comment">//获取从配置文件得到的类</span></span><br><span class="line">    Class&lt;?&gt; clazz = getExtensionClasses().get(name);</span><br><span class="line">    <span class="keyword">if</span> (clazz == <span class="keyword">null</span>) &#123;</span><br><span class="line">        <span class="keyword">throw</span> findException(name);</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="keyword">try</span> &#123;</span><br><span class="line">        <span class="comment">//得到实例</span></span><br><span class="line">        T instance = (T) EXTENSION_INSTANCES.get(clazz);</span><br><span class="line">        <span class="keyword">if</span> (instance == <span class="keyword">null</span>) &#123;</span><br><span class="line">            EXTENSION_INSTANCES.putIfAbsent(clazz, (T) clazz.newInstance());</span><br><span class="line">            instance = (T) EXTENSION_INSTANCES.get(clazz);</span><br><span class="line">        &#125;</span><br><span class="line">        <span class="comment">//将其他实例注入这个实例的set方法</span></span><br><span class="line">        <span class="comment">//这里是RegistryProtocol的实例</span></span><br><span class="line">        injectExtension(instance);</span><br><span class="line">        <span class="comment">//获取接口的所有实现类 ，ProtocolFilterWrapper、ProtocolListenerWrapper</span></span><br><span class="line">        <span class="comment">//RegistryProtocol注入ProtocolFilterWrapper构造方法得到实例，接着注入ProtocolListenerWrapper得到实例</span></span><br><span class="line">        Set&lt;Class&lt;?&gt;&gt; wrapperClasses = cachedWrapperClasses;</span><br><span class="line">        <span class="keyword">if</span> (wrapperClasses != <span class="keyword">null</span> &amp;&amp; !wrapperClasses.isEmpty()) &#123;</span><br><span class="line">            <span class="keyword">for</span> (Class&lt;?&gt; wrapperClass : wrapperClasses) &#123;</span><br><span class="line">                instance = injectExtension((T) wrapperClass.getConstructor(type).newInstance(instance));</span><br><span class="line">            &#125;</span><br><span class="line">        &#125;</span><br><span class="line">        <span class="comment">//返回ProtocolListenerWrapper</span></span><br><span class="line">        <span class="keyword">return</span> instance;</span><br><span class="line">    &#125; <span class="keyword">catch</span> (Throwable t) &#123;</span><br><span class="line">        <span class="keyword">throw</span> <span class="keyword">new</span> IllegalStateException(<span class="string">&quot;Extension instance(name: &quot;</span> + name + <span class="string">&quot;, class: &quot;</span> +</span><br><span class="line">                type + <span class="string">&quot;)  could not be instantiated: &quot;</span> + t.getMessage(), t);</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+    </div>
+
+    
+    
+    
+
+    <footer class="post-footer">
+          <div class="reward-container">
+  <div>Buy me a coffee</div>
+  <button>
+    Donate
+  </button>
+  <div class="post-reward">
+      <div>
+        <img src="/hexo/images/wechatpay.png" alt="Absurd WeChat Pay">
+        <span>WeChat Pay</span>
+      </div>
+
+  </div>
+</div>
+
+          <div class="post-tags">
+              <a href="/hexo/tags/rpc/" rel="tag"># rpc</a>
+              <a href="/hexo/tags/dubbo/" rel="tag"># dubbo</a>
+          </div>
+
+        
+
+          <div class="post-nav">
+            <div class="post-nav-item">
+                <a href="/hexo/post/8ce3a370.html" rel="prev" title="sharding-jdbc源码解析-sql解析（五）">
+                  <i class="fa fa-chevron-left"></i> sharding-jdbc源码解析-sql解析（五）
+                </a>
+            </div>
+            <div class="post-nav-item">
+                <a href="/hexo/post/bc931ae8.html" rel="next" title="fastjson IdentityHashMap 内存泄漏排查">
+                  fastjson IdentityHashMap 内存泄漏排查 <i class="fa fa-chevron-right"></i>
+                </a>
+            </div>
+          </div>
+    </footer>
+  </article>
+</div>
+
+
+
+
+
+
+</div>
+  </main>
+
+  <footer class="footer">
+    <div class="footer-inner">
+
+
+<div class="copyright">
+  &copy; 
+  <span itemprop="copyrightYear">2022</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">Absurd</span>
+</div>
+  <div class="powered-by">Powered by <a href="https://hexo.io/" rel="noopener" target="_blank">Hexo</a> & <a href="https://theme-next.js.org/mist/" rel="noopener" target="_blank">NexT.Mist</a>
+  </div>
+
+    </div>
+  </footer>
+
+  
+  <script src="https://cdn.jsdelivr.net/npm/animejs@3.2.1/lib/anime.min.js" integrity="sha256-XL2inqUJaslATFnHdJOi9GfQ60on8Wx1C2H8DYiN1xY=" crossorigin="anonymous"></script>
+<script src="/hexo/js/comments.js"></script><script src="/hexo/js/utils.js"></script><script src="/hexo/js/motion.js"></script><script src="/hexo/js/schemes/muse.js"></script><script src="/hexo/js/next-boot.js"></script>
+
+  
+<script src="https://cdn.jsdelivr.net/npm/hexo-generator-searchdb@1.4.0/dist/search.js" integrity="sha256-vXZMYLEqsROAXkEw93GGIvaB2ab+QW6w3+1ahD9nXXA=" crossorigin="anonymous"></script>
+<script src="/hexo/js/third-party/search/local-search.js"></script>
+
+
+
+
+
+  
+
+
+
+
+
+</body>
+</html>

@@ -1,0 +1,833 @@
+<!DOCTYPE html>
+<html lang="zh-Hans">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width">
+<meta name="theme-color" content="#222" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#222" media="(prefers-color-scheme: dark)">
+<meta name="generator" content="Hexo 6.0.0">
+
+
+  <link rel="apple-touch-icon" sizes="180x180" href="/hexo/images/apple-touch-icon-next.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/hexo/images/favicon-32x32-next.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/hexo/images/favicon-16x16-next.png">
+  <link rel="mask-icon" href="/hexo/images/logo.svg" color="#222">
+
+<link rel="stylesheet" href="/hexo/css/main.css">
+
+
+
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@5.15.4/css/all.min.css" integrity="sha256-mUZM63G8m73Mcidfrv5E+Y61y7a12O5mW4ezU3bxqW4=" crossorigin="anonymous">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/animate.css@3.1.1/animate.min.css" integrity="sha256-PR7ttpcvz8qrF57fur/yAx1qXMFJeJFiA6pSzWi0OIE=" crossorigin="anonymous">
+
+<script class="next-config" data-name="main" type="application/json">{"hostname":"www1350.github.io","root":"/hexo/","images":"/hexo/images","scheme":"Mist","darkmode":true,"version":"8.9.0","exturl":false,"sidebar":{"position":"left","display":"post","padding":18,"offset":12},"copycode":false,"bookmark":{"enable":false,"color":"#222","save":"auto"},"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"stickytabs":false,"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"fadeInDown","post_body":"fadeInDown","coll_header":"fadeInLeft","sidebar":"fadeInUp"}},"prism":false,"i18n":{"placeholder":"Searching...","empty":"We didn't find any results for the search: ${query}","hits_time":"${hits} results found in ${time} ms","hits":"${hits} results found"},"path":"/hexo/search.xml","localsearch":{"enable":true,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":true}}</script><script src="/hexo/js/config.js"></script>
+<meta name="description" content="CAP数据一致性(consistency)如果系统对一个写操作返回成功，那么之后的读请求都必须读到这个新数据；如果返回失败，那么所有读操作都不能读到这个数据，对调用者而言数据具有强一致性(strong consistency) (又叫原子性 atomic、线性一致性 linearizable consistency) 服务可用性(availability)所有读写请求在一定时间内得到响应，可终止、">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Paxos 协议">
+<meta property="og:url" content="https://www1350.github.io/hexo/post/410c3782.html">
+<meta property="og:site_name" content="Absurd博客">
+<meta property="og:description" content="CAP数据一致性(consistency)如果系统对一个写操作返回成功，那么之后的读请求都必须读到这个新数据；如果返回失败，那么所有读操作都不能读到这个数据，对调用者而言数据具有强一致性(strong consistency) (又叫原子性 atomic、线性一致性 linearizable consistency) 服务可用性(availability)所有读写请求在一定时间内得到响应，可终止、">
+<meta property="og:locale">
+<meta property="og:image" content="https://user-images.githubusercontent.com/7789698/38654220-cd1a8610-3e40-11e8-8027-ea351e5bab41.png">
+<meta property="og:image" content="https://user-images.githubusercontent.com/7789698/38786841-12c90a14-415d-11e8-980b-eede0b8ec1f5.png">
+<meta property="og:image" content="https://user-images.githubusercontent.com/7789698/38655116-5ac4c404-3e45-11e8-910a-cc69ae55787a.png">
+<meta property="og:image" content="https://user-images.githubusercontent.com/7789698/38655245-285a36ec-3e46-11e8-91ee-44a133d8fb10.png">
+<meta property="og:image" content="https://user-images.githubusercontent.com/7789698/38655263-44041b1a-3e46-11e8-848d-a5299cede0be.png">
+<meta property="og:image" content="https://user-images.githubusercontent.com/7789698/38656437-1e225b4e-3e4d-11e8-8687-3d3dbb8a61e8.png">
+<meta property="og:image" content="https://user-images.githubusercontent.com/7789698/38656170-5df52db6-3e4b-11e8-8479-613a7f8c6589.png">
+<meta property="og:image" content="https://user-images.githubusercontent.com/7789698/38658036-e02e53a2-3e55-11e8-9a86-cd7455d0da33.png">
+<meta property="og:image" content="https://user-images.githubusercontent.com/7789698/38787192-1f444b76-415f-11e8-8e4a-434b73380f99.png">
+<meta property="og:image" content="https://user-images.githubusercontent.com/7789698/39752060-dc9269ee-52ec-11e8-8782-3287f2829583.png">
+<meta property="og:image" content="https://user-images.githubusercontent.com/7789698/39752118-0e6473a4-52ed-11e8-81c9-242536d38d7f.png">
+<meta property="og:image" content="https://user-images.githubusercontent.com/7789698/39752157-2888a2dc-52ed-11e8-929e-6887e95fefcc.png">
+<meta property="og:image" content="https://user-images.githubusercontent.com/7789698/39752377-d84a49fa-52ed-11e8-83fb-b4ef3875f52a.png">
+<meta property="og:image" content="https://user-images.githubusercontent.com/7789698/39752393-e46e974a-52ed-11e8-8c05-d0db59b82a9a.png">
+<meta property="og:image" content="https://user-images.githubusercontent.com/7789698/38790076-2c6de066-4171-11e8-82f3-4310c7cb3873.png">
+<meta property="og:image" content="https://user-images.githubusercontent.com/7789698/38790297-bf18a51c-4172-11e8-974d-3449e0790e56.png">
+<meta property="og:image" content="https://user-images.githubusercontent.com/7789698/39752667-bb36f452-52ee-11e8-981e-6c7373837ad4.png">
+<meta property="og:image" content="https://user-images.githubusercontent.com/7789698/39752699-ce243002-52ee-11e8-8fc2-2c17081470f0.png">
+<meta property="og:image" content="https://user-images.githubusercontent.com/7789698/39752713-dbf0420c-52ee-11e8-8c06-e801a03cd2a4.png">
+<meta property="og:image" content="https://user-images.githubusercontent.com/7789698/39752738-e92947d4-52ee-11e8-999c-f53e42de92ea.png">
+<meta property="og:image" content="https://user-images.githubusercontent.com/7789698/39752753-f84889fa-52ee-11e8-9e3d-2a0fa6952882.png">
+<meta property="og:image" content="https://user-images.githubusercontent.com/7789698/39752773-06c7f826-52ef-11e8-8e3c-a0815ab94efc.png">
+<meta property="og:image" content="https://user-images.githubusercontent.com/7789698/39753101-300ada22-52f0-11e8-95e5-d19fc3955ed6.png">
+<meta property="og:image" content="https://user-images.githubusercontent.com/7789698/38790429-dc07722e-4173-11e8-8ebb-6298a3a46af8.png">
+<meta property="og:image" content="https://user-images.githubusercontent.com/7789698/38790454-f736b474-4173-11e8-8c99-1a5cb429bae9.png">
+<meta property="og:image" content="https://user-images.githubusercontent.com/7789698/38790495-30cb3bf6-4174-11e8-9312-9cc50da7ef79.png">
+<meta property="og:image" content="https://user-images.githubusercontent.com/7789698/38790385-8af85808-4173-11e8-9e15-e392d86a5fc7.png">
+<meta property="og:image" content="https://user-images.githubusercontent.com/7789698/38790512-5afcc674-4174-11e8-91f8-e10c60f9bbdf.png">
+<meta property="og:image" content="https://user-images.githubusercontent.com/7789698/38790657-4bb35f24-4175-11e8-9916-5e5ed1dcc821.png">
+<meta property="og:image" content="https://user-images.githubusercontent.com/7789698/38790664-54980a86-4175-11e8-9d37-0fc915b4c945.png">
+<meta property="og:image" content="https://user-images.githubusercontent.com/7789698/38790720-9c80060a-4175-11e8-950b-cb2c2a379e2e.png">
+<meta property="og:image" content="https://user-images.githubusercontent.com/7789698/38790726-a3766aee-4175-11e8-89dd-3b4f3d21deb4.png">
+<meta property="og:image" content="https://user-images.githubusercontent.com/7789698/38790739-b76b6608-4175-11e8-994c-2db0082a89a1.png">
+<meta property="og:image" content="https://user-images.githubusercontent.com/7789698/38792973-e7a9c204-4181-11e8-8cba-c954e2b35ea2.png">
+<meta property="og:image" content="https://user-images.githubusercontent.com/7789698/38792979-edbc5bac-4181-11e8-89dc-bf8d00973869.png">
+<meta property="og:image" content="https://user-images.githubusercontent.com/7789698/38793077-4865746c-4182-11e8-9dd9-46af5e615b92.png">
+<meta property="og:image" content="https://user-images.githubusercontent.com/7789698/38793087-4ffb7f78-4182-11e8-8324-d9e1a4762e53.png">
+<meta property="og:image" content="https://user-images.githubusercontent.com/7789698/38793134-82a6b3a2-4182-11e8-8097-d912dda1e05e.png">
+<meta property="og:image" content="https://user-images.githubusercontent.com/7789698/38793177-b650267a-4182-11e8-88e5-2cd39ec3e0ff.png">
+<meta property="og:image" content="https://user-images.githubusercontent.com/7789698/38793222-f709e782-4182-11e8-94b6-fbc177386855.png">
+<meta property="og:image" content="https://user-images.githubusercontent.com/7789698/38793251-172ea7be-4183-11e8-89cb-78c2a9e21760.png">
+<meta property="og:image" content="https://user-images.githubusercontent.com/7789698/38793354-82d6dbf8-4183-11e8-8845-fdf31420b8c6.png">
+<meta property="og:image" content="https://user-images.githubusercontent.com/7789698/38793367-904b8676-4183-11e8-9d8e-1604b54eebef.png">
+<meta property="og:image" content="https://user-images.githubusercontent.com/7789698/38793437-e12c9f30-4183-11e8-8500-aae5f3cab84d.png">
+<meta property="og:image" content="https://user-images.githubusercontent.com/7789698/38793564-6377404e-4184-11e8-9b60-2ce830d11ed0.png">
+<meta property="og:image" content="https://user-images.githubusercontent.com/7789698/38793763-1a5d0ca8-4185-11e8-99dc-f3cd935312d7.png">
+<meta property="article:published_time" content="2018-04-12T02:13:02.000Z">
+<meta property="article:modified_time" content="2022-01-28T07:09:17.724Z">
+<meta property="article:author" content="Absurd">
+<meta property="article:tag" content="笔记">
+<meta property="article:tag" content="Paxos">
+<meta property="article:tag" content="分布式">
+<meta property="article:tag" content="Raft">
+<meta property="article:tag" content="zookeeper">
+<meta property="article:tag" content="ZAB">
+<meta property="article:tag" content="CAP">
+<meta property="article:tag" content="2PC">
+<meta property="article:tag" content="3PC">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="https://user-images.githubusercontent.com/7789698/38654220-cd1a8610-3e40-11e8-8027-ea351e5bab41.png">
+
+
+<link rel="canonical" href="https://www1350.github.io/hexo/post/410c3782.html">
+
+
+
+<script class="next-config" data-name="page" type="application/json">{"sidebar":"","isHome":false,"isPost":true,"lang":"zh-Hans","comments":true,"permalink":"https://www1350.github.io/hexo/post/410c3782.html","path":"post/410c3782.html","title":"Paxos 协议"}</script>
+
+<script class="next-config" data-name="calendar" type="application/json">""</script>
+<title>Paxos 协议 | Absurd博客</title>
+  
+
+
+
+
+  <noscript>
+    <link rel="stylesheet" href="/hexo/css/noscript.css">
+  </noscript>
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage" class="use-motion">
+  <div class="headband"></div>
+
+  <main class="main">
+    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="Toggle navigation bar" role="button">
+        <span class="toggle-line"></span>
+        <span class="toggle-line"></span>
+        <span class="toggle-line"></span>
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/hexo/" class="brand" rel="start">
+      <i class="logo-line"></i>
+      <p class="site-title">Absurd博客</p>
+      <i class="logo-line"></i>
+    </a>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger">
+        <i class="fa fa-search fa-fw fa-lg"></i>
+    </div>
+  </div>
+</div>
+
+
+
+<nav class="site-nav">
+  <ul class="main-menu menu">
+        <li class="menu-item menu-item-home"><a href="/hexo/" rel="section"><i class="fa fa-home fa-fw"></i>Home</a></li>
+        <li class="menu-item menu-item-about"><a href="/hexo/about/" rel="section"><i class="fa fa-user fa-fw"></i>About</a></li>
+        <li class="menu-item menu-item-tags"><a href="/hexo/tags/" rel="section"><i class="fa fa-tags fa-fw"></i>Tags</a></li>
+        <li class="menu-item menu-item-categories"><a href="/hexo/categories/" rel="section"><i class="fa fa-th fa-fw"></i>Categories</a></li>
+        <li class="menu-item menu-item-archives"><a href="/hexo/archives/" rel="section"><i class="fa fa-archive fa-fw"></i>Archives</a></li>
+        <li class="menu-item menu-item-bookmarks"><a href="/hexo/bookmarks/" rel="section"><i class="fa fa-archive fa-fw"></i>bookmarks</a></li>
+      <li class="menu-item menu-item-search">
+        <a role="button" class="popup-trigger"><i class="fa fa-search fa-fw"></i>Search
+        </a>
+      </li>
+  </ul>
+</nav>
+
+
+
+  <div class="search-pop-overlay">
+    <div class="popup search-popup"><div class="search-header">
+  <span class="search-icon">
+    <i class="fa fa-search"></i>
+  </span>
+  <div class="search-input-container">
+    <input autocomplete="off" autocapitalize="off" maxlength="80"
+           placeholder="Searching..." spellcheck="false"
+           type="search" class="search-input">
+  </div>
+  <span class="popup-btn-close" role="button">
+    <i class="fa fa-times-circle"></i>
+  </span>
+</div>
+<div class="search-result-container no-result">
+  <div class="search-result-icon">
+    <i class="fa fa-spinner fa-pulse fa-5x"></i>
+  </div>
+</div>
+
+    </div>
+  </div>
+
+</div>
+        
+  
+  <div class="toggle sidebar-toggle" role="button">
+    <span class="toggle-line"></span>
+    <span class="toggle-line"></span>
+    <span class="toggle-line"></span>
+  </div>
+
+  <aside class="sidebar">
+
+    <div class="sidebar-inner sidebar-nav-active sidebar-toc-active">
+      <ul class="sidebar-nav">
+        <li class="sidebar-nav-toc">
+          Table of Contents
+        </li>
+        <li class="sidebar-nav-overview">
+          Overview
+        </li>
+      </ul>
+
+      <div class="sidebar-panel-container">
+        <!--noindex-->
+        <div class="post-toc-wrap sidebar-panel">
+            <div class="post-toc animated"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#CAP"><span class="nav-number">1.</span> <span class="nav-text">CAP</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#%E6%95%B0%E6%8D%AE%E4%B8%80%E8%87%B4%E6%80%A7-consistency"><span class="nav-number">1.1.</span> <span class="nav-text">数据一致性(consistency)</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E6%9C%8D%E5%8A%A1%E5%8F%AF%E7%94%A8%E6%80%A7-availability"><span class="nav-number">1.2.</span> <span class="nav-text">服务可用性(availability)</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E5%88%86%E5%8C%BA%E5%AE%B9%E9%94%99%E6%80%A7-partition-tolerance"><span class="nav-number">1.3.</span> <span class="nav-text">分区容错性(partition-tolerance)</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#BASE%E7%90%86%E8%AE%BA"><span class="nav-number">2.</span> <span class="nav-text">BASE理论</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#%E5%9F%BA%E6%9C%AC%E5%8F%AF%E7%94%A8%EF%BC%88Basically-Available%EF%BC%89"><span class="nav-number">2.1.</span> <span class="nav-text">基本可用（Basically Available）</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E8%BD%AF%E7%8A%B6%E6%80%81%EF%BC%88Soft-state%EF%BC%89"><span class="nav-number">2.2.</span> <span class="nav-text">软状态（Soft state）</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E6%9C%80%E7%BB%88%E4%B8%80%E8%87%B4%E6%80%A7%EF%BC%88Eventually-consistent%EF%BC%89"><span class="nav-number">2.3.</span> <span class="nav-text">最终一致性（Eventually consistent）</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E9%9B%86%E7%BE%A4%E8%84%91%E8%A3%82"><span class="nav-number">3.</span> <span class="nav-text">集群脑裂</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E4%B8%A4%E9%98%B6%E6%AE%B5%E6%8F%90%E4%BA%A4%EF%BC%88Two-Phase-Commit%EF%BC%89"><span class="nav-number">4.</span> <span class="nav-text">两阶段提交（Two-Phase Commit）</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#%E5%9F%BA%E6%9C%AC%E7%AE%97%E6%B3%95"><span class="nav-number">4.1.</span> <span class="nav-text">基本算法</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E7%BC%BA%E7%82%B9"><span class="nav-number">4.2.</span> <span class="nav-text">缺点</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E4%B8%89%E9%98%B6%E6%AE%B5%E6%8F%90%E4%BA%A4%EF%BC%88Three-Phase-Commit%EF%BC%89"><span class="nav-number">5.</span> <span class="nav-text">三阶段提交（Three-Phase Commit）</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#%E5%9F%BA%E6%9C%AC%E7%AE%97%E6%B3%95-1"><span class="nav-number">5.1.</span> <span class="nav-text">基本算法</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E4%BC%98%E7%82%B9"><span class="nav-number">5.2.</span> <span class="nav-text">优点</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E7%BC%BA%E7%82%B9-1"><span class="nav-number">5.3.</span> <span class="nav-text">缺点</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E7%A7%9F%E7%BA%A6"><span class="nav-number">6.</span> <span class="nav-text">租约</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#%E7%A7%9F%E7%BA%A6%E5%8F%AF%E4%BB%A5%E7%94%A8%E6%9D%A5%E5%B9%B2%E4%BB%80%E4%B9%88%EF%BC%9F"><span class="nav-number">6.1.</span> <span class="nav-text">租约可以用来干什么？</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E4%B8%A4%E5%B0%86%E5%86%9B%E9%97%AE%E9%A2%98"><span class="nav-number">7.</span> <span class="nav-text">两将军问题</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#%E4%B8%89%E5%86%9B%E9%97%AE%E9%A2%98"><span class="nav-number">7.1.</span> <span class="nav-text">三军问题</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E6%8B%9C%E5%8D%A0%E5%BA%AD%E5%B0%86%E5%86%9B%E9%97%AE%E9%A2%98%EF%BC%88Byzantine-Generals-Problem%EF%BC%89"><span class="nav-number">8.</span> <span class="nav-text">拜占庭将军问题（Byzantine Generals Problem）</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#paxos-%E5%8D%8F%E8%AE%AE"><span class="nav-number">9.</span> <span class="nav-text">paxos 协议</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#%E8%A7%92%E8%89%B2"><span class="nav-number">9.1.</span> <span class="nav-text">角色</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E5%AE%9A%E4%B9%89"><span class="nav-number">9.2.</span> <span class="nav-text">定义</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E7%BA%A6%E6%9D%9F"><span class="nav-number">9.3.</span> <span class="nav-text">约束</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#Basic-Paxos"><span class="nav-number">9.4.</span> <span class="nav-text">Basic-Paxos</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#%E6%89%A7%E8%A1%8C%E8%BF%87%E7%A8%8B"><span class="nav-number">9.4.1.</span> <span class="nav-text">执行过程</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#%E7%BA%A6%E6%9D%9F%E6%9D%A1%E4%BB%B6"><span class="nav-number">9.4.2.</span> <span class="nav-text">约束条件</span></a><ol class="nav-child"><li class="nav-item nav-level-5"><a class="nav-link" href="#1-%E6%AD%A3%E7%A1%AE%E6%80%A7"><span class="nav-number">9.4.2.1.</span> <span class="nav-text">1. 正确性</span></a></li><li class="nav-item nav-level-5"><a class="nav-link" href="#2-%E5%8F%AF%E7%BB%88%E6%AD%A2%E6%80%A7"><span class="nav-number">9.4.2.2.</span> <span class="nav-text">2. 可终止性</span></a></li></ol></li><li class="nav-item nav-level-4"><a class="nav-link" href="#%E7%BC%BA%E7%82%B9-2"><span class="nav-number">9.4.3.</span> <span class="nav-text">缺点</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#Acceptor%E6%8E%A5%E6%94%B6%E5%A4%B1%E8%B4%A5%E7%9A%84%E6%83%85%E5%86%B5"><span class="nav-number">9.4.4.</span> <span class="nav-text">Acceptor接收失败的情况</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#Learner%E6%8E%A5%E6%94%B6%E5%A4%B1%E8%B4%A5"><span class="nav-number">9.4.5.</span> <span class="nav-text">Learner接收失败</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#Proposer%E5%AE%95%E6%9C%BA%E6%88%96%E5%8F%91%E9%80%81%E5%A4%B1%E8%B4%A5"><span class="nav-number">9.4.6.</span> <span class="nav-text">Proposer宕机或发送失败</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#Proposers%E7%AB%9E%E4%BA%89"><span class="nav-number">9.4.7.</span> <span class="nav-text">Proposers竞争</span></a></li></ol></li><li class="nav-item nav-level-3"><a class="nav-link" href="#Multi-Paxos"><span class="nav-number">9.5.</span> <span class="nav-text">Multi-Paxos</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#%E5%BC%80%E5%A7%8B%E9%98%B6%E6%AE%B5"><span class="nav-number">9.5.1.</span> <span class="nav-text">开始阶段</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#%E7%A8%B3%E5%AE%9A%E7%8A%B6%E6%80%81"><span class="nav-number">9.5.2.</span> <span class="nav-text">稳定状态</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#%E7%AE%80%E5%8C%96%E8%A7%92%E8%89%B2"><span class="nav-number">9.5.3.</span> <span class="nav-text">简化角色</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#%E5%BC%80%E5%A7%8B%E9%98%B6%E6%AE%B5-1"><span class="nav-number">9.5.4.</span> <span class="nav-text">开始阶段</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#%E7%A8%B3%E5%AE%9A%E9%98%B6%E6%AE%B5"><span class="nav-number">9.5.5.</span> <span class="nav-text">稳定阶段</span></a></li></ol></li><li class="nav-item nav-level-3"><a class="nav-link" href="#Fast-Paxos"><span class="nav-number">9.6.</span> <span class="nav-text">Fast-Paxos</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#%E9%9D%9E%E5%86%B2%E7%AA%81"><span class="nav-number">9.6.1.</span> <span class="nav-text">非冲突</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#proposals%E5%86%B2%E7%AA%81"><span class="nav-number">9.6.2.</span> <span class="nav-text">proposals冲突</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#%E4%B8%8D%E5%8D%8F%E8%B0%83%E6%81%A2%E5%A4%8D%E3%80%81%E5%87%8F%E5%B0%91%E8%A7%92%E8%89%B2"><span class="nav-number">9.6.3.</span> <span class="nav-text">不协调恢复、减少角色</span></a></li></ol></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#Zab-%E5%8E%9F%E5%AD%90%E5%B9%BF%E6%92%AD%E5%8D%8F%E8%AE%AE"><span class="nav-number">10.</span> <span class="nav-text">Zab 原子广播协议</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#%E6%9C%AF%E8%AF%AD%E8%A7%A3%E9%87%8A"><span class="nav-number">10.0.1.</span> <span class="nav-text">术语解释</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#Phase-0-Leader-election%EF%BC%88%E9%80%89%E4%B8%BE%E9%98%B6%E6%AE%B5%EF%BC%89"><span class="nav-number">10.0.2.</span> <span class="nav-text">Phase 0: Leader election（选举阶段）</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#Phase-1-Discovery%EF%BC%88%E5%8F%91%E7%8E%B0%E9%98%B6%E6%AE%B5%EF%BC%89"><span class="nav-number">10.0.3.</span> <span class="nav-text">Phase 1: Discovery（发现阶段）</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#Phase-2-Synchronization%EF%BC%88%E5%90%8C%E6%AD%A5%E9%98%B6%E6%AE%B5%EF%BC%89"><span class="nav-number">10.0.4.</span> <span class="nav-text">Phase 2: Synchronization（同步阶段）</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#Phase-3-Broadcast%EF%BC%88%E5%B9%BF%E6%92%AD%E9%98%B6%E6%AE%B5%EF%BC%89"><span class="nav-number">10.0.5.</span> <span class="nav-text">Phase 3: Broadcast（广播阶段）</span></a></li></ol></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E5%8D%8F%E8%AE%AE%E5%AE%9E%E7%8E%B0"><span class="nav-number">10.1.</span> <span class="nav-text">协议实现</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#Fast-Leader-Election"><span class="nav-number">10.1.1.</span> <span class="nav-text">Fast Leader Election</span></a><ol class="nav-child"><li class="nav-item nav-level-5"><a class="nav-link" href="#%E6%88%90%E4%B8%BA-leader-%E7%9A%84%E6%9D%A1%E4%BB%B6"><span class="nav-number">10.1.1.1.</span> <span class="nav-text">成为 leader 的条件</span></a></li><li class="nav-item nav-level-5"><a class="nav-link" href="#%E9%80%89%E4%B8%BE%E8%BF%87%E7%A8%8B"><span class="nav-number">10.1.1.2.</span> <span class="nav-text">选举过程</span></a></li><li class="nav-item nav-level-5"><a class="nav-link" href="#Recovery-Phase-%EF%BC%88%E6%81%A2%E5%A4%8D%E9%98%B6%E6%AE%B5%EF%BC%89"><span class="nav-number">10.1.1.3.</span> <span class="nav-text">Recovery Phase （恢复阶段）</span></a></li></ol></li></ol></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#Raft-%E5%8D%8F%E8%AE%AE"><span class="nav-number">11.</span> <span class="nav-text">Raft 协议</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#Leader-%E9%80%89%E4%B8%BE%E8%BF%87%E7%A8%8B"><span class="nav-number">11.1.</span> <span class="nav-text">Leader 选举过程</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#Leader-%E8%8A%82%E7%82%B9%E5%AF%B9%E4%B8%80%E8%87%B4%E6%80%A7%E7%9A%84%E5%BD%B1%E5%93%8D"><span class="nav-number">11.2.</span> <span class="nav-text">Leader 节点对一致性的影响</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#1-%E6%95%B0%E6%8D%AE%E5%88%B0%E8%BE%BE-Leader-%E8%8A%82%E7%82%B9%E5%89%8D"><span class="nav-number">11.2.1.</span> <span class="nav-text">1. 数据到达 Leader 节点前</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#2-%E6%95%B0%E6%8D%AE%E5%88%B0%E8%BE%BE-Leader-%E8%8A%82%E7%82%B9%EF%BC%8C%E4%BD%86%E6%9C%AA%E5%A4%8D%E5%88%B6%E5%88%B0-Follower-%E8%8A%82%E7%82%B9"><span class="nav-number">11.2.2.</span> <span class="nav-text">2. 数据到达 Leader 节点，但未复制到 Follower 节点</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#3-%E6%95%B0%E6%8D%AE%E5%88%B0%E8%BE%BE-Leader-%E8%8A%82%E7%82%B9%EF%BC%8C%E6%88%90%E5%8A%9F%E5%A4%8D%E5%88%B6%E5%88%B0-Follower-%E6%89%80%E6%9C%89%E8%8A%82%E7%82%B9%EF%BC%8C%E4%BD%86%E8%BF%98%E6%9C%AA%E5%90%91-Leader-%E5%93%8D%E5%BA%94%E6%8E%A5%E6%94%B6"><span class="nav-number">11.2.3.</span> <span class="nav-text">3. 数据到达 Leader 节点，成功复制到 Follower 所有节点，但还未向 Leader 响应接收</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#4-%E6%95%B0%E6%8D%AE%E5%88%B0%E8%BE%BE-Leader-%E8%8A%82%E7%82%B9%EF%BC%8C%E6%88%90%E5%8A%9F%E5%A4%8D%E5%88%B6%E5%88%B0-Follower-%E9%83%A8%E5%88%86%E8%8A%82%E7%82%B9%EF%BC%8C%E4%BD%86%E8%BF%98%E6%9C%AA%E5%90%91-Leader-%E5%93%8D%E5%BA%94%E6%8E%A5%E6%94%B6"><span class="nav-number">11.2.4.</span> <span class="nav-text">4. 数据到达 Leader 节点，成功复制到 Follower 部分节点，但还未向 Leader 响应接收</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#5-%E6%95%B0%E6%8D%AE%E5%88%B0%E8%BE%BE-Leader-%E8%8A%82%E7%82%B9%EF%BC%8C%E6%88%90%E5%8A%9F%E5%A4%8D%E5%88%B6%E5%88%B0-Follower-%E6%89%80%E6%9C%89%E6%88%96%E5%A4%9A%E6%95%B0%E8%8A%82%E7%82%B9%EF%BC%8C%E6%95%B0%E6%8D%AE%E5%9C%A8-Leader-%E5%A4%84%E4%BA%8E%E5%B7%B2%E6%8F%90%E4%BA%A4%E7%8A%B6%E6%80%81%EF%BC%8C%E4%BD%86%E5%9C%A8-Follower-%E5%A4%84%E4%BA%8E%E6%9C%AA%E6%8F%90%E4%BA%A4%E7%8A%B6%E6%80%81"><span class="nav-number">11.2.5.</span> <span class="nav-text">5. 数据到达 Leader 节点，成功复制到 Follower 所有或多数节点，数据在 Leader 处于已提交状态，但在 Follower 处于未提交状态</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#6-%E6%95%B0%E6%8D%AE%E5%88%B0%E8%BE%BE-Leader-%E8%8A%82%E7%82%B9%EF%BC%8C%E6%88%90%E5%8A%9F%E5%A4%8D%E5%88%B6%E5%88%B0-Follower-%E6%89%80%E6%9C%89%E6%88%96%E5%A4%9A%E6%95%B0%E8%8A%82%E7%82%B9%EF%BC%8C%E6%95%B0%E6%8D%AE%E5%9C%A8%E6%89%80%E6%9C%89%E8%8A%82%E7%82%B9%E9%83%BD%E5%A4%84%E4%BA%8E%E5%B7%B2%E6%8F%90%E4%BA%A4%E7%8A%B6%E6%80%81%EF%BC%8C%E4%BD%86%E8%BF%98%E6%9C%AA%E5%93%8D%E5%BA%94-Client"><span class="nav-number">11.2.6.</span> <span class="nav-text">6. 数据到达 Leader 节点，成功复制到 Follower 所有或多数节点，数据在所有节点都处于已提交状态，但还未响应 Client</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#7-%E7%BD%91%E7%BB%9C%E5%88%86%E5%8C%BA%E5%AF%BC%E8%87%B4%E7%9A%84%E8%84%91%E8%A3%82%E6%83%85%E5%86%B5%EF%BC%8C%E5%87%BA%E7%8E%B0%E5%8F%8C-Leader"><span class="nav-number">11.2.7.</span> <span class="nav-text">7. 网络分区导致的脑裂情况，出现双 Leader</span></a></li></ol></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E5%9B%BE%E8%A7%A3"><span class="nav-number">11.3.</span> <span class="nav-text">图解</span></a></li></ol></li></ol></div>
+        </div>
+        <!--/noindex-->
+
+        <div class="site-overview-wrap sidebar-panel">
+          <div class="site-author site-overview-item animated" itemprop="author" itemscope itemtype="http://schema.org/Person">
+    <img class="site-author-image" itemprop="image" alt="Absurd"
+      src="/hexo/images/avatar.gif">
+  <p class="site-author-name" itemprop="name">Absurd</p>
+  <div class="site-description" itemprop="description"></div>
+</div>
+<div class="site-state-wrap site-overview-item animated">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+        <a href="/hexo/archives/">
+          <span class="site-state-item-count">75</span>
+          <span class="site-state-item-name">posts</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+          <a href="/hexo/categories/">
+        <span class="site-state-item-count">17</span>
+        <span class="site-state-item-name">categories</span></a>
+      </div>
+      <div class="site-state-item site-state-tags">
+          <a href="/hexo/tags/">
+        <span class="site-state-item-count">46</span>
+        <span class="site-state-item-name">tags</span></a>
+      </div>
+  </nav>
+</div>
+  <div class="links-of-author site-overview-item animated">
+      <span class="links-of-author-item">
+        <a href="https://github.com/www1350" title="GitHub → https:&#x2F;&#x2F;github.com&#x2F;www1350" rel="noopener" target="_blank"><i class="fab fa-github fa-fw"></i>GitHub</a>
+      </span>
+      <span class="links-of-author-item">
+        <a href="mailto:www_1350@163.com" title="E-Mail → mailto:www_1350@163.com" rel="noopener" target="_blank"><i class="fa fa-envelope fa-fw"></i>E-Mail</a>
+      </span>
+  </div>
+
+
+
+        </div>
+      </div>
+    </div>
+  </aside>
+  <div class="sidebar-dimmer"></div>
+
+
+    </header>
+
+    
+  <div class="back-to-top" role="button" aria-label="Back to top">
+    <i class="fa fa-arrow-up"></i>
+    <span>0%</span>
+  </div>
+
+<noscript>
+  <div class="noscript-warning">Theme NexT works best with JavaScript enabled</div>
+</noscript>
+
+
+    <div class="main-inner post posts-expand">
+
+
+  
+
+
+<div class="post-block">
+  
+  
+
+  <article itemscope itemtype="http://schema.org/Article" class="post-content" lang="zh-Hans">
+    <link itemprop="mainEntityOfPage" href="https://www1350.github.io/hexo/post/410c3782.html">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/hexo/images/avatar.gif">
+      <meta itemprop="name" content="Absurd">
+      <meta itemprop="description" content="">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Absurd博客">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          Paxos 协议
+        </h1>
+
+        <div class="post-meta-container">
+          <div class="post-meta">
+    <span class="post-meta-item">
+      <span class="post-meta-item-icon">
+        <i class="far fa-calendar"></i>
+      </span>
+      <span class="post-meta-item-text">Posted on</span>
+
+      <time title="Created: 2018-04-12 10:13:02" itemprop="dateCreated datePublished" datetime="2018-04-12T10:13:02+08:00">2018-04-12</time>
+    </span>
+    <span class="post-meta-item">
+      <span class="post-meta-item-icon">
+        <i class="far fa-calendar-check"></i>
+      </span>
+      <span class="post-meta-item-text">Edited on</span>
+      <time title="Modified: 2022-01-28 15:09:17" itemprop="dateModified" datetime="2022-01-28T15:09:17+08:00">2022-01-28</time>
+    </span>
+    <span class="post-meta-item">
+      <span class="post-meta-item-icon">
+        <i class="far fa-folder"></i>
+      </span>
+      <span class="post-meta-item-text">In</span>
+        <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+          <a href="/hexo/categories/%E4%B8%80%E8%87%B4%E6%80%A7/" itemprop="url" rel="index"><span itemprop="name">一致性</span></a>
+        </span>
+    </span>
+
+  
+</div>
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+        <h2 id="CAP"><a href="#CAP" class="headerlink" title="CAP"></a>CAP</h2><h3 id="数据一致性-consistency"><a href="#数据一致性-consistency" class="headerlink" title="数据一致性(consistency)"></a>数据一致性(consistency)</h3><p>如果系统对一个写操作返回成功，那么之后的读请求都必须读到这个新数据；如果返回失败，那么所有读操作都不能读到这个数据，对调用者而言数据具有强一致性(strong consistency) (又叫原子性 atomic、线性一致性 linearizable consistency)</p>
+<h3 id="服务可用性-availability"><a href="#服务可用性-availability" class="headerlink" title="服务可用性(availability)"></a>服务可用性(availability)</h3><p>所有读写请求在一定时间内得到响应，可终止、不会一直等待</p>
+<h3 id="分区容错性-partition-tolerance"><a href="#分区容错性-partition-tolerance" class="headerlink" title="分区容错性(partition-tolerance)"></a>分区容错性(partition-tolerance)</h3><p>在网络分区的情况下，被分隔的节点仍能正常对外服务</p>
+<p>根据定理，分布式系统只能满足三项中的两项而不可能满足全部三项[<a target="_blank" rel="noopener" href="https://zh.wikipedia.org/wiki/CAP%E5%AE%9A%E7%90%86#cite_note-4">4]</a>。理解CAP理论的最简单方式是想象两个节点分处分区两侧。允许至少一个节点更新状态会导致数据不一致，即丧失了C性质。如果为了保证数据一致性，将分区一侧的节点设置为不可用，那么又丧失了A性质。除非两个节点可以互相通信，才能既保证C又保证A，这又会导致丧失P性质。</p>
+<span id="more"></span>
+
+<h2 id="BASE理论"><a href="#BASE理论" class="headerlink" title="BASE理论"></a>BASE理论</h2><h3 id="基本可用（Basically-Available）"><a href="#基本可用（Basically-Available）" class="headerlink" title="基本可用（Basically Available）"></a>基本可用（Basically Available）</h3><p>基本可用是指分布式系统在出现故障的时候，允许损失部分可用性，即保证核心可用。</p>
+<ul>
+<li>响应时间上的损失：正常情况下，一个在线搜索引擎需要0.5秒内返回给用户相应的查询结果，但由于出现异常（比如系统部分机房发生断电或断网故障），查询结果的响应时间增加到了1~2秒。</li>
+<li>功能上的损失：正常情况下，在一个电子商务网站上进行购物，消费者几乎能够顺利地完成每一笔订单，但是在一些节日大促购物高峰的时候，由于消费者的购物行为激增，为了保护购物系统的稳定性，部分消费者可能会被引导到一个降级页面。</li>
+</ul>
+<h3 id="软状态（Soft-state）"><a href="#软状态（Soft-state）" class="headerlink" title="软状态（Soft state）"></a>软状态（Soft state）</h3><p>软状态是指允许系统存在中间状态，而该中间状态不会影响系统整体可用性。分布式存储中一般一份数据至少会有三个副本，允许不同节点间副本同步的延时就是软状态的体现。</p>
+<h3 id="最终一致性（Eventually-consistent）"><a href="#最终一致性（Eventually-consistent）" class="headerlink" title="最终一致性（Eventually consistent）"></a>最终一致性（Eventually consistent）</h3><p>最终一致性是指系统中的所有数据副本经过一定时间后，最终能够达到一致的状态。弱一致性和强一致性相反，最终一致性是弱一致性的一种特殊情况。</p>
+<h2 id="集群脑裂"><a href="#集群脑裂" class="headerlink" title="集群脑裂"></a>集群脑裂</h2><p>集群的脑裂通常是发生在集群中部分节点之间不可达而引起的（或者因为节点请求压力较大，导致其他节点与该节点的心跳检测不可用）。当上述情况发生时，不同分裂的小集群会自主的选择出master节点，造成原本的集群会同时存在多个master节点。</p>
+<h2 id="两阶段提交（Two-Phase-Commit）"><a href="#两阶段提交（Two-Phase-Commit）" class="headerlink" title="两阶段提交（Two-Phase Commit）"></a>两阶段提交（Two-Phase Commit）</h2><p>为了使基于<a target="_blank" rel="noopener" href="https://zh.wikipedia.org/wiki/%E5%88%86%E5%B8%83%E5%BC%8F%E7%B3%BB%E7%BB%9F">分布式系统</a>架构下的所有节点在进行<a target="_blank" rel="noopener" href="https://zh.wikipedia.org/wiki/%E6%95%B0%E6%8D%AE%E5%BA%93%E4%BA%8B%E5%8A%A1">事务</a>提交时保持一致性而设计的一种<a target="_blank" rel="noopener" href="https://zh.wikipedia.org/wiki/%E7%AE%97%E6%B3%95">算法</a>(Algorithm)。</p>
+<p>通常，<strong>二阶段提交</strong>也被称为是一种<strong>协议</strong>(Protocol)。在分布式系统中，每个节点虽然可以知晓自己的操作时成功或者失败，却无法知道其他节点的操作的成功或失败。当一个事务跨越多个节点时，为了保持事务的<a target="_blank" rel="noopener" href="https://zh.wikipedia.org/wiki/ACID">ACID</a>特性，需要引入一个作为<strong>协调者</strong>的组件来统一掌控所有节点(称作<strong>参与者</strong>)的操作结果并最终指示这些节点是否要把操作结果进行真正的提交(比如将更新后的数据写入磁盘等等)。</p>
+<p>因此，二阶段提交的算法思路可以概括为： 参与者将操作成败通知协调者，再由协调者根据所有参与者的反馈情报决定各参与者是否要提交操作还是中止操作。</p>
+<h3 id="基本算法"><a href="#基本算法" class="headerlink" title="基本算法"></a>基本算法</h3><ul>
+<li><p>第一阶段(提交请求阶段)</p>
+<ol>
+<li><strong>协调者</strong>节点向<strong>所有参与者</strong>节点询问是否可以执行提交操作，并开始等待各参与者节点的响应。</li>
+<li>参与者节点<strong>执行</strong>询问发起为止的<strong>所有事务</strong>操作，并将<a target="_blank" rel="noopener" href="https://zh.wikipedia.org/w/index.php?title=Undo%E4%BF%A1%E6%81%AF&action=edit&redlink=1">Undo信息</a>和<a target="_blank" rel="noopener" href="https://zh.wikipedia.org/w/index.php?title=Redo%E4%BF%A1%E6%81%AF&action=edit&redlink=1">Redo信息</a>写入日志。</li>
+</ol>
+<ul>
+<li>各参与者节点<strong>响应</strong>协调者节点发起的询问。如果参与者节点的事务操作实际执行成功，则它返回一个”同意”消息；如果参与者节点的事务操作实际执行失败，则它返回一个”中止”消息。</li>
+</ul>
+<p>有时候，第一阶段也被称作<strong>投票阶段</strong>，即各参与者投票是否要继续接下来的提交操作。</p>
+</li>
+</ul>
+<ul>
+<li><p>第二阶段(提交执行阶段)</p>
+<ul>
+<li><p>成功</p>
+<p>当协调者节点从所有参与者节点获得的相应消息都为”同意”时：</p>
+<ol>
+<li>协调者节点向所有参与者节点发出”<strong>正式提交</strong>“的请求。</li>
+<li>参与者节点正式完成操作（如commit），并释放在整个事务期间内占用的资源。</li>
+</ol>
+<ul>
+<li><p>参与者节点向协调者节点发送”完成”消息。</p>
+</li>
+<li><p>协调者节点收到<strong>所有</strong>参与者节点<strong>反馈</strong>的”完成”消息后，完成事务。</p>
+</li>
+</ul>
+</li>
+<li><p>失败</p>
+<p>如果任一参与者节点在第一阶段返回的响应消息为”终止”，或者 协调者节点在第一阶段的询问超时之前无法获取所有参与者节点的响应消息时：</p>
+<ol>
+<li>协调者节点向所有参与者节点发出”回滚操作”的请求。</li>
+<li>参与者节点利用之前写入的Undo信息执行回滚，并释放在整个事务期间内占用的资源。</li>
+</ol>
+<ul>
+<li><p>参与者节点向协调者节点发送”回滚完成”消息。</p>
+</li>
+<li><p>协调者节点收到所有参与者节点反馈的”回滚完成”消息后，取消事务。</p>
+</li>
+</ul>
+</li>
+</ul>
+<p> 有时候，第二阶段也被称作<strong>完成阶段</strong>，因为无论结果怎样，协调者都必须在此阶段结束当前事务。</p>
+</li>
+</ul>
+<h3 id="缺点"><a href="#缺点" class="headerlink" title="缺点"></a>缺点</h3><p>二阶段提交算法的最大缺点就在于它的执行过程中间，节点都处于<strong>阻塞</strong>状态。即节点之间在等待对方的相应消息时，它将什么也做不了。特别是，当一个节点在已经占有了某项资源的情况下，为了等待其他节点的响应消息而陷入阻塞状态时，当第三个节点尝试访问该节点占有的资源时，这个节点也将连带陷入阻塞状态。</p>
+<p>另外，协调者节点指示参与者节点进行提交等操作时，如有<strong>参与者节点出现了崩溃</strong>等情况而导致协调者始终无法获取所有参与者的响应信息，这时协调者将只能依赖协调者自身的<strong>超时机制</strong>来生效。但往往超时机制生效时，协调者都会指示参与者进行回滚操作。这样的策略显得比较保守。</p>
+<h2 id="三阶段提交（Three-Phase-Commit）"><a href="#三阶段提交（Three-Phase-Commit）" class="headerlink" title="三阶段提交（Three-Phase Commit）"></a>三阶段提交（Three-Phase Commit）</h2><p>在计算机网络及数据库的范畴下，使得一个分布式系统内的所有节点能够执行事务的提交的一种分布式算法。三阶段提交是为解决<a target="_blank" rel="noopener" href="https://zh.wikipedia.org/wiki/%E4%BA%8C%E9%98%B6%E6%AE%B5%E6%8F%90%E4%BA%A4">两阶段提交协议</a>的缺点而设计的。</p>
+<p>与两阶段提交不同的是，三阶段提交是“非阻塞”协议。三阶段提交在两阶段提交的<strong>第一阶段与第二阶段之间插入了</strong>一个<strong>准备阶段</strong>，使得原先在两阶段提交中，参与者在投票之后，由于协调者发生崩溃或错误，而导致参与者处于无法知晓是否提交或者中止的“不确定状态”所产生的可能相当长的延时的问题[<a target="_blank" rel="noopener" href="https://zh.wikipedia.org/wiki/%E4%B8%89%E9%98%B6%E6%AE%B5%E6%8F%90%E4%BA%A4#cite_note-1">1]</a>得以解决。 举例来说，假设有一个决策小组由一个主持人负责与多位组员以电话联络方式协调是否通过一个提案，以两阶段提交来说，主持人收到一个提案请求，打电话跟每个组员询问是否通过并统计回复，然后将最后决定打电话通知各组员。要是主持人在跟第一位组员通完电话后失忆，而第一位组员在得知结果并执行后老人痴呆，那么即使重新选出主持人，也没人知道最后的提案决定是什么，也许是通过，也许是驳回，不管大家选择哪一种决定，都有可能与第一位组员已执行过的真实决定不一致，老板就会不开心认为决策小组沟通有问题而解雇。三阶段提交即是引入了另一个步骤，主持人打电话跟组员通知请准备通过提案，以避免没人知道真实决定而造成决定不一致的失业危机。为什么能够解决二阶段提交的问题呢？回到刚刚提到的状况，在主持人通知完第一位组员请准备通过后两人意外失忆，即使没人知道全体在第一阶段的决定为何，全体决策组员仍可以重新协调过程或直接否决，不会有不一致决定而失业。那么当主持人通知完全体组员请准备通过并得到大家的再次确定后进入第三阶段，当主持人通知第一位组员请通过提案后两人意外失忆，这时候其他组员再重新选出主持人后，仍可以知道目前至少是处于准备通过提案阶段，表示第一阶段大家都已经决定要通过了，此时便可以直接通过。</p>
+<p><img src="https://user-images.githubusercontent.com/7789698/38654220-cd1a8610-3e40-11e8-8027-ea351e5bab41.png" alt="image"></p>
+<h3 id="基本算法-1"><a href="#基本算法-1" class="headerlink" title="基本算法"></a>基本算法</h3><ul>
+<li><p>阶段一CanCommit</p>
+<ol>
+<li>事务询问</li>
+</ol>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">协调者向各参与者发送CanCommit的请求，询问是否可以执行事务提交操作，并开始等待各参与者的响应</span><br></pre></td></tr></table></figure>
+
+<ol start="2">
+<li>参与者向协调者反馈询问的响应</li>
+</ol>
+<p>参与者收到CanCommit请求后，正常情况下，如果自身认为可以顺利执行事务，那么会反馈Yes响应，并进入预备状态，否则反馈No。</p>
+</li>
+<li><p>阶段二PreCommit</p>
+<ol>
+<li>执行事务预提交</li>
+</ol>
+  <figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">如果协调者接收到各参与者反馈都是Yes，那么执行事务预提交</span><br></pre></td></tr></table></figure>
+
+<ul>
+<li>A、发送预提交请求<br> 协调者向各参与者发送preCommit请求，并进入prepared阶段</li>
+<li>B、事务预提交<br> 参与者接收到preCommit请求后，会执行事务操作，并将Undo和Redo信息记录到事务日记中</li>
+<li>C、各参与者向协调者反馈事务执行的响应<br> 如果各参与者都成功执行了事务操作，那么反馈给协调者Ack响应，同时等待最终指令，提交commit或者终止abort</li>
+</ul>
+<ol start="2">
+<li>中断事务</li>
+</ol>
+<p>  如果<strong>任何一个</strong>参与者向协调者反馈了No响应，或者在<strong>等待超时</strong>后，协调者无法接收到所有参与者的反馈，那么就会中断事务。</p>
+<ul>
+<li><p>A、发送中断请求</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">协调者向所有参与者发送abort请求</span><br></pre></td></tr></table></figure></li>
+<li><p>B、中断事务</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">无论是收到来自协调者的abort请求，还是等待超时，参与者都中断事务</span><br></pre></td></tr></table></figure></li>
+</ul>
+<ol start="3">
+<li>阶段三doCommit</li>
+</ol>
+<ul>
+<li><p>执行提交</p>
+<p>A、发送提交请求</p>
+<p>假设协调者正常工作，接收到了所有参与者的ack响应，那么它将从预提交阶段进入提交状态，并向所有参与者发送doCommit请求</p>
+<p>B、事务提交</p>
+<p>参与者收到doCommit请求后，正式提交事务，并在完成事务提交后释放占用的资源</p>
+<p>C、反馈事务提交结果</p>
+<p> 参与者完成事务提交后，向协调者发送ACK信息</p>
+<p> D、完成事务<br> 协调者接收到所有参与者ack信息，完成事务</p>
+</li>
+<li><p>中断事务</p>
+</li>
+</ul>
+<p>  假设协调者正常工作，并且有任一参与者反馈No，或者在等待超时后无法接收所有参与者的反馈，都会中断事务</p>
+<ul>
+<li><p>A、发送中断请求</p>
+<p>协调者向所有参与者节点发送abort请求</p>
+<p>B、事务回滚<br>参与者接收到abort请求后，利用undo日志执行事务回滚，并在完成事务回滚后释放占用的资源</p>
+<p>C、反馈事务回滚结果<br>参与者在完成事务回滚之后，向协调者发送ack信息</p>
+<p>D、中断事务<br>协调者接收到所有参与者反馈的ack信息后，中断事务。</p>
+</li>
+</ul>
+<p>阶段三可能出现的问题：<br>  <strong>协调者出现问题</strong>、<strong>协调者与参与者之间网络出现故障</strong>。不论出现哪种情况，最终都会导致参与者无法及时接收到来自协调者的doCommit或是abort请求，针对这种情况，<strong>参与者都会在等待超时后，继续进行事务提交（timeout后中断事务）</strong>。</p>
+</li>
+</ul>
+<h3 id="优点"><a href="#优点" class="headerlink" title="优点"></a>优点</h3><p>降低参与者阻塞范围，并能够在出现单点故障后继续达成一致</p>
+<h3 id="缺点-1"><a href="#缺点-1" class="headerlink" title="缺点"></a>缺点</h3><p>引入preCommit阶段，在这个阶段如果出现网络分区，协调者无法与参与者正常通信，参与者依然会进行事务提交，造成数据不一致。</p>
+<h2 id="租约"><a href="#租约" class="headerlink" title="租约"></a>租约</h2><p>租约就是在<strong>一定期限内</strong>给予持有者<strong>特定权力</strong>的协议。每个租约都有一个期限，正是这个期限可以保证租约机制容忍机器失效和网络分割。</p>
+<h3 id="租约可以用来干什么？"><a href="#租约可以用来干什么？" class="headerlink" title="租约可以用来干什么？"></a>租约可以用来干什么？</h3><ul>
+<li>进行故障检测。这类似于ZooKeeper中master 与 slaver 之间发送的心跳包的作用。在ZK中， master 和 slaver之间通过交换<strong>心跳包</strong>来检测它们是否还存活。</li>
+<li>维护缓存一致性。第一种办法是轮询：每次读取数据时都先询问服务器数据是不是最新的，若不是，则先让服务器传输新数据，然后再读取该新数据。第二种方法是回调：由服务器记录有哪些客户端读取了数据，当服务器对数据做修改时先通知记录下来的这些客户端，上次读取过的数据已经失效。这二种方法都有一定的缺陷。因此，可以引入租约机制。在租约期限内，可以保证客户端缓存的数据是最新的。当租约过期后，客户端需要重新向服务器询问数据，重新续约。</li>
+</ul>
+<h2 id="两将军问题"><a href="#两将军问题" class="headerlink" title="两将军问题"></a>两将军问题</h2><p>为了引入该算法，首先提出一种场景，即两将军问题：</p>
+<blockquote>
+<p>有两支军队，它们分别有一位将军领导，现在准备攻击一座修筑了防御工事的城市。这两支军队都驻扎在那座城市的附近，分占一座山头。一道山谷把两座山分隔开来，并且两位将军唯一的通信方式就是派各自的信使来往于山谷两边。不幸的是，这个山谷已经被那座城市的保卫者占领，并且存在一种可能，那就是任何被派出的信使通过山谷是会被捕。 请注意，虽然两位将军已经就攻击那座城市达成共识，但在他们各自占领山头阵地之前，并没有就进攻时间达成共识。两位将军必须让自己的军队同时进攻城市才能取得成功。因此，他们必须互相沟通，以确定一个时间来攻击，并同意就在那时攻击。如果只有一个将军进行攻击，那么这将是一个灾难性的失败。</p>
+</blockquote>
+<h3 id="三军问题"><a href="#三军问题" class="headerlink" title="三军问题"></a>三军问题</h3><p><img src="https://user-images.githubusercontent.com/7789698/38786841-12c90a14-415d-11e8-980b-eede0b8ec1f5.png" alt="image"></p>
+<blockquote>
+<p>1） 1支红军在山谷里扎营，在周围的山坡上驻扎着3支蓝军；</p>
+<p>2） 红军比任意1支蓝军都要强大；如果1支蓝军单独作战，红军胜；如果2支或以上蓝军同时进攻，蓝军胜；</p>
+<p>3） 三支蓝军需要同步他们的进攻时间；但他们惟一的通信媒介是派通信兵步行进入山谷，在那里他们可能被俘虏，从而将信息丢失；或者为了避免被俘虏，可能在山谷停留很长时间；</p>
+<p>4） 每支军队有1个参谋负责提议进攻时间；每支军队也有1个将军批准参谋提出的进攻时间；很明显，1个参谋提出的进攻时间需要获得至少2个将军的批准才有意义；</p>
+<p>5） 问题：是否存在一个协议，能够使得蓝军同步他们的进攻时间？</p>
+</blockquote>
+<p>接下来以两个假设的场景来演绎BasicPaxos；参谋和将军需要遵循一些基本的规则</p>
+<blockquote>
+<p>1） 参谋以两阶段提交（prepare/commit）的方式来发起提议，在prepare阶段需要给出一个编号；</p>
+<p>2） 在prepare阶段产生冲突，将军以编号大小来裁决，编号大的参谋胜出；</p>
+<p>3） 参谋在prepare阶段如果收到了将军返回的已接受进攻时间，在commit阶段必须使用这个返回的进攻时间；</p>
+</blockquote>
+<h2 id="拜占庭将军问题（Byzantine-Generals-Problem）"><a href="#拜占庭将军问题（Byzantine-Generals-Problem）" class="headerlink" title="拜占庭将军问题（Byzantine Generals Problem）"></a>拜占庭将军问题（Byzantine Generals Problem）</h2><blockquote>
+<p>一组拜占庭将军分别各率领一支军队共同围困一座城市。为了简化问题，将各支军队的行动策略限定为进攻或撤离两种。因为部分军队进攻部分军队撤离可能会造成灾难性后果，因此各位将军必须通过投票来达成一致策略，即所有军队一起进攻或所有军队一起撤离。因为各位将军分处城市不同方向，他们只能通过信使互相联系。在投票过程中每位将军都将自己投票给进攻还是撤退的信息通过信使分别通知其他所有将军，这样一来每位将军根据自己的投票和其他所有将军送来的信息就可以知道共同的投票结果而决定行动策略。</p>
+</blockquote>
+<p>系统的问题在于，将军中可能出现<a target="_blank" rel="noopener" href="https://zh.wikipedia.org/wiki/%E5%8F%9B%E5%BE%92">叛徒</a>，他们不仅可能向较为糟糕的策略投票，还可能选择性地发送投票信息。假设有9位将军投票，其中1名叛徒。8名忠诚的将军中出现了4人投进攻，4人投撤离的情况。这时候叛徒可能故意给4名投进攻的将领送信表示投票进攻，而给4名投撤离的将领送信表示投撤离。这样一来在4名投进攻的将领看来，投票结果是5人投进攻，从而发起进攻；而在4名投撤离的将军看来则是5人投撤离。这样各支军队的一致协同就遭到了破坏。</p>
+<p>由于将军之间需要通过信使通讯，叛变将军可能通过伪造信件来以其他将军的身份发送假投票。而即使在保证所有将军忠诚的情况下，也不能排除信使被敌人截杀，甚至被敌人间谍替换等情况。因此很难通过保证人员可靠性及通讯可靠性来解决问题。</p>
+<p>假始那些忠诚（或是没有出错）的将军仍然能通过多数决定来决定他们的战略，便称达到了拜占庭容错。在此，票都会有一个默认值，若消息（票）没有被收到，则使用此默认值来投票。</p>
+<p>上述的故事映射到计算机系统里，将军便成了计算机，而信差就是通信系统。虽然上述的问题涉及了电子化的决策支持与信息安全，却没办法单纯的用<a target="_blank" rel="noopener" href="https://zh.wikipedia.org/wiki/%E5%AF%86%E7%A2%BC%E5%AD%B8">密码学</a>与<a target="_blank" rel="noopener" href="https://zh.wikipedia.org/wiki/%E6%95%B8%E4%BD%8D%E7%B0%BD%E7%AB%A0">数字签名</a>来解决。因为不正常的<a target="_blank" rel="noopener" href="https://zh.wikipedia.org/wiki/%E9%9B%BB%E5%A3%93">电压</a>仍可能影响整个加密过程，这不是密码学与数字签名算法在解决的问题。因此计算机就有可能将错误的结果提交去，亦可能导致错误的决策。</p>
+<h2 id="paxos-协议"><a href="#paxos-协议" class="headerlink" title="paxos 协议"></a>paxos 协议</h2><blockquote>
+<p>一个叫做Paxos的希腊城邦，这个岛按照议会民主制的政治模式制订法律，但是没有人愿意将自己的全部时间和精力放在这种事情上。所以无论是议员，议长或者传递纸条的服务员都不能承诺别人需要时一定会出现，也无法承诺批准决议或者传递消息的时间。但是这里假设没有拜占庭将军问题（Byzantine failure，即虽然有可能一个消息被传递了两次，但是绝对不会出现错误的消息）；只要等待足够的时间，消息就会被传到。另外，Paxos岛上的议员是不会反对其他议员提出的决议的。</p>
+</blockquote>
+<p>用于达成共识性问题，即对多个节点产生的值，该算法能保证只选出唯一一个值。</p>
+<h3 id="角色"><a href="#角色" class="headerlink" title="角色"></a>角色</h3><p>主要有三类节点：</p>
+<ol>
+<li><p><strong>提议者（Proposer）</strong>：提议一个值；</p>
+</li>
+<li><p><strong>接受者（Acceptor）</strong>：对每个提议进行投票；</p>
+</li>
+<li><p><strong>告知者（Learner）</strong>：被告知投票的结果，不参与投票的过程。</p>
+<p><img src="https://user-images.githubusercontent.com/7789698/38655116-5ac4c404-3e45-11e8-910a-cc69ae55787a.png" alt="image"></p>
+</li>
+</ol>
+<h3 id="定义"><a href="#定义" class="headerlink" title="定义"></a>定义</h3><ol>
+<li><p>决议（value）只有在被proposers提出后才能被批准（未经批准的决议称为“提案（proposal）”）；</p>
+</li>
+<li><p>在一次Paxos算法的执行实例中，只批准（chosen）一个value；</p>
+</li>
+<li><p>learners只能获得被批准（chosen）的value。</p>
+</li>
+</ol>
+<h3 id="约束"><a href="#约束" class="headerlink" title="约束"></a>约束</h3><blockquote>
+<p>p1: 一个acceptor必须接受（accept）第一次收到的提案。</p>
+</blockquote>
+<blockquote>
+<p>p1a：当且仅当acceptor没有回应过编号大于n的prepare请求时，acceptor接受（accept）编号为n的提案。</p>
+</blockquote>
+<blockquote>
+<p>p2: 一旦一个具有value v的提案被批准（chosen），那么之后批准（chosen）的提案必须具有value v。</p>
+</blockquote>
+<blockquote>
+<p>p2a: 一旦一个具有value v的提案被批准（chosen），那么之后任何acceptor再次接受（accept）的提案必须具有value v。</p>
+</blockquote>
+<blockquote>
+<p>p2b: 一旦一个具有value v的提案被批准（chosen），那么以后任何proposer提出的提案必须具有value v。</p>
+</blockquote>
+<blockquote>
+<p>p2c: 如果一个编号为n的提案具有value v，那么存在一个多数派，要么他们中所有人都没有接受（accept）编号小于n 的任何提案，要么他们已经接受（accept）的所有编号小于n的提案中编号最大的那个提案具有value v。</p>
+</blockquote>
+<h3 id="Basic-Paxos"><a href="#Basic-Paxos" class="headerlink" title="Basic-Paxos"></a>Basic-Paxos</h3><h4 id="执行过程"><a href="#执行过程" class="headerlink" title="执行过程"></a>执行过程</h4><p>规定一个提议包含两个字段：[n, v]，其中 n 为序号（具有唯一性），v 为提议值。</p>
+<ol>
+<li><p>下图演示了两个 Proposer 和三个 Acceptor 的系统中运行该算法的初始过程，每个 Proposer 都会<strong>向每个</strong> Acceptor <strong>发送提议请求</strong>。</p>
+<p><img src="https://user-images.githubusercontent.com/7789698/38655245-285a36ec-3e46-11e8-91ee-44a133d8fb10.png" alt="image"></p>
+</li>
+<li><p>当 Acceptor <strong>接收</strong>到一个<strong>提议</strong>请求，包含的提议为 [n1, v1]，并且之前还未接收过提议请求，那么发送一个提议响应，<strong>设置当前接收的提议为 [n1, v1]<strong>，并且保证以后</strong>不会再接受提议值小于 n1 的提议</strong>。</p>
+<p>如下图，Acceptor X 在收到 [n=2, v=8] 的提议请求时，由于之前没有接收过提议，因此就发送一个 [no previous] 的提议响应，并且设置当前接收的提议为 [n=2, v=8]，并且保证以后不会再接受提议值小于 2 的提议。其它的 Acceptor 类似。</p>
+<p><img src="https://user-images.githubusercontent.com/7789698/38655263-44041b1a-3e46-11e8-848d-a5299cede0be.png" alt="image"></p>
+</li>
+<li><p>如果 Acceptor 接受到一个提议请求，包含的提议为 [n2, v2]，并且<strong>之前</strong>已经接收过提议 [<strong>n1</strong>, v1]。如果 <strong>n1 &gt; n2</strong>，那么就<strong>丢弃</strong>该提议请求；否则（<strong>n2&gt;n1</strong>），发送提议响应，该提议响应包含之前已经接收过的提议 [n1, v1]，**设置当前接收的提议为 [n2, v2]**，并且保证以后不会再接受提议值小于 n2 的提议。</p>
+<p>如下图，Acceptor Z 收到 Proposer A 发来的 [n=2, v=8] 的提议请求，由于之前已经接收过 [n=4, v=5] 的提议，并且 n &gt; 2，因此就抛弃该提议请求；Acceptor X 收到 Proposer B 发来的 [n=4, v=5] 的提议请求，因为之前接收的提议为 [n=2, v=8]，并且 2 &lt;= 4，因此就发送 [n=2, v=8] 的提议响应，设置当前接收的提议为 [n=4, v=5]，并且保证以后不会再接受提议值小于 4 的提议。Acceptor Y 类似。</p>
+<p><img src="https://user-images.githubusercontent.com/7789698/38656437-1e225b4e-3e4d-11e8-8687-3d3dbb8a61e8.png" alt="image"></p>
+</li>
+<li><p>当一个 Proposer 接收到<strong>超过一半 Acceptor 的提议响应</strong>时，就可以发送接受请求。</p>
+<p>如下图，Proposer A 接受到两个提议响应之后，就发送 [n=2, v=8] 接受请求。该接受请求会被所有 Acceptor 丢弃，因为此时所有 Acceptor 都保证不接受提议值小于 4 的提议。Proposer B 过后也收到了两个提议响应，因此也开始发送接受请求。需要注意的是，接受请求的 v 需要取它收到的最大 v 值，也就是 8。因此它发送 [n=4, v=8] 的接受请求。</p>
+<p><img src="https://user-images.githubusercontent.com/7789698/38656170-5df52db6-3e4b-11e8-8479-613a7f8c6589.png" alt="image"></p>
+</li>
+<li><p>Acceptor 接收到接受请求时，如果<strong>提议号大于等于该 Acceptor 承诺的最小提议号</strong>，那么就发送<strong>通知给所有的 Learner</strong>。当 Learner 发现有大多数的 Acceptor 接收了某个提议，那么该提议的提议值就被 Paxos 选择出来。</p>
+<p><img src="https://user-images.githubusercontent.com/7789698/38658036-e02e53a2-3e55-11e8-9a86-cd7455d0da33.png" alt="image"></p>
+</li>
+</ol>
+<h4 id="约束条件"><a href="#约束条件" class="headerlink" title="约束条件"></a>约束条件</h4><h5 id="1-正确性"><a href="#1-正确性" class="headerlink" title="1. 正确性"></a>1. 正确性</h5><p>只有一个提议值会生效。</p>
+<p>因为 Paxos 协议要求每个生效的提议被多数 Acceptor 接收，并且 Acceptor 不会接受两个不同的提议，因此可以保证正确性。</p>
+<h5 id="2-可终止性"><a href="#2-可终止性" class="headerlink" title="2. 可终止性"></a>2. 可终止性</h5><p>最后总会有一个提议生效。</p>
+<p>Paxos 协议能够让 Proposer 发送的提议朝着能被大多数 Acceptor 接受的那个提议靠拢，因此能够保证可终止性。</p>
+<h4 id="缺点-2"><a href="#缺点-2" class="headerlink" title="缺点"></a>缺点</h4><ol>
+<li><strong>活锁问题</strong>。在base-paxos算法中，不存在leader这样的角色，于是存在这样一种情况，即P1提交了一个proposal n1并且通过了prepare阶段；此时P2提交了一个proposal n2(n2&gt;n1)并且也通过了prepare阶段；P1在commit时因为已经通过了n2而被拒绝；于是P1继续提交一个proposal n3并且通过prepare阶段；巧的是此时P2开始commit了，由于n2&lt;n3再次被拒绝……如此循环往复。这种情况被称为活锁。即整个系统都没死，但由于互相请求资源而被互相锁死。为了不发生活锁的情况，最简单的方式当然是缩减proposer到一个，这样就不会发生互相请求锁死的情况，也即退化。事实上很多后来的工业级协议，都是paxos协议的退化或者变种。</li>
+</ol>
+<ol start="2">
+<li><strong>复杂度问题</strong>。base-paxos协议中还存在这样那样的问题，于是各种变种paxos出现了，比如为了解决活锁问题，出现了multi-paxos；为了解决通信次数较多的问题，出现了fast-paxos；为了尽量减少冲突，出现了epaxos。可以看到，工业级实现需要考虑更多的方面，诸如性能，异常等等。这也是为啥许多分布式的一致性框架并非真正基于paxos来实现的原因。</li>
+<li><strong>全序问题</strong>。对于paxos算法来说，不能保证两次提交最终的顺序，而zookeeper需要做到这点</li>
+</ol>
+<p>信息流：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line">Client   Proposer      Acceptor     Learner</span><br><span class="line">   |         |          |  |  |       |  |</span><br><span class="line">   X--------&gt;|          |  |  |       |  |  Request</span><br><span class="line">   |         X---------&gt;|-&gt;|-&gt;|       |  |  Prepare(1)</span><br><span class="line">   |         |&lt;---------X--X--X       |  |  Promise(1,&#123;Va,Vb,Vc&#125;)</span><br><span class="line">   |         X---------&gt;|-&gt;|-&gt;|       |  |  Accept!(1,Vn)</span><br><span class="line">   |         |&lt;---------X--X--X------&gt;|-&gt;|  Accepted(1,Vn)</span><br><span class="line">   |&lt;---------------------------------X--X  Response</span><br><span class="line">   |         |          |  |  |       |  |</span><br></pre></td></tr></table></figure>
+
+<p>Vn = last of (Va,Vb,Vc)</p>
+<h4 id="Acceptor接收失败的情况"><a href="#Acceptor接收失败的情况" class="headerlink" title="Acceptor接收失败的情况"></a>Acceptor接收失败的情况</h4><figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line">Client   Proposer      Acceptor     Learner</span><br><span class="line">   |         |          |  |  |       |  |</span><br><span class="line">   X--------&gt;|          |  |  |       |  |  Request</span><br><span class="line">   |         X---------&gt;|-&gt;|-&gt;|       |  |  Prepare(1)</span><br><span class="line">   |         |          |  |  !       |  |  !! FAIL !!</span><br><span class="line">   |         |&lt;---------X--X          |  |  Promise(1,&#123;Va, Vb, null&#125;)</span><br><span class="line">   |         X---------&gt;|-&gt;|          |  |  Accept!(1,V)</span><br><span class="line">   |         |&lt;---------X--X---------&gt;|-&gt;|  Accepted(1,V)</span><br><span class="line">   |&lt;---------------------------------X--X  Response</span><br><span class="line">   |         |          |  |          |  |</span><br></pre></td></tr></table></figure>
+
+<h4 id="Learner接收失败"><a href="#Learner接收失败" class="headerlink" title="Learner接收失败"></a>Learner接收失败</h4><figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line">Client   Proposer      Acceptor     Learner</span><br><span class="line">   |         |          |  |  |       |  |</span><br><span class="line">   X--------&gt;|          |  |  |       |  |  Request</span><br><span class="line">   |         X---------&gt;|-&gt;|-&gt;|       |  |  Prepare(1)</span><br><span class="line">   |         |&lt;---------X--X--X       |  |  Promise(1,&#123;null,null,null&#125;)</span><br><span class="line">   |         X---------&gt;|-&gt;|-&gt;|       |  |  Accept!(1,V)</span><br><span class="line">   |         |&lt;---------X--X--X------&gt;|-&gt;|  Accepted(1,V)</span><br><span class="line">   |         |          |  |  |       |  !  !! FAIL !!</span><br><span class="line">   |&lt;---------------------------------X     Response</span><br><span class="line">   |         |          |  |  |       |</span><br></pre></td></tr></table></figure>
+
+
+
+<h4 id="Proposer宕机或发送失败"><a href="#Proposer宕机或发送失败" class="headerlink" title="Proposer宕机或发送失败"></a>Proposer宕机或发送失败</h4><figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br></pre></td><td class="code"><pre><span class="line">Client  Proposer        Acceptor     Learner</span><br><span class="line">   |      |             |  |  |       |  |</span><br><span class="line">   X-----&gt;|             |  |  |       |  |  Request</span><br><span class="line">   |      X------------&gt;|-&gt;|-&gt;|       |  |  Prepare(1)</span><br><span class="line">   |      |&lt;------------X--X--X       |  |  Promise(1,&#123;null, null, null&#125;)</span><br><span class="line">   |      |             |  |  |       |  |</span><br><span class="line">   |      |             |  |  |       |  |  !! Leader fails during broadcast !!</span><br><span class="line">   |      X------------&gt;|  |  |       |  |  Accept!(1,V)</span><br><span class="line">   |      !             |  |  |       |  |</span><br><span class="line">   |         |          |  |  |       |  |  !! NEW LEADER !!</span><br><span class="line">   |         X---------&gt;|-&gt;|-&gt;|       |  |  Prepare(2)</span><br><span class="line">   |         |&lt;---------X--X--X       |  |  Promise(2,&#123;V, null, null&#125;)</span><br><span class="line">   |         X---------&gt;|-&gt;|-&gt;|       |  |  Accept!(2,V)</span><br><span class="line">   |         |&lt;---------X--X--X------&gt;|-&gt;|  Accepted(2,V)</span><br><span class="line">   |&lt;---------------------------------X--X  Response</span><br><span class="line">   |         |          |  |  |       |  |</span><br></pre></td></tr></table></figure>
+
+<h4 id="Proposers竞争"><a href="#Proposers竞争" class="headerlink" title="Proposers竞争"></a>Proposers竞争</h4><figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br></pre></td><td class="code"><pre><span class="line">Client   Leader         Acceptor     Learner</span><br><span class="line">   |      |             |  |  |       |  |</span><br><span class="line">   X-----&gt;|             |  |  |       |  |  Request</span><br><span class="line">   |      X------------&gt;|-&gt;|-&gt;|       |  |  Prepare(1)</span><br><span class="line">   |      |&lt;------------X--X--X       |  |  Promise(1,&#123;null,null,null&#125;)</span><br><span class="line">   |      !             |  |  |       |  |  !! LEADER FAILS</span><br><span class="line">   |         |          |  |  |       |  |  !! NEW LEADER (knows last number was 1)</span><br><span class="line">   |         X---------&gt;|-&gt;|-&gt;|       |  |  Prepare(2)</span><br><span class="line">   |         |&lt;---------X--X--X       |  |  Promise(2,&#123;null,null,null&#125;)</span><br><span class="line">   |      |  |          |  |  |       |  |  !! OLD LEADER recovers</span><br><span class="line">   |      |  |          |  |  |       |  |  !! OLD LEADER tries 2, denied</span><br><span class="line">   |      X------------&gt;|-&gt;|-&gt;|       |  |  Prepare(2)</span><br><span class="line">   |      |&lt;------------X--X--X       |  |  Nack(2)</span><br><span class="line">   |      |  |          |  |  |       |  |  !! OLD LEADER tries 3</span><br><span class="line">   |      X------------&gt;|-&gt;|-&gt;|       |  |  Prepare(3)</span><br><span class="line">   |      |&lt;------------X--X--X       |  |  Promise(3,&#123;null,null,null&#125;)</span><br><span class="line">   |      |  |          |  |  |       |  |  !! NEW LEADER proposes, denied</span><br><span class="line">   |      |  X---------&gt;|-&gt;|-&gt;|       |  |  Accept!(2,Va)</span><br><span class="line">   |      |  |&lt;---------X--X--X       |  |  Nack(3)</span><br><span class="line">   |      |  |          |  |  |       |  |  !! NEW LEADER tries 4</span><br><span class="line">   |      |  X---------&gt;|-&gt;|-&gt;|       |  |  Prepare(4)</span><br><span class="line">   |      |  |&lt;---------X--X--X       |  |  Promise(4,&#123;null,null,null&#125;)</span><br><span class="line">   |      |  |          |  |  |       |  |  !! OLD LEADER proposes, denied</span><br><span class="line">   |      X------------&gt;|-&gt;|-&gt;|       |  |  Accept!(3,Vb)</span><br><span class="line">   |      |&lt;------------X--X--X       |  |  Nack(4)</span><br><span class="line">   |      |  |          |  |  |       |  |  ... and so on ...</span><br></pre></td></tr></table></figure>
+
+<h3 id="Multi-Paxos"><a href="#Multi-Paxos" class="headerlink" title="Multi-Paxos"></a>Multi-Paxos</h3><p>唯一的propser</p>
+<p>如果leader是相对稳定的，可以跳过第一个阶段。在同一个leader下，每一轮还会递增一个整数。</p>
+<p>Multi-Paxos减少了无故障消息延迟（proposal到learning），从4次延迟减少到2次延迟</p>
+<h4 id="开始阶段"><a href="#开始阶段" class="headerlink" title="开始阶段"></a>开始阶段</h4><figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line">Client   Proposer      Acceptor     Learner</span><br><span class="line">   |         |          |  |  |       |  | --- First Request ---</span><br><span class="line">   X--------&gt;|          |  |  |       |  |  Request</span><br><span class="line">   |         X---------&gt;|-&gt;|-&gt;|       |  |  Prepare(N)</span><br><span class="line">   |         |&lt;---------X--X--X       |  |  Promise(N,I,&#123;Va,Vb,Vc&#125;)</span><br><span class="line">   |         X---------&gt;|-&gt;|-&gt;|       |  |  Accept!(N,I,Vm)</span><br><span class="line">   |         |&lt;---------X--X--X------&gt;|-&gt;|  Accepted(N,I,Vm)</span><br><span class="line">   |&lt;---------------------------------X--X  Response</span><br><span class="line">   |         |          |  |  |       |  |</span><br></pre></td></tr></table></figure>
+
+<p>Vm = last of (Va, Vb, Vc)</p>
+<h4 id="稳定状态"><a href="#稳定状态" class="headerlink" title="稳定状态"></a>稳定状态</h4><figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line">Client   Proposer       Acceptor     Learner</span><br><span class="line">   |         |          |  |  |       |  |  --- Following Requests ---</span><br><span class="line">   X--------&gt;|          |  |  |       |  |  Request</span><br><span class="line">   |         X---------&gt;|-&gt;|-&gt;|       |  |  Accept!(N,I+1,W)</span><br><span class="line">   |         |&lt;---------X--X--X------&gt;|-&gt;|  Accepted(N,I+1,W)</span><br><span class="line">   |&lt;---------------------------------X--X  Response</span><br><span class="line">   |         |          |  |  |       |  |</span><br></pre></td></tr></table></figure>
+
+<h4 id="简化角色"><a href="#简化角色" class="headerlink" title="简化角色"></a>简化角色</h4><h4 id="开始阶段-1"><a href="#开始阶段-1" class="headerlink" title="开始阶段"></a>开始阶段</h4><figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line">Client      Servers</span><br><span class="line">   |         |  |  | --- First Request ---</span><br><span class="line">   X--------&gt;|  |  |  Request</span><br><span class="line">   |         X-&gt;|-&gt;|  Prepare(N)</span><br><span class="line">   |         |&lt;-X--X  Promise(N,I,&#123;Va,Vb&#125;)</span><br><span class="line">   |         X-&gt;|-&gt;|  Accept!(N,I,Vn)</span><br><span class="line">   |         X&lt;&gt;X&lt;&gt;X  Accepted(N,I)</span><br><span class="line">   |&lt;--------X  |  |  Response</span><br><span class="line">   |         |  |  |</span><br></pre></td></tr></table></figure>
+
+<h4 id="稳定阶段"><a href="#稳定阶段" class="headerlink" title="稳定阶段"></a>稳定阶段</h4><figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line">Client      Servers</span><br><span class="line">   X--------&gt;|  |  |  Request</span><br><span class="line">   |         X-&gt;|-&gt;|  Accept!(N,I+1,W)</span><br><span class="line">   |         X&lt;&gt;X&lt;&gt;X  Accepted(N,I+1)</span><br><span class="line">   |&lt;--------X  |  |  Response</span><br><span class="line">   |         |  |  |</span><br></pre></td></tr></table></figure>
+
+<h3 id="Fast-Paxos"><a href="#Fast-Paxos" class="headerlink" title="Fast-Paxos"></a>Fast-Paxos</h3><p>Basic Paxos里，客户端到Learner的请求有三个消息的延迟。Fast Paxos允许两个消息的延迟。但是要求1、系统由3f+1个acceptor构成，容许f个错误（取代2f+1个）；2、客户端发送请求到多个目的地</p>
+<p>如果leader没有值给Acceptor，Client可以直接给Acceptor发送一个Accept，接下来类似Basic Paxos，Acceptor会回复Leader一个Accepted信息，这样以来就只需要两个消息的延迟久就可以发送给Learner。</p>
+<p>如果leader检测到碰撞，leader将会重新发送消息来解决碰撞。这种协调恢复结束将会耗费4个消息延迟</p>
+<h4 id="非冲突"><a href="#非冲突" class="headerlink" title="非冲突"></a>非冲突</h4><figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line">Client    Leader         Acceptor      Learner</span><br><span class="line">   |         |          |  |  |  |       |  |</span><br><span class="line">   |         X---------&gt;|-&gt;|-&gt;|-&gt;|       |  |  Any(N,I,Recovery)</span><br><span class="line">   |         |          |  |  |  |       |  |</span><br><span class="line">   X-------------------&gt;|-&gt;|-&gt;|-&gt;|       |  |  Accept!(N,I,W)</span><br><span class="line">   |         |&lt;---------X--X--X--X------&gt;|-&gt;|  Accepted(N,I,W)</span><br><span class="line">   |&lt;------------------------------------X--X  Response(W)</span><br><span class="line">   |         |          |  |  |  |       |  |</span><br></pre></td></tr></table></figure>
+
+<h4 id="proposals冲突"><a href="#proposals冲突" class="headerlink" title="proposals冲突"></a>proposals冲突</h4><figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br></pre></td><td class="code"><pre><span class="line">Client   Leader      Acceptor     Learner</span><br><span class="line"> |  |      |        |  |  |  |      |  |</span><br><span class="line"> |  |      |        |  |  |  |      |  |</span><br><span class="line"> |  |      |        |  |  |  |      |  |  !! Concurrent conflicting proposals</span><br><span class="line"> |  |      |        |  |  |  |      |  |  !!   received in different order</span><br><span class="line"> |  |      |        |  |  |  |      |  |  !!   by the Acceptors</span><br><span class="line"> |  X--------------?|-?|-?|-?|      |  |  Accept!(N,I,V)</span><br><span class="line"> X-----------------?|-?|-?|-?|      |  |  Accept!(N,I,W)</span><br><span class="line"> |  |      |        |  |  |  |      |  |</span><br><span class="line"> |  |      |        |  |  |  |      |  |  !! Acceptors disagree on value</span><br><span class="line"> |  |      |&lt;-------X--X-&gt;|-&gt;|-----&gt;|-&gt;|  Accepted(N,I,V)</span><br><span class="line"> |  |      |&lt;-------|&lt;-|&lt;-X--X-----&gt;|-&gt;|  Accepted(N,I,W)</span><br><span class="line"> |  |      |        |  |  |  |      |  |</span><br><span class="line"> |  |      |        |  |  |  |      |  |  !! Detect collision &amp; recover</span><br><span class="line"> |  |      X-------&gt;|-&gt;|-&gt;|-&gt;|      |  |  Accept!(N+1,I,W)</span><br><span class="line"> |  |      |&lt;-------X--X--X--X-----&gt;|-&gt;|  Accepted(N+1,I,W)</span><br><span class="line"> |&lt;---------------------------------X--X  Response(W)</span><br><span class="line"> |  |      |        |  |  |  |      |  |</span><br></pre></td></tr></table></figure>
+
+<p>proposals冲突，不协调恢复</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br></pre></td><td class="code"><pre><span class="line">Client   Leader      Acceptor     Learner</span><br><span class="line"> |  |      |        |  |  |  |      |  |</span><br><span class="line"> |  |      X-------&gt;|-&gt;|-&gt;|-&gt;|      |  |  Any(N,I,Recovery)</span><br><span class="line"> |  |      |        |  |  |  |      |  |</span><br><span class="line"> |  |      |        |  |  |  |      |  |  !! Concurrent conflicting proposals</span><br><span class="line"> |  |      |        |  |  |  |      |  |  !!   received in different order</span><br><span class="line"> |  |      |        |  |  |  |      |  |  !!   by the Acceptors</span><br><span class="line"> |  X--------------?|-?|-?|-?|      |  |  Accept!(N,I,V)</span><br><span class="line"> X-----------------?|-?|-?|-?|      |  |  Accept!(N,I,W)</span><br><span class="line"> |  |      |        |  |  |  |      |  |</span><br><span class="line"> |  |      |        |  |  |  |      |  |  !! Acceptors disagree on value</span><br><span class="line"> |  |      |&lt;-------X--X-&gt;|-&gt;|-----&gt;|-&gt;|  Accepted(N,I,V)</span><br><span class="line"> |  |      |&lt;-------|&lt;-|&lt;-X--X-----&gt;|-&gt;|  Accepted(N,I,W)</span><br><span class="line"> |  |      |        |  |  |  |      |  |</span><br><span class="line"> |  |      |        |  |  |  |      |  |  !! Detect collision &amp; recover</span><br><span class="line"> |  |      |&lt;-------X--X--X--X-----&gt;|-&gt;|  Accepted(N+1,I,W)</span><br><span class="line"> |&lt;---------------------------------X--X  Response(W)</span><br><span class="line"> |  |      |        |  |  |  |      |  |</span><br></pre></td></tr></table></figure>
+
+<h4 id="不协调恢复、减少角色"><a href="#不协调恢复、减少角色" class="headerlink" title="不协调恢复、减少角色"></a>不协调恢复、减少角色</h4><figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br></pre></td><td class="code"><pre><span class="line">Client         Servers</span><br><span class="line"> |  |         |  |  |  |</span><br><span class="line"> |  |         X-&gt;|-&gt;|-&gt;|  Any(N,I,Recovery)</span><br><span class="line"> |  |         |  |  |  |</span><br><span class="line"> |  |         |  |  |  |  !! Concurrent conflicting proposals</span><br><span class="line"> |  |         |  |  |  |  !!   received in different order</span><br><span class="line"> |  |         |  |  |  |  !!   by the Servers</span><br><span class="line"> |  X--------?|-?|-?|-?|  Accept!(N,I,V)</span><br><span class="line"> X-----------?|-?|-?|-?|  Accept!(N,I,W)</span><br><span class="line"> |  |         |  |  |  |</span><br><span class="line"> |  |         |  |  |  |  !! Servers disagree on value</span><br><span class="line"> |  |         X&lt;&gt;X-&gt;|-&gt;|  Accepted(N,I,V)</span><br><span class="line"> |  |         |&lt;-|&lt;-X&lt;&gt;X  Accepted(N,I,W)</span><br><span class="line"> |  |         |  |  |  |</span><br><span class="line"> |  |         |  |  |  |  !! Detect collision &amp; recover</span><br><span class="line"> |  |         X&lt;&gt;X&lt;&gt;X&lt;&gt;X  Accepted(N+1,I,W)</span><br><span class="line"> |&lt;-----------X--X--X--X  Response(W)</span><br><span class="line"> |  |         |  |  |  |</span><br></pre></td></tr></table></figure>
+
+<h2 id="Zab-原子广播协议"><a href="#Zab-原子广播协议" class="headerlink" title="Zab 原子广播协议"></a>Zab 原子广播协议</h2><p>Zab的全称是Zookeeper atomic broadcast protocol，是Zookeeper内部用到的一致性协议。相比Paxos，Zab最大的特点是保证强一致性(strong consistency，或叫线性一致性linearizable consistency)。</p>
+<h4 id="术语解释"><a href="#术语解释" class="headerlink" title="术语解释"></a>术语解释</h4><ul>
+<li><strong>quorum</strong>：集群中超过半数的节点集合</li>
+</ul>
+<p>ZAB 中的节点有三种状态</p>
+<ul>
+<li><strong>following</strong>：当前节点是跟随者，服从 leader 节点的命令</li>
+<li><strong>leading</strong>：当前节点是 leader，负责协调事务</li>
+<li><strong>election/looking</strong>：节点处于选举状态</li>
+</ul>
+<p><em>代码实现中多了一种：observing 状态，这是 Zookeeper 引入 Observer 之后加入的，Observer 不参与选举，是只读节点，跟 ZAB 协议没有关系</em></p>
+<p>节点的持久状态</p>
+<ul>
+<li><strong>history</strong>：当前节点接收到事务提议的 log</li>
+<li><strong>acceptedEpoch</strong>：follower 已经接受的 leader 更改年号的 NEWEPOCH 提议</li>
+<li><strong>currentEpoch</strong>：当前所处的年代</li>
+<li><strong>zxid</strong>：事务请求的唯一标记，由leader服务器负责进行分配。由2部分构成，高32位是上述的peerEpoch，低32位是请求的计数，从0开始。所以由zxid我们就可以知道该请求是哪个轮次的，并且是该轮次的第几个请求。</li>
+<li><strong>lastZxid</strong>：history 中最近接收到的提议的 zxid （最大的）</li>
+<li><strong>lastProcessedZxid</strong>：最后一次commit的事务请求的zxid</li>
+<li><strong>electionEpoch</strong>：每执行一次leader选举，electionEpoch就会自增，用来标记leader选举的轮次</li>
+<li><strong>peerEpoch</strong>：每次leader选举完成之后，都会选举出一个新的peerEpoch，用来标记事务请求所属的轮次d</li>
+</ul>
+<blockquote>
+<p>在 ZAB 协议的事务编号 Zxid 设计中，Zxid 是一个 64 位的数字，其中低 32 位是一个简单的单调递增的计数器，针对客户端每一个事务请求，计数器加 1；而高 32 位则代表 Leader 周期 epoch 的编号，每个当选产生一个新的 Leader 服务器，就会从这个 Leader 服务器上取出其本地日志中最大事务的ZXID，并从中读取 epoch 值，然后加 1，以此作为新的 epoch，并将低 32 位从 0 开始计数。</p>
+<p>epoch：可以理解为当前集群所处的年代或者周期，每个 leader 就像皇帝，都有自己的年号，所以每次改朝换代，leader 变更之后，都会在前一个年代的基础上加 1。这样就算旧的 leader 崩溃恢复之后，也没有人听他的了，因为 follower 只听从当前年代的 leader 的命令。</p>
+</blockquote>
+<p><img src="https://user-images.githubusercontent.com/7789698/38787192-1f444b76-415f-11e8-8e4a-434b73380f99.png" alt="image"></p>
+<h4 id="Phase-0-Leader-election（选举阶段）"><a href="#Phase-0-Leader-election（选举阶段）" class="headerlink" title="Phase 0: Leader election（选举阶段）"></a>Phase 0: Leader election（选举阶段）</h4><p>节点在一开始都处于选举阶段，只要有<strong>一个节点得到超半数节点的票数</strong>，它就可以当选<strong>准leader</strong>。只有到达 Phase 3 准 leader 才会成为真正的 leader。这一阶段的目的是就是为了选出一个准 leader，然后进入下一个阶段。</p>
+<p>协议并没有规定详细的选举算法，后面我们会提到实现中使用的 Fast Leader Election。</p>
+<h4 id="Phase-1-Discovery（发现阶段）"><a href="#Phase-1-Discovery（发现阶段）" class="headerlink" title="Phase 1: Discovery（发现阶段）"></a>Phase 1: Discovery（发现阶段）</h4><p>在这个阶段，<strong>followers 跟准leader进行通信</strong>，<strong>同步followers最近接收的事务提议</strong>。这个一阶段的主要目的是发现当前大多数节点接收的最新提议，并且<strong>准leader生成新的epoch</strong>，让followers接受，更新它们的acceptedEpoch</p>
+<p><img src="https://user-images.githubusercontent.com/7789698/39752060-dc9269ee-52ec-11e8-8782-3287f2829583.png" alt="image"></p>
+<p><strong>一个 follower 只会连接一个 leader</strong>，如果有一个节点 f 认为另一个 follower p 是 leader，f 在尝试连接 p 时会被拒绝，f 被拒绝之后，就会进入 Phase 0。</p>
+<h4 id="Phase-2-Synchronization（同步阶段）"><a href="#Phase-2-Synchronization（同步阶段）" class="headerlink" title="Phase 2: Synchronization（同步阶段）"></a>Phase 2: Synchronization（同步阶段）</h4><p>同步阶段主要是利用 leader 前一阶段获得的最新提议历史，同步集群中所有的副本。只有当 quorum 都同步完成，准 leader 才会成为真正的 leader。follower 只会接收 zxid 比自己的 lastZxid 大的提议。<br><img src="https://user-images.githubusercontent.com/7789698/39752118-0e6473a4-52ed-11e8-81c9-242536d38d7f.png" alt="image"></p>
+<h4 id="Phase-3-Broadcast（广播阶段）"><a href="#Phase-3-Broadcast（广播阶段）" class="headerlink" title="Phase 3: Broadcast（广播阶段）"></a>Phase 3: Broadcast（广播阶段）</h4><p>到了这个阶段，Zookeeper 集群才能正式对外提供事务服务，并且 leader 可以进行消息广播。同时如果有新的节点加入，还需要对新节点进行同步。<br><img src="https://user-images.githubusercontent.com/7789698/39752157-2888a2dc-52ed-11e8-929e-6887e95fefcc.png" alt="image"><br>值得注意的是，ZAB 提交事务并不像 2PC 一样需要全部follower都 ACK，只需要得到quorum（超过半数的节点）的 ACK 就可以了。</p>
+<h3 id="协议实现"><a href="#协议实现" class="headerlink" title="协议实现"></a>协议实现</h3><p>协议的 Java 版本实现跟上面的定义有些不同，选举阶段使用的是 Fast Leader Election（FLE），它包含了 Phase 1 的发现职责。因为 FLE 会选举拥有最新提议历史的节点作为 leader，这样就省去了发现最新提议的步骤。实际的实现将 Phase 1 和 Phase 2 合并为 Recovery Phase（恢复阶段）。所以，ZAB 的实现只有三个阶段：</p>
+<ul>
+<li><strong>Fast Leader Election</strong></li>
+<li><strong>Recovery Phase</strong></li>
+<li><strong>Broadcast Phase</strong></li>
+</ul>
+<h4 id="Fast-Leader-Election"><a href="#Fast-Leader-Election" class="headerlink" title="Fast Leader Election"></a>Fast Leader Election</h4><p>前面提到 FLE 会选举拥有最新提议历史（lastZixd最大）的节点作为 leader，这样就省去了发现最新提议的步骤。这是基于拥有最新提议的节点也有最新提交记录的前提。</p>
+<h5 id="成为-leader-的条件"><a href="#成为-leader-的条件" class="headerlink" title="成为 leader 的条件"></a>成为 leader 的条件</h5><ol>
+<li>选<code>epoch</code>最大的</li>
+<li><code>epoch</code>相等，选 zxid 最大的</li>
+<li><code>epoch</code>和<code>zxid</code>都相等，选择<code>server id</code>最大的（就是我们配置<code>zoo.cfg</code>中的<code>myid</code>）</li>
+</ol>
+<p>节点在选举开始都默认投票给自己，当接收其他节点的选票时，会根据上面的条件更改自己的选票并重新发送选票给其他节点，当有一个节点的得票超过半数，该节点会设置自己的状态为 leading，其他节点会设置自己的状态为 following。</p>
+<h5 id="选举过程"><a href="#选举过程" class="headerlink" title="选举过程"></a>选举过程</h5><p><img src="https://user-images.githubusercontent.com/7789698/39752377-d84a49fa-52ed-11e8-83fb-b4ef3875f52a.png" alt="image"></p>
+<h5 id="Recovery-Phase-（恢复阶段）"><a href="#Recovery-Phase-（恢复阶段）" class="headerlink" title="Recovery Phase （恢复阶段）"></a>Recovery Phase （恢复阶段）</h5><p>这一阶段 follower 发送它们的 lastZixd 给 leader，leader 根据 lastZixd 决定如何同步数据。这里的实现跟前面 Phase 2 有所不同：Follower 收到 TRUNC 指令会中止 L.lastCommittedZxid 之后的提议，收到 DIFF 指令会接收新的提议。</p>
+<blockquote>
+<p>history.lastCommittedZxid：最近被提交的提议的 zxid<br>history:oldThreshold：被认为已经太旧的已提交提议的 zxid</p>
+</blockquote>
+<p><img src="https://user-images.githubusercontent.com/7789698/39752393-e46e974a-52ed-11e8-8c05-d0db59b82a9a.png" alt="image"></p>
+<h2 id="Raft-协议"><a href="#Raft-协议" class="headerlink" title="Raft 协议"></a>Raft 协议</h2><p>在一个由 Raft 协议组织的集群中有三类角色：</p>
+<ul>
+<li>Leader（领袖）</li>
+<li>Follower（群众）</li>
+<li>Candidate（候选人）</li>
+</ul>
+<h3 id="Leader-选举过程"><a href="#Leader-选举过程" class="headerlink" title="Leader 选举过程"></a>Leader 选举过程</h3><p>在极简的思维下，一个最小的 Raft 民主集群需要三个参与者（如下图：A、B、C），这样才可能投出多数票。初始状态 ABC 都是 Follower，然后发起选举这时有三种可能情形发生。下图中前二种都能选出 Leader，第三种则表明本轮投票无效（Split Votes），每方都投给了自己，结果没有任何一方获得多数票。之后每个参与方随机休息一阵（Election Timeout）重新发起投票直到一方获得多数票。这里的关键就是随机 timeout，最先从 timeout 中恢复发起投票的一方向还在 timeout 中的另外两方请求投票，这时它们就只能投给对方了，很快达成一致。</p>
+<p><img src="https://user-images.githubusercontent.com/7789698/38790076-2c6de066-4171-11e8-82f3-4310c7cb3873.png" alt="image"></p>
+<p>选出 Leader 后，Leader 通过定期向所有 Follower 发送心跳信息维持其统治。若 Follower 一段时间未收到 Leader 的心跳则认为 Leader 可能已经挂了再次发起选主过程。</p>
+<h3 id="Leader-节点对一致性的影响"><a href="#Leader-节点对一致性的影响" class="headerlink" title="Leader 节点对一致性的影响"></a>Leader 节点对一致性的影响</h3><p>Raft 协议强依赖 Leader 节点的可用性来确保集群数据的一致性。数据的流向只能从 Leader 节点向 Follower 节点转移。当 Client 向集群 Leader 节点提交数据后，Leader 节点接收到的数据处于未提交状态（Uncommitted），接着 Leader 节点会并发向所有 Follower 节点复制数据并等待接收响应，确保至少集群中超过半数节点已接收到数据后再向 Client 确认数据已接收。一旦向 Client 发出数据接收 Ack 响应后，表明此时数据状态进入已提交（Committed），Leader 节点再向 Follower 节点发通知告知该数据状态已提交。</p>
+<p><img src="https://user-images.githubusercontent.com/7789698/38790297-bf18a51c-4172-11e8-974d-3449e0790e56.png" alt="image"></p>
+<p>在这个过程中，主节点可能在任意阶段挂掉，看下 Raft 协议如何针对不同阶段保障数据一致性的。</p>
+<h4 id="1-数据到达-Leader-节点前"><a href="#1-数据到达-Leader-节点前" class="headerlink" title="1. 数据到达 Leader 节点前"></a>1. 数据到达 Leader 节点前</h4><p>这个阶段 Leader 挂掉不影响一致性，不多说。</p>
+<p><img src="https://user-images.githubusercontent.com/7789698/39752667-bb36f452-52ee-11e8-981e-6c7373837ad4.png" alt="image"></p>
+<h4 id="2-数据到达-Leader-节点，但未复制到-Follower-节点"><a href="#2-数据到达-Leader-节点，但未复制到-Follower-节点" class="headerlink" title="2. 数据到达 Leader 节点，但未复制到 Follower 节点"></a>2. 数据到达 Leader 节点，但未复制到 Follower 节点</h4><p>这个阶段 Leader 挂掉，数据属于未提交状态，Client 不会收到 Ack 会认为<strong>超时失败</strong>可安全发起重试。Follower 节点上没有该数据，<strong>重新选主</strong>后 Client <strong>重试重新提交</strong>可成功。原来的 Leader 节点恢复后作为 Follower 加入集群重新从当前任期的新 Leader 处同步数据，强制保持和 Leader 数据一致。</p>
+<p><img src="https://user-images.githubusercontent.com/7789698/39752699-ce243002-52ee-11e8-8fc2-2c17081470f0.png" alt="image"></p>
+<h4 id="3-数据到达-Leader-节点，成功复制到-Follower-所有节点，但还未向-Leader-响应接收"><a href="#3-数据到达-Leader-节点，成功复制到-Follower-所有节点，但还未向-Leader-响应接收" class="headerlink" title="3. 数据到达 Leader 节点，成功复制到 Follower 所有节点，但还未向 Leader 响应接收"></a>3. 数据到达 Leader 节点，成功复制到 Follower 所有节点，但还未向 Leader 响应接收</h4><p>这个阶段 Leader 挂掉，虽然数据在 Follower 节点处于未提交状态（Uncommitted）但保持一致，重新选出 Leader 后可完成数据提交，此时 Client 由于不知到底提交成功没有，可<strong>重试提交</strong>。针对这种情况 Raft 要求 RPC 请求实现幂等性，也就是要实现内部去重机制。</p>
+<p><img src="https://user-images.githubusercontent.com/7789698/39752713-dbf0420c-52ee-11e8-8c06-e801a03cd2a4.png" alt="image"></p>
+<h4 id="4-数据到达-Leader-节点，成功复制到-Follower-部分节点，但还未向-Leader-响应接收"><a href="#4-数据到达-Leader-节点，成功复制到-Follower-部分节点，但还未向-Leader-响应接收" class="headerlink" title="4. 数据到达 Leader 节点，成功复制到 Follower 部分节点，但还未向 Leader 响应接收"></a>4. 数据到达 Leader 节点，成功复制到 Follower 部分节点，但还未向 Leader 响应接收</h4><p>这个阶段 Leader 挂掉，数据在 Follower 节点处于未提交状态（Uncommitted）且不一致，Raft 协议要求投票只能投给拥有最新数据的节点。所以拥有最新数据的节点会被选为 Leader 再强制同步数据到 Follower，数据不会丢失并最终一致。</p>
+<p><img src="https://user-images.githubusercontent.com/7789698/39752738-e92947d4-52ee-11e8-999c-f53e42de92ea.png" alt="image"></p>
+<h4 id="5-数据到达-Leader-节点，成功复制到-Follower-所有或多数节点，数据在-Leader-处于已提交状态，但在-Follower-处于未提交状态"><a href="#5-数据到达-Leader-节点，成功复制到-Follower-所有或多数节点，数据在-Leader-处于已提交状态，但在-Follower-处于未提交状态" class="headerlink" title="5. 数据到达 Leader 节点，成功复制到 Follower 所有或多数节点，数据在 Leader 处于已提交状态，但在 Follower 处于未提交状态"></a>5. 数据到达 Leader 节点，成功复制到 Follower 所有或多数节点，数据在 Leader 处于已提交状态，但在 Follower 处于未提交状态</h4><p>这个阶段 Leader 挂掉，重新选出新 Leader 后的处理流程和阶段 3 一样。</p>
+<p><img src="https://user-images.githubusercontent.com/7789698/39752753-f84889fa-52ee-11e8-9e3d-2a0fa6952882.png" alt="image"></p>
+<h4 id="6-数据到达-Leader-节点，成功复制到-Follower-所有或多数节点，数据在所有节点都处于已提交状态，但还未响应-Client"><a href="#6-数据到达-Leader-节点，成功复制到-Follower-所有或多数节点，数据在所有节点都处于已提交状态，但还未响应-Client" class="headerlink" title="6. 数据到达 Leader 节点，成功复制到 Follower 所有或多数节点，数据在所有节点都处于已提交状态，但还未响应 Client"></a>6. 数据到达 Leader 节点，成功复制到 Follower 所有或多数节点，数据在所有节点都处于已提交状态，但还未响应 Client</h4><p>这个阶段 Leader 挂掉，Cluster 内部数据其实已经是一致的，Client 重复重试基于幂等策略对一致性无影响。</p>
+<p><img src="https://user-images.githubusercontent.com/7789698/39752773-06c7f826-52ef-11e8-8e3c-a0815ab94efc.png" alt="image"></p>
+<h4 id="7-网络分区导致的脑裂情况，出现双-Leader"><a href="#7-网络分区导致的脑裂情况，出现双-Leader" class="headerlink" title="7. 网络分区导致的脑裂情况，出现双 Leader"></a>7. 网络分区导致的脑裂情况，出现双 Leader</h4><p>网络分区将原先的 Leader 节点和 Follower 节点分隔开，Follower 收不到 Leader 的心跳将发起选举产生新的 Leader。这时就产生了双 Leader，原先的 Leader 独自在一个区，向它提交数据不可能复制到多数节点所以永远提交不成功。向新的 Leader 提交数据可以提交成功，网络恢复后旧的 Leader 发现集群中有更新任期（Term）的新 Leader 则自动降级为 Follower 并从新 Leader 处同步数据达成集群数据一致。</p>
+<p><img src="https://user-images.githubusercontent.com/7789698/39753101-300ada22-52f0-11e8-95e5-d19fc3955ed6.png" alt="image"></p>
+<h3 id="图解"><a href="#图解" class="headerlink" title="图解"></a>图解</h3><ol>
+<li>刚开始所有的节点都是follower。</li>
+</ol>
+<p><img src="https://user-images.githubusercontent.com/7789698/38790429-dc07722e-4173-11e8-8ebb-6298a3a46af8.png" alt="image"></p>
+<ol start="2">
+<li>如果follower不能接收到leader的消息就成为candidate。这里有个选举超时时间election timeout，这个时间是随机在150ms到300ms之间，第一个到达超时时间恢复的节点将会认为自己是candidate，并且投自己。</li>
+</ol>
+<p><img src="https://user-images.githubusercontent.com/7789698/38790454-f736b474-4173-11e8-8c99-1a5cb429bae9.png" alt="image"></p>
+<ol start="3">
+<li>candidate发送投票请求，请求选举自己为leader。如果follow节点尚未投票则返回响应给候选人投票且重置自己的election timeout。</li>
+</ol>
+<p><img src="https://user-images.githubusercontent.com/7789698/38790495-30cb3bf6-4174-11e8-9312-9cc50da7ef79.png" alt="image"></p>
+<p><img src="https://user-images.githubusercontent.com/7789698/38790385-8af85808-4173-11e8-9e15-e392d86a5fc7.png" alt="image"></p>
+<ol start="4">
+<li>候选人获得超过半数的票则被选举为leader。</li>
+</ol>
+<p><img src="https://user-images.githubusercontent.com/7789698/38790512-5afcc674-4174-11e8-91f8-e10c60f9bbdf.png" alt="image"></p>
+<ol start="5">
+<li>leader停止将会触发重新选举</li>
+</ol>
+<p><img src="https://user-images.githubusercontent.com/7789698/38790657-4bb35f24-4175-11e8-9916-5e5ed1dcc821.png" alt="image"></p>
+<p><img src="https://user-images.githubusercontent.com/7789698/38790664-54980a86-4175-11e8-9d37-0fc915b4c945.png" alt="image"></p>
+<ol start="6">
+<li>当有两个节点同时成为候选人。节点已经投票的时候将不会在接受后续投票请求。一旦没有超过半数投票，就会等待超时重新投票。</li>
+</ol>
+<p><img src="https://user-images.githubusercontent.com/7789698/38790720-9c80060a-4175-11e8-950b-cb2c2a379e2e.png" alt="image"><img src="https://user-images.githubusercontent.com/7789698/38790726-a3766aee-4175-11e8-89dd-3b4f3d21deb4.png" alt="image"></p>
+<p><img src="https://user-images.githubusercontent.com/7789698/38790739-b76b6608-4175-11e8-994c-2db0082a89a1.png" alt="image"></p>
+<ol start="7">
+<li>leader将会采用两段式提交的方法发送log，这一个阶段也叫做log replication。这时候每个节点将会有一个被指定的heartbeat timeout。首先，客户端发送的变更将会增加到leader的log里面。然后，这个log将会被在heartbeat timeout结束之前发送到followers。接下来，超过半数的节点响应接受了这个请求则leader会进入commit状态，并且会返回给client响应。最后，leader会提交给followers commit状态。</li>
+</ol>
+<p><img src="https://user-images.githubusercontent.com/7789698/38792973-e7a9c204-4181-11e8-8cba-c954e2b35ea2.png" alt="image"><img src="https://user-images.githubusercontent.com/7789698/38792979-edbc5bac-4181-11e8-89dc-bf8d00973869.png" alt="image"><img src="https://user-images.githubusercontent.com/7789698/38793077-4865746c-4182-11e8-9dd9-46af5e615b92.png" alt="image"><br><img src="https://user-images.githubusercontent.com/7789698/38793087-4ffb7f78-4182-11e8-8324-d9e1a4762e53.png" alt="image"></p>
+<p><img src="https://user-images.githubusercontent.com/7789698/38793134-82a6b3a2-4182-11e8-8097-d912dda1e05e.png" alt="image"></p>
+<p><img src="https://user-images.githubusercontent.com/7789698/38793177-b650267a-4182-11e8-88e5-2cd39ec3e0ff.png" alt="image"></p>
+<p><img src="https://user-images.githubusercontent.com/7789698/38793222-f709e782-4182-11e8-94b6-fbc177386855.png" alt="image"></p>
+<p><img src="https://user-images.githubusercontent.com/7789698/38793251-172ea7be-4183-11e8-89cb-78c2a9e21760.png" alt="image"></p>
+<ol start="8">
+<li>当raft节点面临网络分区的时候，也能够保持一致。比如我们现在把节点A、B和节点C、D、E分区。这时候节点C、D、E将会重新选举出节点E。这时候我们尝试用两个客户端分别与两个分区通信：1.第一个客户端向第一个分区发送set 3的请求的时候，由于节点B没法得到超过半数的响应所以将会停留在uncommitted状态 2.第二个客户端发送set 8 请求的时候，由于节点E能得到超过半数的响应（包括自己3个），所以将会形成一次完整的复制。当网络分区请求得到恢复之后：节点B做为leader接收到了term更高的leader的消息，便下线成为follow</li>
+</ol>
+<p><img src="https://user-images.githubusercontent.com/7789698/38793354-82d6dbf8-4183-11e8-8845-fdf31420b8c6.png" alt="image"><img src="https://user-images.githubusercontent.com/7789698/38793367-904b8676-4183-11e8-9d8e-1604b54eebef.png" alt="image"></p>
+<p><img src="https://user-images.githubusercontent.com/7789698/38793437-e12c9f30-4183-11e8-8500-aae5f3cab84d.png" alt="image"></p>
+<p><img src="https://user-images.githubusercontent.com/7789698/38793564-6377404e-4184-11e8-9b60-2ce830d11ed0.png" alt="image"><img src="https://user-images.githubusercontent.com/7789698/38793763-1a5d0ca8-4185-11e8-99dc-f3cd935312d7.png" alt="image"></p>
+<p>参考：</p>
+<p><a target="_blank" rel="noopener" href="http://mp.weixin.qq.com/s?__biz=MzI4NDMyNTU2Mw==&amp;mid=2247483815&amp;idx=1&amp;sn=74ee0b591ada2c24b6bd13f8d3171670&amp;chksm=ebfc6273dc8beb65113c585ece8f5feda02e4be29684d9d8f8a173b25986374cc755c80b6ca5&amp;scene=21#wechat_redirect">http://mp.weixin.qq.com/s?__biz=MzI4NDMyNTU2Mw==&amp;mid=2247483815&amp;idx=1&amp;sn=74ee0b591ada2c24b6bd13f8d3171670&amp;chksm=ebfc6273dc8beb65113c585ece8f5feda02e4be29684d9d8f8a173b25986374cc755c80b6ca5&amp;scene=21#wechat_redirect</a></p>
+<p><a target="_blank" rel="noopener" href="http://www.cnblogs.com/hapjin/p/4748603.html">http://www.cnblogs.com/hapjin/p/4748603.html</a></p>
+<p><a target="_blank" rel="noopener" href="https://segmentfault.com/a/1190000004474543">https://segmentfault.com/a/1190000004474543</a></p>
+<p><a target="_blank" rel="noopener" href="http://blog.csdn.net/liweisnake/article/details/69253206">http://blog.csdn.net/liweisnake/article/details/69253206</a></p>
+<p><a target="_blank" rel="noopener" href="https://my.oschina.net/pingpangkuangmo/blog/778927">https://my.oschina.net/pingpangkuangmo/blog/778927</a></p>
+<p><a target="_blank" rel="noopener" href="https://zh.wikipedia.org/wiki/%E6%8B%9C%E5%8D%A0%E5%BA%AD%E5%B0%86%E5%86%9B%E9%97%AE%E9%A2%98">https://zh.wikipedia.org/wiki/%E6%8B%9C%E5%8D%A0%E5%BA%AD%E5%B0%86%E5%86%9B%E9%97%AE%E9%A2%98</a></p>
+<p><a target="_blank" rel="noopener" href="https://mp.weixin.qq.com/s?__biz=MzI4NDMyNTU2Mw==&amp;mid=2247483815&amp;idx=1&amp;sn=74ee0b591ada2c24b6bd13f8d3171670&amp;chksm=ebfc6273dc8beb65113c585ece8f5feda02e4be29684d9d8f8a173b25986374cc755c80b6ca5&amp;scene=21#wechat_redirect">https://mp.weixin.qq.com/s?__biz=MzI4NDMyNTU2Mw==&amp;mid=2247483815&amp;idx=1&amp;sn=74ee0b591ada2c24b6bd13f8d3171670&amp;chksm=ebfc6273dc8beb65113c585ece8f5feda02e4be29684d9d8f8a173b25986374cc755c80b6ca5&amp;scene=21#wechat_redirect</a></p>
+<p><a target="_blank" rel="noopener" href="http://blog.jobbole.com/104985/">http://blog.jobbole.com/104985/</a></p>
+<p><a target="_blank" rel="noopener" href="http://www.infoq.com/cn/articles/raft-paper">http://www.infoq.com/cn/articles/raft-paper</a></p>
+<p><a target="_blank" rel="noopener" href="https://ramcloud.atlassian.net/wiki/download/attachments/6586375/raft.pdf">In search of an Understandable Consensus Algorithm (Extended Version)</a></p>
+<p><a target="_blank" rel="noopener" href="https://www.cnblogs.com/mindwind/p/5231986.html">https://www.cnblogs.com/mindwind/p/5231986.html</a></p>
+<p><a target="_blank" rel="noopener" href="http://thesecretlivesofdata.com/raft/">http://thesecretlivesofdata.com/raft/</a></p>
+
+    </div>
+
+    
+    
+    
+
+    <footer class="post-footer">
+          <div class="reward-container">
+  <div>Buy me a coffee</div>
+  <button>
+    Donate
+  </button>
+  <div class="post-reward">
+      <div>
+        <img src="/hexo/images/wechatpay.png" alt="Absurd WeChat Pay">
+        <span>WeChat Pay</span>
+      </div>
+
+  </div>
+</div>
+
+          <div class="post-tags">
+              <a href="/hexo/tags/%E7%AC%94%E8%AE%B0/" rel="tag"># 笔记</a>
+              <a href="/hexo/tags/Paxos/" rel="tag"># Paxos</a>
+              <a href="/hexo/tags/%E5%88%86%E5%B8%83%E5%BC%8F/" rel="tag"># 分布式</a>
+              <a href="/hexo/tags/Raft/" rel="tag"># Raft</a>
+              <a href="/hexo/tags/zookeeper/" rel="tag"># zookeeper</a>
+              <a href="/hexo/tags/ZAB/" rel="tag"># ZAB</a>
+              <a href="/hexo/tags/CAP/" rel="tag"># CAP</a>
+              <a href="/hexo/tags/2PC/" rel="tag"># 2PC</a>
+              <a href="/hexo/tags/3PC/" rel="tag"># 3PC</a>
+          </div>
+
+        
+
+          <div class="post-nav">
+            <div class="post-nav-item">
+                <a href="/hexo/post/a7ba99a3.html" rel="prev" title="java基础概念">
+                  <i class="fa fa-chevron-left"></i> java基础概念
+                </a>
+            </div>
+            <div class="post-nav-item">
+                <a href="/hexo/post/f64ed43e.html" rel="next" title="dubbo源码解析（十） Dispatcher">
+                  dubbo源码解析（十） Dispatcher <i class="fa fa-chevron-right"></i>
+                </a>
+            </div>
+          </div>
+    </footer>
+  </article>
+</div>
+
+
+
+
+
+
+</div>
+  </main>
+
+  <footer class="footer">
+    <div class="footer-inner">
+
+
+<div class="copyright">
+  &copy; 
+  <span itemprop="copyrightYear">2022</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">Absurd</span>
+</div>
+  <div class="powered-by">Powered by <a href="https://hexo.io/" rel="noopener" target="_blank">Hexo</a> & <a href="https://theme-next.js.org/mist/" rel="noopener" target="_blank">NexT.Mist</a>
+  </div>
+
+    </div>
+  </footer>
+
+  
+  <script src="https://cdn.jsdelivr.net/npm/animejs@3.2.1/lib/anime.min.js" integrity="sha256-XL2inqUJaslATFnHdJOi9GfQ60on8Wx1C2H8DYiN1xY=" crossorigin="anonymous"></script>
+<script src="/hexo/js/comments.js"></script><script src="/hexo/js/utils.js"></script><script src="/hexo/js/motion.js"></script><script src="/hexo/js/schemes/muse.js"></script><script src="/hexo/js/next-boot.js"></script>
+
+  
+<script src="https://cdn.jsdelivr.net/npm/hexo-generator-searchdb@1.4.0/dist/search.js" integrity="sha256-vXZMYLEqsROAXkEw93GGIvaB2ab+QW6w3+1ahD9nXXA=" crossorigin="anonymous"></script>
+<script src="/hexo/js/third-party/search/local-search.js"></script>
+
+
+
+
+
+  
+
+
+
+
+
+</body>
+</html>

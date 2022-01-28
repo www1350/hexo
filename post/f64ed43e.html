@@ -1,0 +1,441 @@
+<!DOCTYPE html>
+<html lang="zh-Hans">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width">
+<meta name="theme-color" content="#222" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#222" media="(prefers-color-scheme: dark)">
+<meta name="generator" content="Hexo 6.0.0">
+
+
+  <link rel="apple-touch-icon" sizes="180x180" href="/hexo/images/apple-touch-icon-next.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/hexo/images/favicon-32x32-next.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/hexo/images/favicon-16x16-next.png">
+  <link rel="mask-icon" href="/hexo/images/logo.svg" color="#222">
+
+<link rel="stylesheet" href="/hexo/css/main.css">
+
+
+
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@5.15.4/css/all.min.css" integrity="sha256-mUZM63G8m73Mcidfrv5E+Y61y7a12O5mW4ezU3bxqW4=" crossorigin="anonymous">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/animate.css@3.1.1/animate.min.css" integrity="sha256-PR7ttpcvz8qrF57fur/yAx1qXMFJeJFiA6pSzWi0OIE=" crossorigin="anonymous">
+
+<script class="next-config" data-name="main" type="application/json">{"hostname":"www1350.github.io","root":"/hexo/","images":"/hexo/images","scheme":"Mist","darkmode":true,"version":"8.9.0","exturl":false,"sidebar":{"position":"left","display":"post","padding":18,"offset":12},"copycode":false,"bookmark":{"enable":false,"color":"#222","save":"auto"},"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"stickytabs":false,"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"fadeInDown","post_body":"fadeInDown","coll_header":"fadeInLeft","sidebar":"fadeInUp"}},"prism":false,"i18n":{"placeholder":"Searching...","empty":"We didn't find any results for the search: ${query}","hits_time":"${hits} results found in ${time} ms","hits":"${hits} results found"},"path":"/hexo/search.xml","localsearch":{"enable":true,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":true}}</script><script src="/hexo/js/config.js"></script>
+<meta name="description" content="线程模型如果事件处理的逻辑能迅速完成，并且不会发起新的 IO 请求，比如只是在内存中记个标识，则直接在 IO 线程上处理更快，因为减少了线程池调度。 但如果事件处理逻辑较慢，或者需要发起新的 IO 请求，比如需要查询数据库，则必须派发到线程池，否则 IO 线程阻塞，将导致不能接收其它请求。 如果用 IO 线程处理事件，又在事件处理过程中发起新的 IO 请求，比如在连接事件中发起登录请求，会报“可能">
+<meta property="og:type" content="article">
+<meta property="og:title" content="dubbo源码解析（十） Dispatcher">
+<meta property="og:url" content="https://www1350.github.io/hexo/post/f64ed43e.html">
+<meta property="og:site_name" content="Absurd博客">
+<meta property="og:description" content="线程模型如果事件处理的逻辑能迅速完成，并且不会发起新的 IO 请求，比如只是在内存中记个标识，则直接在 IO 线程上处理更快，因为减少了线程池调度。 但如果事件处理逻辑较慢，或者需要发起新的 IO 请求，比如需要查询数据库，则必须派发到线程池，否则 IO 线程阻塞，将导致不能接收其它请求。 如果用 IO 线程处理事件，又在事件处理过程中发起新的 IO 请求，比如在连接事件中发起登录请求，会报“可能">
+<meta property="og:locale">
+<meta property="og:image" content="https://user-images.githubusercontent.com/7789698/39110477-d4f17800-4703-11e8-909b-5a5983a1dc48.png">
+<meta property="og:image" content="https://user-images.githubusercontent.com/7789698/39111930-75d21db0-4709-11e8-8dfd-78b21a3534e2.png">
+<meta property="article:published_time" content="2018-04-23T11:32:39.000Z">
+<meta property="article:modified_time" content="2022-01-28T07:09:17.732Z">
+<meta property="article:author" content="Absurd">
+<meta property="article:tag" content="rpc">
+<meta property="article:tag" content="dubbo">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="https://user-images.githubusercontent.com/7789698/39110477-d4f17800-4703-11e8-909b-5a5983a1dc48.png">
+
+
+<link rel="canonical" href="https://www1350.github.io/hexo/post/f64ed43e.html">
+
+
+
+<script class="next-config" data-name="page" type="application/json">{"sidebar":"","isHome":false,"isPost":true,"lang":"zh-Hans","comments":true,"permalink":"https://www1350.github.io/hexo/post/f64ed43e.html","path":"post/f64ed43e.html","title":"dubbo源码解析（十） Dispatcher"}</script>
+
+<script class="next-config" data-name="calendar" type="application/json">""</script>
+<title>dubbo源码解析（十） Dispatcher | Absurd博客</title>
+  
+
+
+
+
+  <noscript>
+    <link rel="stylesheet" href="/hexo/css/noscript.css">
+  </noscript>
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage" class="use-motion">
+  <div class="headband"></div>
+
+  <main class="main">
+    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="Toggle navigation bar" role="button">
+        <span class="toggle-line"></span>
+        <span class="toggle-line"></span>
+        <span class="toggle-line"></span>
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/hexo/" class="brand" rel="start">
+      <i class="logo-line"></i>
+      <p class="site-title">Absurd博客</p>
+      <i class="logo-line"></i>
+    </a>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger">
+        <i class="fa fa-search fa-fw fa-lg"></i>
+    </div>
+  </div>
+</div>
+
+
+
+<nav class="site-nav">
+  <ul class="main-menu menu">
+        <li class="menu-item menu-item-home"><a href="/hexo/" rel="section"><i class="fa fa-home fa-fw"></i>Home</a></li>
+        <li class="menu-item menu-item-about"><a href="/hexo/about/" rel="section"><i class="fa fa-user fa-fw"></i>About</a></li>
+        <li class="menu-item menu-item-tags"><a href="/hexo/tags/" rel="section"><i class="fa fa-tags fa-fw"></i>Tags</a></li>
+        <li class="menu-item menu-item-categories"><a href="/hexo/categories/" rel="section"><i class="fa fa-th fa-fw"></i>Categories</a></li>
+        <li class="menu-item menu-item-archives"><a href="/hexo/archives/" rel="section"><i class="fa fa-archive fa-fw"></i>Archives</a></li>
+        <li class="menu-item menu-item-bookmarks"><a href="/hexo/bookmarks/" rel="section"><i class="fa fa-archive fa-fw"></i>bookmarks</a></li>
+      <li class="menu-item menu-item-search">
+        <a role="button" class="popup-trigger"><i class="fa fa-search fa-fw"></i>Search
+        </a>
+      </li>
+  </ul>
+</nav>
+
+
+
+  <div class="search-pop-overlay">
+    <div class="popup search-popup"><div class="search-header">
+  <span class="search-icon">
+    <i class="fa fa-search"></i>
+  </span>
+  <div class="search-input-container">
+    <input autocomplete="off" autocapitalize="off" maxlength="80"
+           placeholder="Searching..." spellcheck="false"
+           type="search" class="search-input">
+  </div>
+  <span class="popup-btn-close" role="button">
+    <i class="fa fa-times-circle"></i>
+  </span>
+</div>
+<div class="search-result-container no-result">
+  <div class="search-result-icon">
+    <i class="fa fa-spinner fa-pulse fa-5x"></i>
+  </div>
+</div>
+
+    </div>
+  </div>
+
+</div>
+        
+  
+  <div class="toggle sidebar-toggle" role="button">
+    <span class="toggle-line"></span>
+    <span class="toggle-line"></span>
+    <span class="toggle-line"></span>
+  </div>
+
+  <aside class="sidebar">
+
+    <div class="sidebar-inner sidebar-nav-active sidebar-toc-active">
+      <ul class="sidebar-nav">
+        <li class="sidebar-nav-toc">
+          Table of Contents
+        </li>
+        <li class="sidebar-nav-overview">
+          Overview
+        </li>
+      </ul>
+
+      <div class="sidebar-panel-container">
+        <!--noindex-->
+        <div class="post-toc-wrap sidebar-panel">
+            <div class="post-toc animated"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#%E7%BA%BF%E7%A8%8B%E6%A8%A1%E5%9E%8B"><span class="nav-number">1.</span> <span class="nav-text">线程模型</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#%E6%BA%90%E7%A0%81"><span class="nav-number">1.0.1.</span> <span class="nav-text">源码</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#DirectDispatcher"><span class="nav-number">1.0.1.1.</span> <span class="nav-text">DirectDispatcher</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#WrappedChannelHandler"><span class="nav-number">1.0.1.2.</span> <span class="nav-text">WrappedChannelHandler</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#AllDispatcher"><span class="nav-number">1.0.1.3.</span> <span class="nav-text">AllDispatcher</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#MessageOnlyChannelHandler"><span class="nav-number">1.0.1.4.</span> <span class="nav-text">MessageOnlyChannelHandler</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#ExecutionChannelHandler"><span class="nav-number">1.0.1.5.</span> <span class="nav-text">ExecutionChannelHandler</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#ConnectionOrderedChannelHandler"><span class="nav-number">1.0.1.6.</span> <span class="nav-text">ConnectionOrderedChannelHandler</span></a></li></ol></li></ol></li></ol></li></ol></div>
+        </div>
+        <!--/noindex-->
+
+        <div class="site-overview-wrap sidebar-panel">
+          <div class="site-author site-overview-item animated" itemprop="author" itemscope itemtype="http://schema.org/Person">
+    <img class="site-author-image" itemprop="image" alt="Absurd"
+      src="/hexo/images/avatar.gif">
+  <p class="site-author-name" itemprop="name">Absurd</p>
+  <div class="site-description" itemprop="description"></div>
+</div>
+<div class="site-state-wrap site-overview-item animated">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+        <a href="/hexo/archives/">
+          <span class="site-state-item-count">75</span>
+          <span class="site-state-item-name">posts</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+          <a href="/hexo/categories/">
+        <span class="site-state-item-count">17</span>
+        <span class="site-state-item-name">categories</span></a>
+      </div>
+      <div class="site-state-item site-state-tags">
+          <a href="/hexo/tags/">
+        <span class="site-state-item-count">46</span>
+        <span class="site-state-item-name">tags</span></a>
+      </div>
+  </nav>
+</div>
+  <div class="links-of-author site-overview-item animated">
+      <span class="links-of-author-item">
+        <a href="https://github.com/www1350" title="GitHub → https:&#x2F;&#x2F;github.com&#x2F;www1350" rel="noopener" target="_blank"><i class="fab fa-github fa-fw"></i>GitHub</a>
+      </span>
+      <span class="links-of-author-item">
+        <a href="mailto:www_1350@163.com" title="E-Mail → mailto:www_1350@163.com" rel="noopener" target="_blank"><i class="fa fa-envelope fa-fw"></i>E-Mail</a>
+      </span>
+  </div>
+
+
+
+        </div>
+      </div>
+    </div>
+  </aside>
+  <div class="sidebar-dimmer"></div>
+
+
+    </header>
+
+    
+  <div class="back-to-top" role="button" aria-label="Back to top">
+    <i class="fa fa-arrow-up"></i>
+    <span>0%</span>
+  </div>
+
+<noscript>
+  <div class="noscript-warning">Theme NexT works best with JavaScript enabled</div>
+</noscript>
+
+
+    <div class="main-inner post posts-expand">
+
+
+  
+
+
+<div class="post-block">
+  
+  
+
+  <article itemscope itemtype="http://schema.org/Article" class="post-content" lang="zh-Hans">
+    <link itemprop="mainEntityOfPage" href="https://www1350.github.io/hexo/post/f64ed43e.html">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/hexo/images/avatar.gif">
+      <meta itemprop="name" content="Absurd">
+      <meta itemprop="description" content="">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Absurd博客">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          dubbo源码解析（十） Dispatcher
+        </h1>
+
+        <div class="post-meta-container">
+          <div class="post-meta">
+    <span class="post-meta-item">
+      <span class="post-meta-item-icon">
+        <i class="far fa-calendar"></i>
+      </span>
+      <span class="post-meta-item-text">Posted on</span>
+
+      <time title="Created: 2018-04-23 19:32:39" itemprop="dateCreated datePublished" datetime="2018-04-23T19:32:39+08:00">2018-04-23</time>
+    </span>
+    <span class="post-meta-item">
+      <span class="post-meta-item-icon">
+        <i class="far fa-calendar-check"></i>
+      </span>
+      <span class="post-meta-item-text">Edited on</span>
+      <time title="Modified: 2022-01-28 15:09:17" itemprop="dateModified" datetime="2022-01-28T15:09:17+08:00">2022-01-28</time>
+    </span>
+    <span class="post-meta-item">
+      <span class="post-meta-item-icon">
+        <i class="far fa-folder"></i>
+      </span>
+      <span class="post-meta-item-text">In</span>
+        <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+          <a href="/hexo/categories/%E4%B8%AD%E9%97%B4%E4%BB%B6/" itemprop="url" rel="index"><span itemprop="name">中间件</span></a>
+        </span>
+          , 
+        <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+          <a href="/hexo/categories/%E4%B8%AD%E9%97%B4%E4%BB%B6/%E6%BA%90%E7%A0%81/" itemprop="url" rel="index"><span itemprop="name">源码</span></a>
+        </span>
+    </span>
+
+  
+</div>
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+        <h1 id="线程模型"><a href="#线程模型" class="headerlink" title="线程模型"></a>线程模型</h1><p>如果事件处理的逻辑能迅速完成，并且不会发起新的 IO 请求，比如只是在内存中记个标识，则直接在 IO 线程上处理更快，因为减少了线程池调度。</p>
+<p>但如果事件处理逻辑较慢，或者需要发起新的 IO 请求，比如需要查询数据库，则必须派发到线程池，否则 IO 线程阻塞，将导致不能接收其它请求。</p>
+<p>如果用 IO 线程处理事件，又在事件处理过程中发起新的 IO 请求，比如在连接事件中发起登录请求，会报“可能引发死锁”异常，但不会真死锁。</p>
+<p><img src="https://user-images.githubusercontent.com/7789698/39110477-d4f17800-4703-11e8-909b-5a5983a1dc48.png" alt="image"></p>
+<p>因此，需要通过不同的派发策略和不同的线程池配置的组合来应对不同的场景:</p>
+<figure class="highlight xml"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="tag">&lt;<span class="name">dubbo:protocol</span> <span class="attr">name</span>=<span class="string">&quot;dubbo&quot;</span> <span class="attr">dispatcher</span>=<span class="string">&quot;all&quot;</span> <span class="attr">threadpool</span>=<span class="string">&quot;fixed&quot;</span> <span class="attr">threads</span>=<span class="string">&quot;100&quot;</span> /&gt;</span></span><br></pre></td></tr></table></figure>
+
+<p>Dispatcher</p>
+<ul>
+<li><code>all</code> 所有消息都派发到线程池，包括请求，响应，连接事件，断开事件，心跳等（如果线程池不可用了，就使用共享线程池）。</li>
+<li><code>direct</code> 所有消息都不派发到线程池，全部在 IO 线程上直接执行。</li>
+<li><code>message</code> 只有请求响应消息派发到线程池，其它连接断开事件，心跳等消息，直接在 IO 线程上执行。</li>
+<li><code>execution</code> 连接断开事件请求响应消息派发到线程池，其它心跳等消息，直接在 IO 线程上执行。</li>
+<li><code>connection</code> 在 IO 线程上，将连接断开事件放入队列，有序逐个执行，其它消息派发到线程池(如果请求响应消息的线程池不可用了，就使用共享线程池)。</li>
+</ul>
+<p>ThreadPool</p>
+<ul>
+<li><code>fixed</code> 固定大小线程池，启动时建立线程，不关闭，一直持有。(缺省)</li>
+<li><code>cached</code> 缓存线程池，空闲一分钟自动删除，需要时重建。</li>
+<li><code>limited</code> 可伸缩线程池，但池中的线程数只会增长不会收缩。只增长不收缩的目的是为了避免收缩时突然来了大流量引起的性能问题。</li>
+<li><code>eager</code> 优先创建<code>Worker</code>线程池。在任务数量大于<code>corePoolSize</code>但是小于<code>maximumPoolSize</code>时，优先创建<code>Worker</code>来处理任务。当任务数量大于<code>maximumPoolSize</code>时，将任务放入阻塞队列中。阻塞队列充满时抛出<code>RejectedExecutionException</code>。(相比于<code>cached</code>:<code>cached</code>在任务数量超过<code>maximumPoolSize</code>时直接抛出异常而不是将任务放入阻塞队列)</li>
+</ul>
+<p>上面这个eager是小伙伴时无两最近提交的，可以忽略。</p>
+<span id="more"></span>
+
+<h3 id="源码"><a href="#源码" class="headerlink" title="源码"></a>源码</h3><p>Dispatcher接口</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">@SPI(AllDispatcher.NAME)</span></span><br><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">interface</span> <span class="title">Dispatcher</span> </span>&#123;</span><br><span class="line"></span><br><span class="line">    <span class="comment">/**</span></span><br><span class="line"><span class="comment">     * dispatch the message to threadpool.</span></span><br><span class="line"><span class="comment">     *</span></span><br><span class="line"><span class="comment">     * <span class="doctag">@param</span> handler</span></span><br><span class="line"><span class="comment">     * <span class="doctag">@param</span> url</span></span><br><span class="line"><span class="comment">     * <span class="doctag">@return</span> channel handler</span></span><br><span class="line"><span class="comment">     */</span></span><br><span class="line">    <span class="meta">@Adaptive(&#123;Constants.DISPATCHER_KEY, &quot;dispather&quot;, &quot;channel.handler&quot;&#125;)</span></span><br><span class="line">    <span class="comment">// The last two parameters are reserved for compatibility with the old configuration</span></span><br><span class="line">    <span class="function">ChannelHandler <span class="title">dispatch</span><span class="params">(ChannelHandler handler, URL url)</span></span>;</span><br><span class="line"></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+
+
+<figure class="highlight properties"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="attr">all</span>=<span class="string">com.alibaba.dubbo.remoting.transport.dispatcher.all.AllDispatcher</span></span><br><span class="line"><span class="attr">direct</span>=<span class="string">com.alibaba.dubbo.remoting.transport.dispatcher.direct.DirectDispatcher</span></span><br><span class="line"><span class="attr">message</span>=<span class="string">com.alibaba.dubbo.remoting.transport.dispatcher.message.MessageOnlyDispatcher</span></span><br><span class="line"><span class="attr">execution</span>=<span class="string">com.alibaba.dubbo.remoting.transport.dispatcher.execution.ExecutionDispatcher</span></span><br><span class="line"><span class="attr">connection</span>=<span class="string">com.alibaba.dubbo.remoting.transport.dispatcher.connection.ConnectionOrderedDispatcher</span></span><br></pre></td></tr></table></figure>
+
+<h4 id="DirectDispatcher"><a href="#DirectDispatcher" class="headerlink" title="DirectDispatcher"></a>DirectDispatcher</h4><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">DirectDispatcher</span> <span class="keyword">implements</span> <span class="title">Dispatcher</span> </span>&#123;</span><br><span class="line">    <span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">final</span> String NAME = <span class="string">&quot;direct&quot;</span>;</span><br><span class="line">    <span class="function"><span class="keyword">public</span> ChannelHandler <span class="title">dispatch</span><span class="params">(ChannelHandler handler, URL url)</span> </span>&#123;</span><br><span class="line">        <span class="keyword">return</span> handler;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+
+
+<p><img src="https://user-images.githubusercontent.com/7789698/39111930-75d21db0-4709-11e8-8dfd-78b21a3534e2.png" alt="image"></p>
+<h4 id="WrappedChannelHandler"><a href="#WrappedChannelHandler" class="headerlink" title="WrappedChannelHandler"></a>WrappedChannelHandler</h4><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">//共享线程池</span></span><br><span class="line"><span class="keyword">protected</span> <span class="keyword">static</span> <span class="keyword">final</span> ExecutorService SHARED_EXECUTOR = Executors.newCachedThreadPool(<span class="keyword">new</span> NamedThreadFactory(<span class="string">&quot;DubboSharedHandler&quot;</span>, <span class="keyword">true</span>));</span><br><span class="line"></span><br><span class="line"><span class="keyword">protected</span> <span class="keyword">final</span> ExecutorService executor;</span><br><span class="line"></span><br><span class="line"><span class="keyword">protected</span> <span class="keyword">final</span> ChannelHandler handler;</span><br><span class="line"></span><br><span class="line"><span class="keyword">protected</span> <span class="keyword">final</span> URL url;</span><br></pre></td></tr></table></figure>
+
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">public</span> <span class="title">WrappedChannelHandler</span><span class="params">(ChannelHandler handler, URL url)</span> </span>&#123;</span><br><span class="line">    <span class="keyword">this</span>.handler = handler;</span><br><span class="line">    <span class="keyword">this</span>.url = url;</span><br><span class="line">    executor = (ExecutorService) ExtensionLoader.getExtensionLoader(ThreadPool.class).getAdaptiveExtension().getExecutor(url);</span><br><span class="line"></span><br><span class="line">    String componentKey = Constants.EXECUTOR_SERVICE_COMPONENT_KEY;</span><br><span class="line">    <span class="keyword">if</span> (Constants.CONSUMER_SIDE.equalsIgnoreCase(url.getParameter(Constants.SIDE_KEY))) &#123;</span><br><span class="line">        componentKey = Constants.CONSUMER_SIDE;</span><br><span class="line">    &#125;</span><br><span class="line">    DataStore dataStore = ExtensionLoader.getExtensionLoader(DataStore.class).getDefaultExtension();</span><br><span class="line">    dataStore.put(componentKey, Integer.toString(url.getPort()), executor);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+
+
+<h4 id="AllDispatcher"><a href="#AllDispatcher" class="headerlink" title="AllDispatcher"></a>AllDispatcher</h4><p>所有消息都派发到线程池，包括请求，响应，连接事件，断开事件，心跳等。</p>
+<ul>
+<li>如果线程池不可用了，就使用共享线程池</li>
+</ul>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">AllDispatcher</span> <span class="keyword">implements</span> <span class="title">Dispatcher</span> </span>&#123;</span><br><span class="line">    <span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">final</span> String NAME = <span class="string">&quot;all&quot;</span>;</span><br><span class="line">    <span class="function"><span class="keyword">public</span> ChannelHandler <span class="title">dispatch</span><span class="params">(ChannelHandler handler, URL url)</span> </span>&#123;</span><br><span class="line">        <span class="keyword">return</span> <span class="keyword">new</span> AllChannelHandler(handler, url);</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">AllChannelHandler</span> <span class="keyword">extends</span> <span class="title">WrappedChannelHandler</span> </span>&#123;</span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="title">AllChannelHandler</span><span class="params">(ChannelHandler handler, URL url)</span> </span>&#123;</span><br><span class="line">        <span class="keyword">super</span>(handler, url);</span><br><span class="line">    &#125;</span><br><span class="line">    </span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">connected</span><span class="params">(Channel channel)</span> <span class="keyword">throws</span> RemotingException </span>&#123;</span><br><span class="line">        <span class="comment">//连接进线程池</span></span><br><span class="line">        ExecutorService cexecutor = getExecutorService();</span><br><span class="line">        <span class="keyword">try</span> &#123;</span><br><span class="line">            cexecutor.execute(<span class="keyword">new</span> ChannelEventRunnable(channel, handler, ChannelState.CONNECTED));</span><br><span class="line">        &#125; <span class="keyword">catch</span> (Throwable t) &#123;</span><br><span class="line">            <span class="keyword">throw</span> <span class="keyword">new</span> ExecutionException(<span class="string">&quot;connect event&quot;</span>, channel, getClass() + <span class="string">&quot; error when process connected event .&quot;</span>, t);</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">disconnected</span><span class="params">(Channel channel)</span> <span class="keyword">throws</span> RemotingException </span>&#123;</span><br><span class="line">        <span class="comment">//断开进线程池</span></span><br><span class="line">        ExecutorService cexecutor = getExecutorService();</span><br><span class="line">        <span class="keyword">try</span> &#123;</span><br><span class="line">            cexecutor.execute(<span class="keyword">new</span> ChannelEventRunnable(channel, handler, ChannelState.DISCONNECTED));</span><br><span class="line">        &#125; <span class="keyword">catch</span> (Throwable t) &#123;</span><br><span class="line">            <span class="keyword">throw</span> <span class="keyword">new</span> ExecutionException(<span class="string">&quot;disconnect event&quot;</span>, channel, getClass() + <span class="string">&quot; error when process disconnected event .&quot;</span>, t);</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line"><span class="comment">//请求响应进线程池</span></span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">received</span><span class="params">(Channel channel, Object message)</span> <span class="keyword">throws</span> RemotingException </span>&#123;</span><br><span class="line">        ExecutorService cexecutor = getExecutorService();</span><br><span class="line">        <span class="keyword">try</span> &#123;</span><br><span class="line">            cexecutor.execute(<span class="keyword">new</span> ChannelEventRunnable(channel, handler, ChannelState.RECEIVED, message));</span><br><span class="line">        &#125; <span class="keyword">catch</span> (Throwable t) &#123;</span><br><span class="line">            <span class="comment">//TODO A temporary solution to the problem that the exception information can not be sent to the opposite end after the thread pool is full. Need a refactoring</span></span><br><span class="line">            <span class="comment">//fix The thread pool is full, refuses to call, does not return, and causes the consumer to wait for time out</span></span><br><span class="line">           <span class="keyword">if</span>(message <span class="keyword">instanceof</span> Request &amp;&amp; t <span class="keyword">instanceof</span> RejectedExecutionException)&#123;</span><br><span class="line">              Request request = (Request)message;</span><br><span class="line">              <span class="keyword">if</span>(request.isTwoWay())&#123;</span><br><span class="line">                 String msg = <span class="string">&quot;Server side(&quot;</span> + url.getIp() + <span class="string">&quot;,&quot;</span> + url.getPort() + <span class="string">&quot;) threadpool is exhausted ,detail msg:&quot;</span> + t.getMessage();</span><br><span class="line">                 Response response = <span class="keyword">new</span> Response(request.getId(), request.getVersion());</span><br><span class="line">                 response.setStatus(Response.SERVER_THREADPOOL_EXHAUSTED_ERROR);</span><br><span class="line">                 response.setErrorMessage(msg);</span><br><span class="line">                 channel.send(response);</span><br><span class="line">                 <span class="keyword">return</span>;</span><br><span class="line">              &#125;</span><br><span class="line">           &#125;</span><br><span class="line">            <span class="keyword">throw</span> <span class="keyword">new</span> ExecutionException(message, channel, getClass() + <span class="string">&quot; error when process received event .&quot;</span>, t);</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">caught</span><span class="params">(Channel channel, Throwable exception)</span> <span class="keyword">throws</span> RemotingException </span>&#123;</span><br><span class="line">        ExecutorService cexecutor = getExecutorService();</span><br><span class="line">        <span class="keyword">try</span> &#123;</span><br><span class="line">            cexecutor.execute(<span class="keyword">new</span> ChannelEventRunnable(channel, handler, ChannelState.CAUGHT, exception));</span><br><span class="line">        &#125; <span class="keyword">catch</span> (Throwable t) &#123;</span><br><span class="line">            <span class="keyword">throw</span> <span class="keyword">new</span> ExecutionException(<span class="string">&quot;caught event&quot;</span>, channel, getClass() + <span class="string">&quot; error when process caught event .&quot;</span>, t);</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line"><span class="comment">//如果线程池是空的或者已经被shutdown了</span></span><br><span class="line">    <span class="function"><span class="keyword">private</span> ExecutorService <span class="title">getExecutorService</span><span class="params">()</span> </span>&#123;</span><br><span class="line">        ExecutorService cexecutor = executor;</span><br><span class="line">        <span class="keyword">if</span> (cexecutor == <span class="keyword">null</span> || cexecutor.isShutdown()) &#123;</span><br><span class="line">            cexecutor = SHARED_EXECUTOR;</span><br><span class="line">        &#125;</span><br><span class="line">        <span class="keyword">return</span> cexecutor;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<h4 id="MessageOnlyChannelHandler"><a href="#MessageOnlyChannelHandler" class="headerlink" title="MessageOnlyChannelHandler"></a>MessageOnlyChannelHandler</h4><p>只有请求响应消息派发到线程池，其它连接断开事件，心跳等消息，直接在 IO 线程上执行。</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">MessageOnlyChannelHandler</span> <span class="keyword">extends</span> <span class="title">WrappedChannelHandler</span> </span>&#123;</span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="title">MessageOnlyChannelHandler</span><span class="params">(ChannelHandler handler, URL url)</span> </span>&#123;</span><br><span class="line">        <span class="keyword">super</span>(handler, url);</span><br><span class="line">    &#125;</span><br><span class="line"><span class="comment">//请求响应消息进线程池</span></span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">received</span><span class="params">(Channel channel, Object message)</span> <span class="keyword">throws</span> RemotingException </span>&#123;</span><br><span class="line">        ExecutorService cexecutor = executor;</span><br><span class="line">        <span class="keyword">if</span> (cexecutor == <span class="keyword">null</span> || cexecutor.isShutdown()) &#123;</span><br><span class="line">            cexecutor = SHARED_EXECUTOR;</span><br><span class="line">        &#125;</span><br><span class="line">        <span class="keyword">try</span> &#123;</span><br><span class="line">            cexecutor.execute(<span class="keyword">new</span> ChannelEventRunnable(channel, handler, ChannelState.RECEIVED, message));</span><br><span class="line">        &#125; <span class="keyword">catch</span> (Throwable t) &#123;</span><br><span class="line">            <span class="keyword">throw</span> <span class="keyword">new</span> ExecutionException(message, channel, getClass() + <span class="string">&quot; error when process received event .&quot;</span>, t);</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<h4 id="ExecutionChannelHandler"><a href="#ExecutionChannelHandler" class="headerlink" title="ExecutionChannelHandler"></a>ExecutionChannelHandler</h4><p>只请求消息派发到线程池，不含响应，响应和其它连接断开事件，心跳等消息，直接在 IO 线程上执行。</p>
+<p>与AllChannelHandler不同之处在于，若创建的线程池ExecutorService不可用（null或者被shutdown了），AllChannelHandler将使用共享线程池，而ExecutionChannelHandler只有报错了。</p>
+<ul>
+<li>都是用线程池解决</li>
+</ul>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">ExecutionChannelHandler</span> <span class="keyword">extends</span> <span class="title">WrappedChannelHandler</span> </span>&#123;</span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="title">ExecutionChannelHandler</span><span class="params">(ChannelHandler handler, URL url)</span> </span>&#123;</span><br><span class="line">        <span class="keyword">super</span>(handler, url);</span><br><span class="line">    &#125;</span><br><span class="line"><span class="comment">//连接进线程池</span></span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">connected</span><span class="params">(Channel channel)</span> <span class="keyword">throws</span> RemotingException </span>&#123;</span><br><span class="line">        executor.execute(<span class="keyword">new</span> ChannelEventRunnable(channel, handler, ChannelState.CONNECTED));</span><br><span class="line">    &#125;</span><br><span class="line"><span class="comment">//断开进线程池</span></span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">disconnected</span><span class="params">(Channel channel)</span> <span class="keyword">throws</span> RemotingException </span>&#123;</span><br><span class="line">        executor.execute(<span class="keyword">new</span> ChannelEventRunnable(channel, handler, ChannelState.DISCONNECTED));</span><br><span class="line">    &#125;</span><br><span class="line"><span class="comment">//请求响应</span></span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">received</span><span class="params">(Channel channel, Object message)</span> <span class="keyword">throws</span> RemotingException </span>&#123;</span><br><span class="line">       <span class="keyword">try</span> &#123;</span><br><span class="line">            executor.execute(<span class="keyword">new</span> ChannelEventRunnable(channel, handler, ChannelState.RECEIVED, message));</span><br><span class="line">        &#125; <span class="keyword">catch</span> (Throwable t) &#123;</span><br><span class="line">            <span class="comment">//TODO A temporary solution to the problem that the exception information can not be sent to the opposite end after the thread pool is full. Need a refactoring</span></span><br><span class="line">            <span class="comment">//fix The thread pool is full, refuses to call, does not return, and causes the consumer to wait for time out</span></span><br><span class="line">           <span class="keyword">if</span>(message <span class="keyword">instanceof</span> Request &amp;&amp;</span><br><span class="line">                 t <span class="keyword">instanceof</span> RejectedExecutionException)&#123;</span><br><span class="line">              Request request = (Request)message;</span><br><span class="line">              <span class="keyword">if</span>(request.isTwoWay())&#123;</span><br><span class="line">                 String msg = <span class="string">&quot;Server side(&quot;</span>+url.getIp()+<span class="string">&quot;,&quot;</span>+url.getPort()+<span class="string">&quot;) threadpool is exhausted ,detail msg:&quot;</span>+t.getMessage();</span><br><span class="line">                 Response response = <span class="keyword">new</span> Response(request.getId(), request.getVersion());</span><br><span class="line">                 response.setStatus(Response.SERVER_THREADPOOL_EXHAUSTED_ERROR);</span><br><span class="line">                 response.setErrorMessage(msg);</span><br><span class="line">                 channel.send(response);</span><br><span class="line">                 <span class="keyword">return</span>;</span><br><span class="line">              &#125;</span><br><span class="line">           &#125;</span><br><span class="line">            <span class="keyword">throw</span> <span class="keyword">new</span> ExecutionException(message, channel, getClass() + <span class="string">&quot; error when process received event .&quot;</span>, t);</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line"><span class="comment">//异常放入线程池</span></span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">caught</span><span class="params">(Channel channel, Throwable exception)</span> <span class="keyword">throws</span> RemotingException </span>&#123;</span><br><span class="line">        executor.execute(<span class="keyword">new</span> ChannelEventRunnable(channel, handler, ChannelState.CAUGHT, exception));</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<h4 id="ConnectionOrderedChannelHandler"><a href="#ConnectionOrderedChannelHandler" class="headerlink" title="ConnectionOrderedChannelHandler"></a>ConnectionOrderedChannelHandler</h4><p>在 IO 线程上，将连接断开事件放入队列，有序逐个执行，其它消息派发到线程池。</p>
+<ul>
+<li>如果请求响应消息的线程池不可用了，就使用共享线程池。</li>
+<li>连接断开事件放入队列有序逐个执行</li>
+</ul>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br><span class="line">65</span><br><span class="line">66</span><br><span class="line">67</span><br><span class="line">68</span><br><span class="line">69</span><br><span class="line">70</span><br><span class="line">71</span><br><span class="line">72</span><br><span class="line">73</span><br><span class="line">74</span><br><span class="line">75</span><br><span class="line">76</span><br><span class="line">77</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">ConnectionOrderedChannelHandler</span> <span class="keyword">extends</span> <span class="title">WrappedChannelHandler</span> </span>&#123;</span><br><span class="line">    <span class="keyword">protected</span> <span class="keyword">final</span> ThreadPoolExecutor connectionExecutor;</span><br><span class="line">    <span class="keyword">private</span> <span class="keyword">final</span> <span class="keyword">int</span> queuewarninglimit;</span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="title">ConnectionOrderedChannelHandler</span><span class="params">(ChannelHandler handler, URL url)</span> </span>&#123;</span><br><span class="line">        <span class="keyword">super</span>(handler, url);</span><br><span class="line">        String threadName = url.getParameter(Constants.THREAD_NAME_KEY, Constants.DEFAULT_THREAD_NAME);</span><br><span class="line">        connectionExecutor = <span class="keyword">new</span> ThreadPoolExecutor(<span class="number">1</span>, <span class="number">1</span>,</span><br><span class="line">                <span class="number">0L</span>, TimeUnit.MILLISECONDS,</span><br><span class="line">                <span class="keyword">new</span> LinkedBlockingQueue&lt;Runnable&gt;(url.getPositiveParameter(Constants.CONNECT_QUEUE_CAPACITY, Integer.MAX_VALUE)),</span><br><span class="line">                <span class="keyword">new</span> NamedThreadFactory(threadName, <span class="keyword">true</span>),</span><br><span class="line">                <span class="keyword">new</span> AbortPolicyWithReport(threadName, url)</span><br><span class="line">        );  <span class="comment">// FIXME There&#x27;s no place to release connectionExecutor!</span></span><br><span class="line">        queuewarninglimit = url.getParameter(Constants.CONNECT_QUEUE_WARNING_SIZE, Constants.DEFAULT_CONNECT_QUEUE_WARNING_SIZE);</span><br><span class="line">    &#125;</span><br><span class="line"><span class="comment">//连接放入队列</span></span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">connected</span><span class="params">(Channel channel)</span> <span class="keyword">throws</span> RemotingException </span>&#123;</span><br><span class="line">        <span class="keyword">try</span> &#123;</span><br><span class="line">            checkQueueLength();</span><br><span class="line">            connectionExecutor.execute(<span class="keyword">new</span> ChannelEventRunnable(channel, handler, ChannelState.CONNECTED));</span><br><span class="line">        &#125; <span class="keyword">catch</span> (Throwable t) &#123;</span><br><span class="line">            <span class="keyword">throw</span> <span class="keyword">new</span> ExecutionException(<span class="string">&quot;connect event&quot;</span>, channel, getClass() + <span class="string">&quot; error when process connected event .&quot;</span>, t);</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line"><span class="comment">//断开放入队列</span></span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">disconnected</span><span class="params">(Channel channel)</span> <span class="keyword">throws</span> RemotingException </span>&#123;</span><br><span class="line">        <span class="keyword">try</span> &#123;</span><br><span class="line">            checkQueueLength();</span><br><span class="line">            connectionExecutor.execute(<span class="keyword">new</span> ChannelEventRunnable(channel, handler, ChannelState.DISCONNECTED));</span><br><span class="line">        &#125; <span class="keyword">catch</span> (Throwable t) &#123;</span><br><span class="line">            <span class="keyword">throw</span> <span class="keyword">new</span> ExecutionException(<span class="string">&quot;disconnected event&quot;</span>, channel, getClass() + <span class="string">&quot; error when process disconnected event .&quot;</span>, t);</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line"><span class="comment">//请求响应消息派发线程池</span></span><br><span class="line"><span class="comment">//若创建的线程池ExecutorService不可用（null或者被shutdown了），将使用共享线程池</span></span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">received</span><span class="params">(Channel channel, Object message)</span> <span class="keyword">throws</span> RemotingException </span>&#123;</span><br><span class="line">        ExecutorService cexecutor = executor;</span><br><span class="line">        <span class="keyword">if</span> (cexecutor == <span class="keyword">null</span> || cexecutor.isShutdown()) &#123;</span><br><span class="line">            cexecutor = SHARED_EXECUTOR;</span><br><span class="line">        &#125;</span><br><span class="line">        <span class="keyword">try</span> &#123;</span><br><span class="line">            cexecutor.execute(<span class="keyword">new</span> ChannelEventRunnable(channel, handler, ChannelState.RECEIVED, message));</span><br><span class="line">        &#125; <span class="keyword">catch</span> (Throwable t) &#123;</span><br><span class="line">            <span class="comment">//fix, reject exception can not be sent to consumer because thread pool is full, resulting in consumers waiting till timeout.</span></span><br><span class="line">            <span class="keyword">if</span> (message <span class="keyword">instanceof</span> Request &amp;&amp; t <span class="keyword">instanceof</span> RejectedExecutionException) &#123;</span><br><span class="line">                Request request = (Request) message;</span><br><span class="line">                <span class="keyword">if</span> (request.isTwoWay()) &#123;</span><br><span class="line">                    String msg = <span class="string">&quot;Server side(&quot;</span> + url.getIp() + <span class="string">&quot;,&quot;</span> + url.getPort() + <span class="string">&quot;) threadpool is exhausted ,detail msg:&quot;</span> + t.getMessage();</span><br><span class="line">                    Response response = <span class="keyword">new</span> Response(request.getId(), request.getVersion());</span><br><span class="line">                    response.setStatus(Response.SERVER_THREADPOOL_EXHAUSTED_ERROR);</span><br><span class="line">                    response.setErrorMessage(msg);</span><br><span class="line">                    channel.send(response);</span><br><span class="line">                    <span class="keyword">return</span>;</span><br><span class="line">                &#125;</span><br><span class="line">            &#125;</span><br><span class="line">            <span class="keyword">throw</span> <span class="keyword">new</span> ExecutionException(message, channel, getClass() + <span class="string">&quot; error when process received event .&quot;</span>, t);</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line"><span class="comment">//异常放入线程池</span></span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">caught</span><span class="params">(Channel channel, Throwable exception)</span> <span class="keyword">throws</span> RemotingException </span>&#123;</span><br><span class="line">        ExecutorService cexecutor = executor;</span><br><span class="line">        <span class="keyword">if</span> (cexecutor == <span class="keyword">null</span> || cexecutor.isShutdown()) &#123;</span><br><span class="line">            cexecutor = SHARED_EXECUTOR;</span><br><span class="line">        &#125;</span><br><span class="line">        <span class="keyword">try</span> &#123;</span><br><span class="line">            cexecutor.execute(<span class="keyword">new</span> ChannelEventRunnable(channel, handler, ChannelState.CAUGHT, exception));</span><br><span class="line">        &#125; <span class="keyword">catch</span> (Throwable t) &#123;</span><br><span class="line">            <span class="keyword">throw</span> <span class="keyword">new</span> ExecutionException(<span class="string">&quot;caught event&quot;</span>, channel, getClass() + <span class="string">&quot; error when process caught event .&quot;</span>, t);</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">private</span> <span class="keyword">void</span> <span class="title">checkQueueLength</span><span class="params">()</span> </span>&#123;</span><br><span class="line">        <span class="keyword">if</span> (connectionExecutor.getQueue().size() &gt; queuewarninglimit) &#123;</span><br><span class="line">            logger.warn(<span class="keyword">new</span> IllegalThreadStateException(<span class="string">&quot;connectionordered channel handler `queue size: &quot;</span> + connectionExecutor.getQueue().size() + <span class="string">&quot; exceed the warning limit number :&quot;</span> + queuewarninglimit));</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+    </div>
+
+    
+    
+    
+
+    <footer class="post-footer">
+          <div class="reward-container">
+  <div>Buy me a coffee</div>
+  <button>
+    Donate
+  </button>
+  <div class="post-reward">
+      <div>
+        <img src="/hexo/images/wechatpay.png" alt="Absurd WeChat Pay">
+        <span>WeChat Pay</span>
+      </div>
+
+  </div>
+</div>
+
+          <div class="post-tags">
+              <a href="/hexo/tags/rpc/" rel="tag"># rpc</a>
+              <a href="/hexo/tags/dubbo/" rel="tag"># dubbo</a>
+          </div>
+
+        
+
+          <div class="post-nav">
+            <div class="post-nav-item">
+                <a href="/hexo/post/410c3782.html" rel="prev" title="Paxos 协议">
+                  <i class="fa fa-chevron-left"></i> Paxos 协议
+                </a>
+            </div>
+            <div class="post-nav-item">
+                <a href="/hexo/post/1ac0c692.html" rel="next" title="自定义拓展日志">
+                  自定义拓展日志 <i class="fa fa-chevron-right"></i>
+                </a>
+            </div>
+          </div>
+    </footer>
+  </article>
+</div>
+
+
+
+
+
+
+</div>
+  </main>
+
+  <footer class="footer">
+    <div class="footer-inner">
+
+
+<div class="copyright">
+  &copy; 
+  <span itemprop="copyrightYear">2022</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">Absurd</span>
+</div>
+  <div class="powered-by">Powered by <a href="https://hexo.io/" rel="noopener" target="_blank">Hexo</a> & <a href="https://theme-next.js.org/mist/" rel="noopener" target="_blank">NexT.Mist</a>
+  </div>
+
+    </div>
+  </footer>
+
+  
+  <script src="https://cdn.jsdelivr.net/npm/animejs@3.2.1/lib/anime.min.js" integrity="sha256-XL2inqUJaslATFnHdJOi9GfQ60on8Wx1C2H8DYiN1xY=" crossorigin="anonymous"></script>
+<script src="/hexo/js/comments.js"></script><script src="/hexo/js/utils.js"></script><script src="/hexo/js/motion.js"></script><script src="/hexo/js/schemes/muse.js"></script><script src="/hexo/js/next-boot.js"></script>
+
+  
+<script src="https://cdn.jsdelivr.net/npm/hexo-generator-searchdb@1.4.0/dist/search.js" integrity="sha256-vXZMYLEqsROAXkEw93GGIvaB2ab+QW6w3+1ahD9nXXA=" crossorigin="anonymous"></script>
+<script src="/hexo/js/third-party/search/local-search.js"></script>
+
+
+
+
+
+  
+
+
+
+
+
+</body>
+</html>

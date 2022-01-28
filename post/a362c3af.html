@@ -1,0 +1,576 @@
+<!DOCTYPE html>
+<html lang="zh-Hans">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width">
+<meta name="theme-color" content="#222" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#222" media="(prefers-color-scheme: dark)">
+<meta name="generator" content="Hexo 6.0.0">
+
+
+  <link rel="apple-touch-icon" sizes="180x180" href="/hexo/images/apple-touch-icon-next.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/hexo/images/favicon-32x32-next.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/hexo/images/favicon-16x16-next.png">
+  <link rel="mask-icon" href="/hexo/images/logo.svg" color="#222">
+
+<link rel="stylesheet" href="/hexo/css/main.css">
+
+
+
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@5.15.4/css/all.min.css" integrity="sha256-mUZM63G8m73Mcidfrv5E+Y61y7a12O5mW4ezU3bxqW4=" crossorigin="anonymous">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/animate.css@3.1.1/animate.min.css" integrity="sha256-PR7ttpcvz8qrF57fur/yAx1qXMFJeJFiA6pSzWi0OIE=" crossorigin="anonymous">
+
+<script class="next-config" data-name="main" type="application/json">{"hostname":"www1350.github.io","root":"/hexo/","images":"/hexo/images","scheme":"Mist","darkmode":true,"version":"8.9.0","exturl":false,"sidebar":{"position":"left","display":"post","padding":18,"offset":12},"copycode":false,"bookmark":{"enable":false,"color":"#222","save":"auto"},"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"stickytabs":false,"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"fadeInDown","post_body":"fadeInDown","coll_header":"fadeInLeft","sidebar":"fadeInUp"}},"prism":false,"i18n":{"placeholder":"Searching...","empty":"We didn't find any results for the search: ${query}","hits_time":"${hits} results found in ${time} ms","hits":"${hits} results found"},"path":"/hexo/search.xml","localsearch":{"enable":true,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":true}}</script><script src="/hexo/js/config.js"></script>
+<meta name="description" content="spring万恶的xml配置虽然恶心，但是也不乏良好的设计。如何自定义xml呢？ 创建XML Schema文件什么是XML Schema XML Schema 描述了 XML文档的结构  12345678910111213141516171819202122232425262728293031&lt;?xml version&#x3D;&quot;1.0&quot; encoding&#x3D;&quot;UTF-8">
+<meta property="og:type" content="article">
+<meta property="og:title" content="自定义spring xml配置">
+<meta property="og:url" content="https://www1350.github.io/hexo/post/a362c3af.html">
+<meta property="og:site_name" content="Absurd博客">
+<meta property="og:description" content="spring万恶的xml配置虽然恶心，但是也不乏良好的设计。如何自定义xml呢？ 创建XML Schema文件什么是XML Schema XML Schema 描述了 XML文档的结构  12345678910111213141516171819202122232425262728293031&lt;?xml version&#x3D;&quot;1.0&quot; encoding&#x3D;&quot;UTF-8">
+<meta property="og:locale">
+<meta property="og:image" content="https://user-images.githubusercontent.com/7789698/39589196-18f58e0e-4f30-11e8-8506-2748fd00c55b.png">
+<meta property="article:published_time" content="2018-05-03T06:28:19.000Z">
+<meta property="article:modified_time" content="2022-01-28T07:09:17.741Z">
+<meta property="article:author" content="Absurd">
+<meta property="article:tag" content="spring">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="https://user-images.githubusercontent.com/7789698/39589196-18f58e0e-4f30-11e8-8506-2748fd00c55b.png">
+
+
+<link rel="canonical" href="https://www1350.github.io/hexo/post/a362c3af.html">
+
+
+
+<script class="next-config" data-name="page" type="application/json">{"sidebar":"","isHome":false,"isPost":true,"lang":"zh-Hans","comments":true,"permalink":"https://www1350.github.io/hexo/post/a362c3af.html","path":"post/a362c3af.html","title":"自定义spring xml配置"}</script>
+
+<script class="next-config" data-name="calendar" type="application/json">""</script>
+<title>自定义spring xml配置 | Absurd博客</title>
+  
+
+
+
+
+  <noscript>
+    <link rel="stylesheet" href="/hexo/css/noscript.css">
+  </noscript>
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage" class="use-motion">
+  <div class="headband"></div>
+
+  <main class="main">
+    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="Toggle navigation bar" role="button">
+        <span class="toggle-line"></span>
+        <span class="toggle-line"></span>
+        <span class="toggle-line"></span>
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/hexo/" class="brand" rel="start">
+      <i class="logo-line"></i>
+      <p class="site-title">Absurd博客</p>
+      <i class="logo-line"></i>
+    </a>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger">
+        <i class="fa fa-search fa-fw fa-lg"></i>
+    </div>
+  </div>
+</div>
+
+
+
+<nav class="site-nav">
+  <ul class="main-menu menu">
+        <li class="menu-item menu-item-home"><a href="/hexo/" rel="section"><i class="fa fa-home fa-fw"></i>Home</a></li>
+        <li class="menu-item menu-item-about"><a href="/hexo/about/" rel="section"><i class="fa fa-user fa-fw"></i>About</a></li>
+        <li class="menu-item menu-item-tags"><a href="/hexo/tags/" rel="section"><i class="fa fa-tags fa-fw"></i>Tags</a></li>
+        <li class="menu-item menu-item-categories"><a href="/hexo/categories/" rel="section"><i class="fa fa-th fa-fw"></i>Categories</a></li>
+        <li class="menu-item menu-item-archives"><a href="/hexo/archives/" rel="section"><i class="fa fa-archive fa-fw"></i>Archives</a></li>
+        <li class="menu-item menu-item-bookmarks"><a href="/hexo/bookmarks/" rel="section"><i class="fa fa-archive fa-fw"></i>bookmarks</a></li>
+      <li class="menu-item menu-item-search">
+        <a role="button" class="popup-trigger"><i class="fa fa-search fa-fw"></i>Search
+        </a>
+      </li>
+  </ul>
+</nav>
+
+
+
+  <div class="search-pop-overlay">
+    <div class="popup search-popup"><div class="search-header">
+  <span class="search-icon">
+    <i class="fa fa-search"></i>
+  </span>
+  <div class="search-input-container">
+    <input autocomplete="off" autocapitalize="off" maxlength="80"
+           placeholder="Searching..." spellcheck="false"
+           type="search" class="search-input">
+  </div>
+  <span class="popup-btn-close" role="button">
+    <i class="fa fa-times-circle"></i>
+  </span>
+</div>
+<div class="search-result-container no-result">
+  <div class="search-result-icon">
+    <i class="fa fa-spinner fa-pulse fa-5x"></i>
+  </div>
+</div>
+
+    </div>
+  </div>
+
+</div>
+        
+  
+  <div class="toggle sidebar-toggle" role="button">
+    <span class="toggle-line"></span>
+    <span class="toggle-line"></span>
+    <span class="toggle-line"></span>
+  </div>
+
+  <aside class="sidebar">
+
+    <div class="sidebar-inner sidebar-nav-active sidebar-toc-active">
+      <ul class="sidebar-nav">
+        <li class="sidebar-nav-toc">
+          Table of Contents
+        </li>
+        <li class="sidebar-nav-overview">
+          Overview
+        </li>
+      </ul>
+
+      <div class="sidebar-panel-container">
+        <!--noindex-->
+        <div class="post-toc-wrap sidebar-panel">
+            <div class="post-toc animated"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%88%9B%E5%BB%BAXML-Schema%E6%96%87%E4%BB%B6"><span class="nav-number">1.</span> <span class="nav-text">创建XML Schema文件</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#%E4%BB%80%E4%B9%88%E6%98%AFXML-Schema"><span class="nav-number">1.1.</span> <span class="nav-text">什么是XML Schema</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#%E7%AE%80%E6%98%93%E5%85%83%E7%B4%A0"><span class="nav-number">1.1.1.</span> <span class="nav-text">简易元素</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#XSD-%E5%B1%9E%E6%80%A7"><span class="nav-number">1.1.2.</span> <span class="nav-text">XSD 属性</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#%E9%BB%98%E8%AE%A4%E5%80%BC"><span class="nav-number">1.1.3.</span> <span class="nav-text">默认值</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#%E5%9B%BA%E5%AE%9A%E5%80%BC"><span class="nav-number">1.1.4.</span> <span class="nav-text">固定值</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#%E5%8F%AF%E9%80%89%E7%9A%84%E5%92%8C%E5%BF%85%E9%9C%80%E7%9A%84%E5%B1%9E%E6%80%A7"><span class="nav-number">1.1.5.</span> <span class="nav-text">可选的和必需的属性</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#XSD-%E9%99%90%E5%AE%9A-Facets"><span class="nav-number">1.1.6.</span> <span class="nav-text">XSD 限定 &#x2F; Facets</span></a><ol class="nav-child"><li class="nav-item nav-level-5"><a class="nav-link" href="#%E5%AF%B9%E5%80%BC%E7%9A%84%E9%99%90%E5%AE%9A%EF%BC%88minInclusive%EF%BC%8FmaxInclusive%EF%BC%89"><span class="nav-number">1.1.6.1.</span> <span class="nav-text">对值的限定（minInclusive／maxInclusive）</span></a></li><li class="nav-item nav-level-5"><a class="nav-link" href="#%E5%AF%B9%E4%B8%80%E7%BB%84%E5%80%BC%E7%9A%84%E9%99%90%E5%AE%9A%EF%BC%88enumeration%EF%BC%89"><span class="nav-number">1.1.6.2.</span> <span class="nav-text">对一组值的限定（enumeration）</span></a></li><li class="nav-item nav-level-5"><a class="nav-link" href="#%E5%AF%B9%E4%B8%80%E7%B3%BB%E5%88%97%E5%80%BC%E7%9A%84%E9%99%90%E5%AE%9A%EF%BC%88pattern%EF%BC%89"><span class="nav-number">1.1.6.3.</span> <span class="nav-text">对一系列值的限定（pattern）</span></a></li><li class="nav-item nav-level-5"><a class="nav-link" href="#%E5%AF%B9%E4%B8%80%E7%B3%BB%E5%88%97%E5%80%BC%E7%9A%84%E5%85%B6%E4%BB%96%E9%99%90%E5%AE%9A"><span class="nav-number">1.1.6.4.</span> <span class="nav-text">对一系列值的其他限定</span></a></li><li class="nav-item nav-level-5"><a class="nav-link" href="#%E5%AF%B9%E7%A9%BA%E7%99%BD%E5%AD%97%E7%AC%A6%E7%9A%84%E9%99%90%E5%AE%9A%EF%BC%88whiteSpace%EF%BC%89"><span class="nav-number">1.1.6.5.</span> <span class="nav-text">对空白字符的限定（whiteSpace）</span></a></li><li class="nav-item nav-level-5"><a class="nav-link" href="#%E5%AF%B9%E9%95%BF%E5%BA%A6%E7%9A%84%E9%99%90%E5%AE%9A%EF%BC%88length%EF%BC%8FminLength%EF%BC%8FmaxLength%EF%BC%89"><span class="nav-number">1.1.6.6.</span> <span class="nav-text">对长度的限定（length／minLength／maxLength）</span></a></li><li class="nav-item nav-level-5"><a class="nav-link" href="#%E6%95%B0%E6%8D%AE%E7%B1%BB%E5%9E%8B%E7%9A%84%E9%99%90%E5%AE%9A"><span class="nav-number">1.1.6.7.</span> <span class="nav-text">数据类型的限定</span></a></li></ol></li><li class="nav-item nav-level-4"><a class="nav-link" href="#%E5%A4%8D%E5%90%88%E5%85%83%E7%B4%A0%EF%BC%88complexType%EF%BC%89"><span class="nav-number">1.1.7.</span> <span class="nav-text">复合元素（complexType）</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#%E6%8C%87%E7%A4%BA%E5%99%A8"><span class="nav-number">1.1.8.</span> <span class="nav-text">指示器</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#%E5%85%83%E7%B4%A0"><span class="nav-number">1.1.9.</span> <span class="nav-text"> 元素</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#%E5%85%83%E7%B4%A0-1"><span class="nav-number">1.1.10.</span> <span class="nav-text"> 元素</span></a></li></ol></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E6%9E%84%E9%80%A0Bean"><span class="nav-number">2.</span> <span class="nav-text">构造Bean</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#META-INF%E4%B8%8B%E5%A2%9E%E5%8A%A0spring-schemas"><span class="nav-number">3.</span> <span class="nav-text">META-INF下增加spring.schemas</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E7%BB%A7%E6%89%BFNamespaceHandlerSupport%E5%AE%9E%E7%8E%B0%E5%A4%84%E7%90%86%E5%99%A8"><span class="nav-number">4.</span> <span class="nav-text">继承NamespaceHandlerSupport实现处理器</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%AE%9E%E7%8E%B0BeanDefinitionParser%E6%8E%A5%E5%8F%A3%E5%AE%9E%E7%8E%B0%E5%A4%9A%E4%B8%AA%E8%A7%A3%E6%9E%90%E5%99%A8"><span class="nav-number">5.</span> <span class="nav-text">实现BeanDefinitionParser接口实现多个解析器</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#META-INF%E4%B8%8B%E5%A2%9E%E5%8A%A0spring-handlers"><span class="nav-number">6.</span> <span class="nav-text">META-INF下增加spring.handlers</span></a></li></ol></div>
+        </div>
+        <!--/noindex-->
+
+        <div class="site-overview-wrap sidebar-panel">
+          <div class="site-author site-overview-item animated" itemprop="author" itemscope itemtype="http://schema.org/Person">
+    <img class="site-author-image" itemprop="image" alt="Absurd"
+      src="/hexo/images/avatar.gif">
+  <p class="site-author-name" itemprop="name">Absurd</p>
+  <div class="site-description" itemprop="description"></div>
+</div>
+<div class="site-state-wrap site-overview-item animated">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+        <a href="/hexo/archives/">
+          <span class="site-state-item-count">75</span>
+          <span class="site-state-item-name">posts</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+          <a href="/hexo/categories/">
+        <span class="site-state-item-count">17</span>
+        <span class="site-state-item-name">categories</span></a>
+      </div>
+      <div class="site-state-item site-state-tags">
+          <a href="/hexo/tags/">
+        <span class="site-state-item-count">46</span>
+        <span class="site-state-item-name">tags</span></a>
+      </div>
+  </nav>
+</div>
+  <div class="links-of-author site-overview-item animated">
+      <span class="links-of-author-item">
+        <a href="https://github.com/www1350" title="GitHub → https:&#x2F;&#x2F;github.com&#x2F;www1350" rel="noopener" target="_blank"><i class="fab fa-github fa-fw"></i>GitHub</a>
+      </span>
+      <span class="links-of-author-item">
+        <a href="mailto:www_1350@163.com" title="E-Mail → mailto:www_1350@163.com" rel="noopener" target="_blank"><i class="fa fa-envelope fa-fw"></i>E-Mail</a>
+      </span>
+  </div>
+
+
+
+        </div>
+      </div>
+    </div>
+  </aside>
+  <div class="sidebar-dimmer"></div>
+
+
+    </header>
+
+    
+  <div class="back-to-top" role="button" aria-label="Back to top">
+    <i class="fa fa-arrow-up"></i>
+    <span>0%</span>
+  </div>
+
+<noscript>
+  <div class="noscript-warning">Theme NexT works best with JavaScript enabled</div>
+</noscript>
+
+
+    <div class="main-inner post posts-expand">
+
+
+  
+
+
+<div class="post-block">
+  
+  
+
+  <article itemscope itemtype="http://schema.org/Article" class="post-content" lang="zh-Hans">
+    <link itemprop="mainEntityOfPage" href="https://www1350.github.io/hexo/post/a362c3af.html">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/hexo/images/avatar.gif">
+      <meta itemprop="name" content="Absurd">
+      <meta itemprop="description" content="">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Absurd博客">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          自定义spring xml配置
+        </h1>
+
+        <div class="post-meta-container">
+          <div class="post-meta">
+    <span class="post-meta-item">
+      <span class="post-meta-item-icon">
+        <i class="far fa-calendar"></i>
+      </span>
+      <span class="post-meta-item-text">Posted on</span>
+
+      <time title="Created: 2018-05-03 14:28:19" itemprop="dateCreated datePublished" datetime="2018-05-03T14:28:19+08:00">2018-05-03</time>
+    </span>
+    <span class="post-meta-item">
+      <span class="post-meta-item-icon">
+        <i class="far fa-calendar-check"></i>
+      </span>
+      <span class="post-meta-item-text">Edited on</span>
+      <time title="Modified: 2022-01-28 15:09:17" itemprop="dateModified" datetime="2022-01-28T15:09:17+08:00">2022-01-28</time>
+    </span>
+
+  
+</div>
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+        <p>spring万恶的xml配置虽然恶心，但是也不乏良好的设计。如何自定义xml呢？</p>
+<h2 id="创建XML-Schema文件"><a href="#创建XML-Schema文件" class="headerlink" title="创建XML Schema文件"></a>创建XML Schema文件</h2><h3 id="什么是XML-Schema"><a href="#什么是XML-Schema" class="headerlink" title="什么是XML Schema"></a>什么是XML Schema</h3><ul>
+<li>XML Schema 描述了 XML文档的结构</li>
+</ul>
+<figure class="highlight xml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">&lt;?xml version=&quot;1.0&quot; encoding=&quot;UTF-8&quot; standalone=&quot;no&quot;?&gt;</span></span><br><span class="line"><span class="tag">&lt;<span class="name">xsd:schema</span> <span class="attr">xmlns:xsd</span>=<span class="string">&quot;http://www.w3.org/2001/XMLSchema&quot;</span></span></span><br><span class="line"><span class="tag">            <span class="attr">xmlns:beans</span>=<span class="string">&quot;http://www.springframework.org/schema/beans&quot;</span></span></span><br><span class="line"><span class="tag">            <span class="attr">xmlns:tool</span>=<span class="string">&quot;http://www.springframework.org/schema/tool&quot;</span></span></span><br><span class="line"><span class="tag">            <span class="attr">xmlns</span>=<span class="string">&quot;http://code.alibabatech.com/schema/dubbo&quot;</span></span></span><br><span class="line"><span class="tag">            <span class="attr">targetNamespace</span>=<span class="string">&quot;http://code.alibabatech.com/schema/dubbo&quot;</span>&gt;</span></span><br><span class="line"></span><br><span class="line">    <span class="tag">&lt;<span class="name">xsd:import</span> <span class="attr">namespace</span>=<span class="string">&quot;http://www.w3.org/XML/1998/namespace&quot;</span>/&gt;</span></span><br><span class="line">    <span class="tag">&lt;<span class="name">xsd:import</span> <span class="attr">namespace</span>=<span class="string">&quot;http://www.springframework.org/schema/beans&quot;</span>/&gt;</span></span><br><span class="line">    <span class="tag">&lt;<span class="name">xsd:import</span> <span class="attr">namespace</span>=<span class="string">&quot;http://www.springframework.org/schema/tool&quot;</span>/&gt;</span></span><br><span class="line"></span><br><span class="line">    <span class="tag">&lt;<span class="name">xsd:complexType</span> <span class="attr">name</span>=<span class="string">&quot;annotationType&quot;</span>&gt;</span></span><br><span class="line">        <span class="tag">&lt;<span class="name">xsd:attribute</span> <span class="attr">name</span>=<span class="string">&quot;id&quot;</span> <span class="attr">type</span>=<span class="string">&quot;xsd:ID&quot;</span>&gt;</span></span><br><span class="line">            <span class="tag">&lt;<span class="name">xsd:annotation</span>&gt;</span></span><br><span class="line">                <span class="tag">&lt;<span class="name">xsd:documentation</span>&gt;</span>&lt;![CDATA[ The unique identifier for a bean. ]]&gt;<span class="tag">&lt;/<span class="name">xsd:documentation</span>&gt;</span></span><br><span class="line">            <span class="tag">&lt;/<span class="name">xsd:annotation</span>&gt;</span></span><br><span class="line">        <span class="tag">&lt;/<span class="name">xsd:attribute</span>&gt;</span></span><br><span class="line">        <span class="tag">&lt;<span class="name">xsd:attribute</span> <span class="attr">name</span>=<span class="string">&quot;package&quot;</span> <span class="attr">type</span>=<span class="string">&quot;xsd:string&quot;</span> <span class="attr">use</span>=<span class="string">&quot;optional&quot;</span>&gt;</span></span><br><span class="line">            <span class="tag">&lt;<span class="name">xsd:annotation</span>&gt;</span></span><br><span class="line">                <span class="tag">&lt;<span class="name">xsd:documentation</span>&gt;</span>&lt;![CDATA[ The scan package. ]]&gt;<span class="tag">&lt;/<span class="name">xsd:documentation</span>&gt;</span></span><br><span class="line">            <span class="tag">&lt;/<span class="name">xsd:annotation</span>&gt;</span></span><br><span class="line">        <span class="tag">&lt;/<span class="name">xsd:attribute</span>&gt;</span></span><br><span class="line">    <span class="tag">&lt;/<span class="name">xsd:complexType</span>&gt;</span></span><br><span class="line"></span><br><span class="line">    <span class="tag">&lt;<span class="name">xsd:element</span> <span class="attr">name</span>=<span class="string">&quot;annotation&quot;</span> <span class="attr">type</span>=<span class="string">&quot;annotationType&quot;</span>&gt;</span></span><br><span class="line">        <span class="tag">&lt;<span class="name">xsd:annotation</span>&gt;</span></span><br><span class="line">            <span class="tag">&lt;<span class="name">xsd:documentation</span>&gt;</span>&lt;![CDATA[ The annotation config ]]&gt;<span class="tag">&lt;/<span class="name">xsd:documentation</span>&gt;</span></span><br><span class="line">        <span class="tag">&lt;/<span class="name">xsd:annotation</span>&gt;</span></span><br><span class="line">    <span class="tag">&lt;/<span class="name">xsd:element</span>&gt;</span></span><br><span class="line"></span><br><span class="line"><span class="tag">&lt;/<span class="name">xsd:schema</span>&gt;</span></span><br></pre></td></tr></table></figure>
+
+<h4 id="简易元素"><a href="#简易元素" class="headerlink" title="简易元素"></a>简易元素</h4><p><strong>语法</strong></p>
+<figure class="highlight xml"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="tag">&lt;<span class="name">xsd:element</span> <span class="attr">name</span>=<span class="string">&quot;xxx&quot;</span> <span class="attr">type</span>=<span class="string">&quot;yyy&quot;</span>/&gt;</span></span><br></pre></td></tr></table></figure>
+
+<p>这里的xsd:element 被称为简易元素。name是名称，type是类型。XML Schema 拥有很多内建的数据类型。</p>
+<p><strong>实例</strong></p>
+<p>这是一些 XML 元素：</p>
+<figure class="highlight xml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="tag">&lt;<span class="name">lastname</span>&gt;</span>Refsnes<span class="tag">&lt;/<span class="name">lastname</span>&gt;</span></span><br><span class="line"><span class="tag">&lt;<span class="name">age</span>&gt;</span>36<span class="tag">&lt;/<span class="name">age</span>&gt;</span></span><br><span class="line"><span class="tag">&lt;<span class="name">dateborn</span>&gt;</span>1970-03-27<span class="tag">&lt;/<span class="name">dateborn</span>&gt;</span></span><br></pre></td></tr></table></figure>
+
+<p>这是相应的简易元素定义：</p>
+<figure class="highlight xml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="tag">&lt;<span class="name">xsd:element</span> <span class="attr">name</span>=<span class="string">&quot;lastname&quot;</span> <span class="attr">type</span>=<span class="string">&quot;xsd:string&quot;</span>/&gt;</span></span><br><span class="line"><span class="tag">&lt;<span class="name">xsd:element</span> <span class="attr">name</span>=<span class="string">&quot;age&quot;</span> <span class="attr">type</span>=<span class="string">&quot;xsd:integer&quot;</span>/&gt;</span></span><br><span class="line"><span class="tag">&lt;<span class="name">xsd:element</span> <span class="attr">name</span>=<span class="string">&quot;dateborn&quot;</span> <span class="attr">type</span>=<span class="string">&quot;xsd:date&quot;</span>/&gt;</span></span><br></pre></td></tr></table></figure>
+
+<h4 id="XSD-属性"><a href="#XSD-属性" class="headerlink" title="XSD 属性"></a>XSD 属性</h4><p>简易元素无法拥有属性。假如某个元素拥有属性，它就会被当作某种复合类型。但是属性本身总是作为简易类型被声明的。</p>
+<p><strong>语法</strong></p>
+<figure class="highlight xml"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="tag">&lt;<span class="name">xsd:attribute</span> <span class="attr">name</span>=<span class="string">&quot;xxx&quot;</span> <span class="attr">type</span>=<span class="string">&quot;yyy&quot;</span>/&gt;</span></span><br></pre></td></tr></table></figure>
+
+<p><strong>实例</strong></p>
+<p>这是一些 XML 元素：</p>
+<figure class="highlight xml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="tag">&lt;<span class="name">lastname</span>&gt;</span>Refsnes<span class="tag">&lt;/<span class="name">lastname</span>&gt;</span></span><br><span class="line"><span class="tag">&lt;<span class="name">age</span>&gt;</span>36<span class="tag">&lt;/<span class="name">age</span>&gt;</span></span><br><span class="line"><span class="tag">&lt;<span class="name">dateborn</span>&gt;</span>1970-03-27<span class="tag">&lt;/<span class="name">dateborn</span>&gt;</span></span><br></pre></td></tr></table></figure>
+
+<p>这是相应的简易元素定义：</p>
+<figure class="highlight xml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="tag">&lt;<span class="name">xsd:element</span> <span class="attr">name</span>=<span class="string">&quot;lastname&quot;</span> <span class="attr">type</span>=<span class="string">&quot;xsd:string&quot;</span>/&gt;</span></span><br><span class="line"><span class="tag">&lt;<span class="name">xsd:element</span> <span class="attr">name</span>=<span class="string">&quot;age&quot;</span> <span class="attr">type</span>=<span class="string">&quot;xsd:integer&quot;</span>/&gt;</span></span><br><span class="line"><span class="tag">&lt;<span class="name">xsd:element</span> <span class="attr">name</span>=<span class="string">&quot;dateborn&quot;</span> <span class="attr">type</span>=<span class="string">&quot;xsd:date&quot;</span>/&gt;</span></span><br></pre></td></tr></table></figure>
+
+<h4 id="默认值"><a href="#默认值" class="headerlink" title="默认值"></a>默认值</h4><p>当没有其他的值被规定时，默认值就会自动分配给元素。</p>
+<p>在下面的例子中，缺省值是 “red”：</p>
+<figure class="highlight xml"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="tag">&lt;<span class="name">xsd:element</span> <span class="attr">name</span>=<span class="string">&quot;color&quot;</span> <span class="attr">type</span>=<span class="string">&quot;xsd:string&quot;</span> <span class="attr">default</span>=<span class="string">&quot;red&quot;</span>/&gt;</span></span><br></pre></td></tr></table></figure>
+
+<h4 id="固定值"><a href="#固定值" class="headerlink" title="固定值"></a>固定值</h4><p>固定值同样会自动分配给元素，并且您无法规定另外一个值。</p>
+<p>在下面的例子中，固定值是 “red”：</p>
+<figure class="highlight xml"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="tag">&lt;<span class="name">xsd:element</span> <span class="attr">name</span>=<span class="string">&quot;color&quot;</span> <span class="attr">type</span>=<span class="string">&quot;xsd:string&quot;</span> <span class="attr">fixed</span>=<span class="string">&quot;red&quot;</span>/&gt;</span></span><br></pre></td></tr></table></figure>
+
+<h4 id="可选的和必需的属性"><a href="#可选的和必需的属性" class="headerlink" title="可选的和必需的属性"></a>可选的和必需的属性</h4><p>在缺省的情况下，属性是可选的。如需规定属性为必选，请使用 “use” 属性：</p>
+<figure class="highlight xml"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="tag">&lt;<span class="name">xsd:attribute</span> <span class="attr">name</span>=<span class="string">&quot;lang&quot;</span> <span class="attr">type</span>=<span class="string">&quot;xsd:string&quot;</span> <span class="attr">use</span>=<span class="string">&quot;required&quot;</span>/&gt;</span></span><br></pre></td></tr></table></figure>
+
+<h4 id="XSD-限定-Facets"><a href="#XSD-限定-Facets" class="headerlink" title="XSD 限定 / Facets"></a>XSD 限定 / Facets</h4><p>限定（restriction）用于为 XML 元素或者属性定义可接受的值。对 XML 元素的限定被称为 facet。</p>
+<h5 id="对值的限定（minInclusive／maxInclusive）"><a href="#对值的限定（minInclusive／maxInclusive）" class="headerlink" title="对值的限定（minInclusive／maxInclusive）"></a>对值的限定（minInclusive／maxInclusive）</h5><p>下面的例子定义了带有一个限定且名为 “age” 的元素。age 的值不能低于 0 或者高于 120：</p>
+<figure class="highlight xml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line"><span class="tag">&lt;<span class="name">xsd:element</span> <span class="attr">name</span>=<span class="string">&quot;age&quot;</span>&gt;</span></span><br><span class="line"><span class="tag">&lt;<span class="name">xsd:simpleType</span>&gt;</span></span><br><span class="line">  <span class="tag">&lt;<span class="name">xsd:restriction</span> <span class="attr">base</span>=<span class="string">&quot;xsd:integer&quot;</span>&gt;</span></span><br><span class="line">    <span class="tag">&lt;<span class="name">xsd:minInclusive</span> <span class="attr">value</span>=<span class="string">&quot;0&quot;</span>/&gt;</span></span><br><span class="line">    <span class="tag">&lt;<span class="name">xsd:maxInclusive</span> <span class="attr">value</span>=<span class="string">&quot;120&quot;</span>/&gt;</span></span><br><span class="line">   <span class="tag">&lt;/<span class="name">xsd:restriction</span>&gt;</span></span><br><span class="line">  <span class="tag">&lt;/<span class="name">xsd:simpleType</span>&gt;</span></span><br><span class="line"><span class="tag">&lt;/<span class="name">xsd:element</span>&gt;</span></span><br></pre></td></tr></table></figure>
+
+<h5 id="对一组值的限定（enumeration）"><a href="#对一组值的限定（enumeration）" class="headerlink" title="对一组值的限定（enumeration）"></a>对一组值的限定（enumeration）</h5><p>如需把 XML 元素的内容限制为一组可接受的值，我们要使用枚举约束（enumeration constraint）。</p>
+<p>下面的例子定义了带有一个限定的名为 “car” 的元素。可接受的值只有：Audi, Golf, BMW：</p>
+<figure class="highlight xml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line"><span class="tag">&lt;<span class="name">xsd:element</span> <span class="attr">name</span>=<span class="string">&quot;car&quot;</span>&gt;</span></span><br><span class="line">  <span class="tag">&lt;<span class="name">xsd:simpleType</span>&gt;</span></span><br><span class="line">    <span class="tag">&lt;<span class="name">xsd:restriction</span> <span class="attr">base</span>=<span class="string">&quot;xsd:string&quot;</span>&gt;</span></span><br><span class="line">      <span class="tag">&lt;<span class="name">xsd:enumeration</span> <span class="attr">value</span>=<span class="string">&quot;Audi&quot;</span>/&gt;</span></span><br><span class="line">      <span class="tag">&lt;<span class="name">xsd:enumeration</span> <span class="attr">value</span>=<span class="string">&quot;Golf&quot;</span>/&gt;</span></span><br><span class="line">      <span class="tag">&lt;<span class="name">xsd:enumeration</span> <span class="attr">value</span>=<span class="string">&quot;BMW&quot;</span>/&gt;</span></span><br><span class="line">    <span class="tag">&lt;/<span class="name">xsd:restriction</span>&gt;</span></span><br><span class="line">  <span class="tag">&lt;/<span class="name">xsd:simpleType</span>&gt;</span></span><br><span class="line"><span class="tag">&lt;/<span class="name">xsd:element</span>&gt;</span></span><br></pre></td></tr></table></figure>
+
+<p>上面的例子也可以被写为：</p>
+<figure class="highlight xml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line"><span class="tag">&lt;<span class="name">xsd:element</span> <span class="attr">name</span>=<span class="string">&quot;car&quot;</span> <span class="attr">type</span>=<span class="string">&quot;carType&quot;</span>/&gt;</span></span><br><span class="line"><span class="tag">&lt;<span class="name">xsd:simpleType</span> <span class="attr">name</span>=<span class="string">&quot;carType&quot;</span>&gt;</span></span><br><span class="line">  <span class="tag">&lt;<span class="name">xsd:restriction</span> <span class="attr">base</span>=<span class="string">&quot;xsd:string&quot;</span>&gt;</span></span><br><span class="line">    <span class="tag">&lt;<span class="name">xsd:enumeration</span> <span class="attr">value</span>=<span class="string">&quot;Audi&quot;</span>/&gt;</span></span><br><span class="line">    <span class="tag">&lt;<span class="name">xsd:enumeration</span> <span class="attr">value</span>=<span class="string">&quot;Golf&quot;</span>/&gt;</span></span><br><span class="line">    <span class="tag">&lt;<span class="name">xsd:enumeration</span> <span class="attr">value</span>=<span class="string">&quot;BMW&quot;</span>/&gt;</span></span><br><span class="line">  <span class="tag">&lt;/<span class="name">xsd:restriction</span>&gt;</span></span><br><span class="line"><span class="tag">&lt;/<span class="name">xsd:simpleType</span>&gt;</span></span><br></pre></td></tr></table></figure>
+
+<p><strong>注意：</strong> 在这种情况下，类型 “carType” 可被其他元素使用，因为它不是 “car” 元素的组成部分。</p>
+<h5 id="对一系列值的限定（pattern）"><a href="#对一系列值的限定（pattern）" class="headerlink" title="对一系列值的限定（pattern）"></a>对一系列值的限定（pattern）</h5><p>如需把 XML 元素的内容限制定义为一系列可使用的数字或字母，我们要使用模式约束（pattern constraint）。</p>
+<p>下面的例子定义了带有一个限定的名为 “letter” 的元素。可接受的值只有小写字母 a - z 其中的一个：</p>
+<figure class="highlight xml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line"><span class="tag">&lt;<span class="name">xsd:element</span> <span class="attr">name</span>=<span class="string">&quot;letter&quot;</span>&gt;</span></span><br><span class="line">  <span class="tag">&lt;<span class="name">xsd:simpleType</span>&gt;</span></span><br><span class="line">    <span class="tag">&lt;<span class="name">xsd:restriction</span> <span class="attr">base</span>=<span class="string">&quot;xsd:string&quot;</span>&gt;</span></span><br><span class="line">      <span class="tag">&lt;<span class="name">xsd:pattern</span> <span class="attr">value</span>=<span class="string">&quot;[a-z]&quot;</span>/&gt;</span></span><br><span class="line">    <span class="tag">&lt;/<span class="name">xsd:restriction</span>&gt;</span></span><br><span class="line">  <span class="tag">&lt;/<span class="name">xsd:simpleType</span>&gt;</span></span><br><span class="line"><span class="tag">&lt;/<span class="name">xsd:element</span>&gt;</span></span><br></pre></td></tr></table></figure>
+
+<p>下一个例子定义了带有一个限定的名为 “initials” 的元素。可接受的值是大写字母 A - Z 其中的三个：</p>
+<figure class="highlight xml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line"><span class="tag">&lt;<span class="name">xsd:element</span> <span class="attr">name</span>=<span class="string">&quot;initials&quot;</span>&gt;</span></span><br><span class="line">  <span class="tag">&lt;<span class="name">xsd:simpleType</span>&gt;</span></span><br><span class="line">    <span class="tag">&lt;<span class="name">xsd:restriction</span> <span class="attr">base</span>=<span class="string">&quot;xsd:string&quot;</span>&gt;</span></span><br><span class="line">      <span class="tag">&lt;<span class="name">xsd:pattern</span> <span class="attr">value</span>=<span class="string">&quot;[A-Z][A-Z][A-Z]&quot;</span>/&gt;</span></span><br><span class="line">    <span class="tag">&lt;/<span class="name">xsd:restriction</span>&gt;</span></span><br><span class="line">  <span class="tag">&lt;/<span class="name">xsd:simpleType</span>&gt;</span></span><br><span class="line"><span class="tag">&lt;/<span class="name">xsd:element</span>&gt;</span></span><br></pre></td></tr></table></figure>
+
+<p>下一个例子也定义了带有一个限定的名为 “initials” 的元素。可接受的值是大写或小写字母 a - z 其中的三个：</p>
+<figure class="highlight xml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line"><span class="tag">&lt;<span class="name">xsd:element</span> <span class="attr">name</span>=<span class="string">&quot;initials&quot;</span>&gt;</span></span><br><span class="line">  <span class="tag">&lt;<span class="name">xsd:simpleType</span>&gt;</span></span><br><span class="line">    <span class="tag">&lt;<span class="name">xsd:restriction</span> <span class="attr">base</span>=<span class="string">&quot;xsd:string&quot;</span>&gt;</span></span><br><span class="line">      <span class="tag">&lt;<span class="name">xsd:pattern</span> <span class="attr">value</span>=<span class="string">&quot;[a-zA-Z][a-zA-Z][a-zA-Z]&quot;</span>/&gt;</span></span><br><span class="line">    <span class="tag">&lt;/<span class="name">xsd:restriction</span>&gt;</span></span><br><span class="line">  <span class="tag">&lt;/<span class="name">xsd:simpleType</span>&gt;</span></span><br><span class="line"><span class="tag">&lt;/<span class="name">xsd:element</span>&gt;</span></span><br></pre></td></tr></table></figure>
+
+<p>下一个例子定义了带有一个限定的名为 “choice 的元素。可接受的值是字母 x, y 或 z 中的一个：</p>
+<figure class="highlight xml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line"><span class="tag">&lt;<span class="name">xsd:element</span> <span class="attr">name</span>=<span class="string">&quot;choice&quot;</span>&gt;</span></span><br><span class="line">  <span class="tag">&lt;<span class="name">xsd:simpleType</span>&gt;</span></span><br><span class="line">    <span class="tag">&lt;<span class="name">xsd:restriction</span> <span class="attr">base</span>=<span class="string">&quot;xsd:string&quot;</span>&gt;</span></span><br><span class="line">      <span class="tag">&lt;<span class="name">xsd:pattern</span> <span class="attr">value</span>=<span class="string">&quot;[xyz]&quot;</span>/&gt;</span></span><br><span class="line">    <span class="tag">&lt;/<span class="name">xsd:restriction</span>&gt;</span></span><br><span class="line">  <span class="tag">&lt;/<span class="name">xsd:simpleType</span>&gt;</span></span><br><span class="line"><span class="tag">&lt;/<span class="name">xsd:element</span>&gt;</span></span><br></pre></td></tr></table></figure>
+
+<p>下一个例子定义了带有一个限定的名为 “prodid” 的元素。可接受的值是五个阿拉伯数字的一个序列，且每个数字的范围是 0-9：</p>
+<figure class="highlight xml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line"><span class="tag">&lt;<span class="name">xsd:element</span> <span class="attr">name</span>=<span class="string">&quot;prodid&quot;</span>&gt;</span></span><br><span class="line">  <span class="tag">&lt;<span class="name">xsd:simpleType</span>&gt;</span></span><br><span class="line">    <span class="tag">&lt;<span class="name">xsd:restriction</span> <span class="attr">base</span>=<span class="string">&quot;xsd:integer&quot;</span>&gt;</span></span><br><span class="line">      <span class="tag">&lt;<span class="name">xsd:pattern</span> <span class="attr">value</span>=<span class="string">&quot;[0-9][0-9][0-9][0-9][0-9]&quot;</span>/&gt;</span></span><br><span class="line">    <span class="tag">&lt;/<span class="name">xsd:restriction</span>&gt;</span></span><br><span class="line">  <span class="tag">&lt;/<span class="name">xsd:simpleType</span>&gt;</span></span><br><span class="line"><span class="tag">&lt;/<span class="name">xsd:element</span>&gt;</span></span><br></pre></td></tr></table></figure>
+
+<h5 id="对一系列值的其他限定"><a href="#对一系列值的其他限定" class="headerlink" title="对一系列值的其他限定"></a>对一系列值的其他限定</h5><p>下面的例子定义了带有一个限定的名为 “letter” 的元素。可接受的值是 a - z 中零个或多个字母：</p>
+<figure class="highlight xml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line"><span class="tag">&lt;<span class="name">xsd:element</span> <span class="attr">name</span>=<span class="string">&quot;letter&quot;</span>&gt;</span></span><br><span class="line">  <span class="tag">&lt;<span class="name">xsd:simpleType</span>&gt;</span></span><br><span class="line">    <span class="tag">&lt;<span class="name">xsd:restriction</span> <span class="attr">base</span>=<span class="string">&quot;xsd:string&quot;</span>&gt;</span></span><br><span class="line">      <span class="tag">&lt;<span class="name">xsd:pattern</span> <span class="attr">value</span>=<span class="string">&quot;([a-z])*&quot;</span>/&gt;</span></span><br><span class="line">    <span class="tag">&lt;/<span class="name">xsd:restriction</span>&gt;</span></span><br><span class="line">  <span class="tag">&lt;/<span class="name">xsd:simpleType</span>&gt;</span></span><br><span class="line"><span class="tag">&lt;/<span class="name">xsd:element</span>&gt;</span></span><br></pre></td></tr></table></figure>
+
+<p>下面的例子定义了带有一个限定的名为 “letter” 的元素。可接受的值是一对或多对字母，每对字母由一个小写字母后跟一个大写字母组成。举个例子，”sToP”将会通过这种模式的验证，但是 “Stop”、”STOP” 或者 “stop” 无法通过验证：</p>
+<figure class="highlight xml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line"><span class="tag">&lt;<span class="name">xsd:element</span> <span class="attr">name</span>=<span class="string">&quot;letter&quot;</span>&gt;</span></span><br><span class="line">  <span class="tag">&lt;<span class="name">xsd:simpleType</span>&gt;</span></span><br><span class="line">    <span class="tag">&lt;<span class="name">xsd:restriction</span> <span class="attr">base</span>=<span class="string">&quot;xsd:string&quot;</span>&gt;</span></span><br><span class="line">      <span class="tag">&lt;<span class="name">xsd:pattern</span> <span class="attr">value</span>=<span class="string">&quot;([a-z][A-Z])+&quot;</span>/&gt;</span></span><br><span class="line">    <span class="tag">&lt;/<span class="name">xsd:restriction</span>&gt;</span></span><br><span class="line">  <span class="tag">&lt;/<span class="name">xsd:simpleType</span>&gt;</span></span><br><span class="line"><span class="tag">&lt;/<span class="name">xsd:element</span>&gt;</span></span><br></pre></td></tr></table></figure>
+
+<p>下面的例子定义了带有一个限定的名为 “gender” 的元素。可接受的值是 male 或者 female：</p>
+<figure class="highlight xml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line"><span class="tag">&lt;<span class="name">xsd:element</span> <span class="attr">name</span>=<span class="string">&quot;gender&quot;</span>&gt;</span></span><br><span class="line">  <span class="tag">&lt;<span class="name">xsd:simpleType</span>&gt;</span></span><br><span class="line">    <span class="tag">&lt;<span class="name">xsd:restriction</span> <span class="attr">base</span>=<span class="string">&quot;xsd:string&quot;</span>&gt;</span></span><br><span class="line">      <span class="tag">&lt;<span class="name">xsd:pattern</span> <span class="attr">value</span>=<span class="string">&quot;male|female&quot;</span>/&gt;</span></span><br><span class="line">    <span class="tag">&lt;/<span class="name">xsd:restriction</span>&gt;</span></span><br><span class="line">  <span class="tag">&lt;/<span class="name">xsd:simpleType</span>&gt;</span></span><br><span class="line"><span class="tag">&lt;/<span class="name">xsd:element</span>&gt;</span></span><br></pre></td></tr></table></figure>
+
+<p>下面的例子定义了带有一个限定的名为 “password” 的元素。可接受的值是由 8 个字符组成的一行字符，这些字符必须是大写或小写字母 a - z 亦或数字 0 - 9：</p>
+<figure class="highlight xml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line"><span class="tag">&lt;<span class="name">xsd:element</span> <span class="attr">name</span>=<span class="string">&quot;password&quot;</span>&gt;</span></span><br><span class="line">  <span class="tag">&lt;<span class="name">xsd:simpleType</span>&gt;</span></span><br><span class="line">    <span class="tag">&lt;<span class="name">xsd:restriction</span> <span class="attr">base</span>=<span class="string">&quot;xsd:string&quot;</span>&gt;</span></span><br><span class="line">      <span class="tag">&lt;<span class="name">xsd:pattern</span> <span class="attr">value</span>=<span class="string">&quot;[a-zA-Z0-9]&#123;8&#125;&quot;</span>/&gt;</span></span><br><span class="line">    <span class="tag">&lt;/<span class="name">xsd:restriction</span>&gt;</span></span><br><span class="line">  <span class="tag">&lt;/<span class="name">xsd:simpleType</span>&gt;</span></span><br><span class="line"><span class="tag">&lt;/<span class="name">xsd:element</span>&gt;</span></span><br></pre></td></tr></table></figure>
+
+<h5 id="对空白字符的限定（whiteSpace）"><a href="#对空白字符的限定（whiteSpace）" class="headerlink" title="对空白字符的限定（whiteSpace）"></a>对空白字符的限定（whiteSpace）</h5><p>如需规定对空白字符（whitespace characters）的处理方式，我们需要使用 whiteSpace 限定。</p>
+<p>下面的例子定义了带有一个限定的名为 “address” 的元素。这个 whiteSpace 限定被设置为 “preserve”，这意味着 XML 处理器不会移除任何空白字符：</p>
+<figure class="highlight xml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line"><span class="tag">&lt;<span class="name">xsd:element</span> <span class="attr">name</span>=<span class="string">&quot;address&quot;</span>&gt;</span></span><br><span class="line">  <span class="tag">&lt;<span class="name">xsd:simpleType</span>&gt;</span></span><br><span class="line">    <span class="tag">&lt;<span class="name">xsd:restriction</span> <span class="attr">base</span>=<span class="string">&quot;xsd:string&quot;</span>&gt;</span></span><br><span class="line">      <span class="tag">&lt;<span class="name">xsd:whiteSpace</span> <span class="attr">value</span>=<span class="string">&quot;preserve&quot;</span>/&gt;</span></span><br><span class="line">    <span class="tag">&lt;/<span class="name">xsd:restriction</span>&gt;</span></span><br><span class="line">  <span class="tag">&lt;/<span class="name">xsd:simpleType</span>&gt;</span></span><br><span class="line"><span class="tag">&lt;/<span class="name">xsd:element</span>&gt;</span></span><br></pre></td></tr></table></figure>
+
+<p>这个例子也定义了带有一个限定的名为 “address” 的元素。这个 whiteSpace 限定被设置为 “replace”，这意味着 XML 处理器将移除所有空白字符（换行、回车、空格以及制表符）：</p>
+<figure class="highlight xml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line"><span class="tag">&lt;<span class="name">xsd:element</span> <span class="attr">name</span>=<span class="string">&quot;address&quot;</span>&gt;</span></span><br><span class="line">  <span class="tag">&lt;<span class="name">xsd:simpleType</span>&gt;</span></span><br><span class="line">    <span class="tag">&lt;<span class="name">xsd:restriction</span> <span class="attr">base</span>=<span class="string">&quot;xsd:string&quot;</span>&gt;</span></span><br><span class="line">      <span class="tag">&lt;<span class="name">xsd:whiteSpace</span> <span class="attr">value</span>=<span class="string">&quot;replace&quot;</span>/&gt;</span></span><br><span class="line">    <span class="tag">&lt;/<span class="name">xsd:restriction</span>&gt;</span></span><br><span class="line">  <span class="tag">&lt;/<span class="name">xsd:simpleType</span>&gt;</span></span><br><span class="line"><span class="tag">&lt;/<span class="name">xsd:element</span>&gt;</span></span><br></pre></td></tr></table></figure>
+
+<p>这个例子也定义了带有一个限定的名为 “address” 的元素。这个 whiteSpace 限定被设置为 “collapse”，这意味着 XML 处理器将移除所有空白字符（换行、回车、空格以及制表符会被替换为空格，开头和结尾的空格会被移除，而多个连续的空格会被缩减为一个单一的空格）：</p>
+<figure class="highlight xml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line"><span class="tag">&lt;<span class="name">xsd:element</span> <span class="attr">name</span>=<span class="string">&quot;address&quot;</span>&gt;</span></span><br><span class="line">  <span class="tag">&lt;<span class="name">xsd:simpleType</span>&gt;</span></span><br><span class="line">    <span class="tag">&lt;<span class="name">xsd:restriction</span> <span class="attr">base</span>=<span class="string">&quot;xsd:string&quot;</span>&gt;</span></span><br><span class="line">      <span class="tag">&lt;<span class="name">xsd:whiteSpace</span> <span class="attr">value</span>=<span class="string">&quot;collapse&quot;</span>/&gt;</span></span><br><span class="line">    <span class="tag">&lt;/<span class="name">xsd:restriction</span>&gt;</span></span><br><span class="line">  <span class="tag">&lt;/<span class="name">xsd:simpleType</span>&gt;</span></span><br><span class="line"><span class="tag">&lt;/<span class="name">xsd:element</span>&gt;</span></span><br></pre></td></tr></table></figure>
+
+<h5 id="对长度的限定（length／minLength／maxLength）"><a href="#对长度的限定（length／minLength／maxLength）" class="headerlink" title="对长度的限定（length／minLength／maxLength）"></a>对长度的限定（length／minLength／maxLength）</h5><p>如需限制元素中值的长度，我们需要使用 length、maxLength 以及 minLength 限定。</p>
+<p>本例定义了带有一个限定且名为 “password” 的元素。其值必须精确到 8 个字符：</p>
+<figure class="highlight xml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line"><span class="tag">&lt;<span class="name">xsd:element</span> <span class="attr">name</span>=<span class="string">&quot;password&quot;</span>&gt;</span></span><br><span class="line">  <span class="tag">&lt;<span class="name">xsd:simpleType</span>&gt;</span></span><br><span class="line">    <span class="tag">&lt;<span class="name">xsd:restriction</span> <span class="attr">base</span>=<span class="string">&quot;xsd:string&quot;</span>&gt;</span></span><br><span class="line">      <span class="tag">&lt;<span class="name">xsd:length</span> <span class="attr">value</span>=<span class="string">&quot;8&quot;</span>/&gt;</span></span><br><span class="line">    <span class="tag">&lt;/<span class="name">xsd:restriction</span>&gt;</span></span><br><span class="line">  <span class="tag">&lt;/<span class="name">xsd:simpleType</span>&gt;</span></span><br><span class="line"><span class="tag">&lt;/<span class="name">xsd:element</span>&gt;</span></span><br></pre></td></tr></table></figure>
+
+<p>这个例子也定义了带有一个限定的名为 “password” 的元素。其值最小为 5 个字符，最大为 8 个字符：</p>
+<figure class="highlight xml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line"><span class="tag">&lt;<span class="name">xsd:element</span> <span class="attr">name</span>=<span class="string">&quot;password&quot;</span>&gt;</span></span><br><span class="line">  <span class="tag">&lt;<span class="name">xsd:simpleType</span>&gt;</span></span><br><span class="line">    <span class="tag">&lt;<span class="name">xsd:restriction</span> <span class="attr">base</span>=<span class="string">&quot;xsd:string&quot;</span>&gt;</span></span><br><span class="line">      <span class="tag">&lt;<span class="name">xsd:minLength</span> <span class="attr">value</span>=<span class="string">&quot;5&quot;</span>/&gt;</span></span><br><span class="line">      <span class="tag">&lt;<span class="name">xsd:maxLength</span> <span class="attr">value</span>=<span class="string">&quot;8&quot;</span>/&gt;</span></span><br><span class="line">    <span class="tag">&lt;/<span class="name">xsd:restriction</span>&gt;</span></span><br><span class="line">  <span class="tag">&lt;/<span class="name">xsd:simpleType</span>&gt;</span></span><br><span class="line"><span class="tag">&lt;/<span class="name">xsd:element</span>&gt;</span></span><br></pre></td></tr></table></figure>
+
+<h5 id="数据类型的限定"><a href="#数据类型的限定" class="headerlink" title="数据类型的限定"></a>数据类型的限定</h5><table>
+<thead>
+<tr>
+<th>限定</th>
+<th>描述</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>enumeration</td>
+<td>定义可接受值的一个列表</td>
+</tr>
+<tr>
+<td>fractionDigits</td>
+<td>定义所允许的最大的小数位数。必须大于等于0。</td>
+</tr>
+<tr>
+<td>length</td>
+<td>定义所允许的字符或者列表项目的精确数目。必须大于或等于0。</td>
+</tr>
+<tr>
+<td>maxExclusive</td>
+<td>定义数值的上限。所允许的值必须小于此值。</td>
+</tr>
+<tr>
+<td>maxInclusive</td>
+<td>定义数值的上限。所允许的值必须小于或等于此值。</td>
+</tr>
+<tr>
+<td>maxLength</td>
+<td>定义所允许的字符或者列表项目的最大数目。必须大于或等于0。</td>
+</tr>
+<tr>
+<td>minExclusive</td>
+<td>定义数值的下限。所允许的值必需大于此值。</td>
+</tr>
+<tr>
+<td>minInclusive</td>
+<td>定义数值的下限。所允许的值必需大于或等于此值。</td>
+</tr>
+<tr>
+<td>minLength</td>
+<td>定义所允许的字符或者列表项目的最小数目。必须大于或等于0。</td>
+</tr>
+<tr>
+<td>pattern</td>
+<td>定义可接受的字符的精确序列。</td>
+</tr>
+<tr>
+<td>totalDigits</td>
+<td>定义所允许的阿拉伯数字的精确位数。必须大于0。</td>
+</tr>
+<tr>
+<td>whiteSpace</td>
+<td>定义空白字符（换行、回车、空格以及制表符）的处理方式。</td>
+</tr>
+</tbody></table>
+<h4 id="复合元素（complexType）"><a href="#复合元素（complexType）" class="headerlink" title="复合元素（complexType）"></a>复合元素（complexType）</h4><p>复合元素指包含其他元素及/或属性的 XML 元素。</p>
+<ul>
+<li><p>有四种类型的复合元素：</p>
+<ul>
+<li><p>空元素</p>
+<figure class="highlight xml"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="tag">&lt;<span class="name">product</span> <span class="attr">pid</span>=<span class="string">&quot;1345&quot;</span>/&gt;</span></span><br></pre></td></tr></table></figure>
+
+<figure class="highlight xml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="tag">&lt;<span class="name">xsd:element</span> <span class="attr">name</span>=<span class="string">&quot;product&quot;</span> <span class="attr">type</span>=<span class="string">&quot;prodtype&quot;</span>/&gt;</span></span><br><span class="line"></span><br><span class="line"><span class="tag">&lt;<span class="name">xsd:complexType</span> <span class="attr">name</span>=<span class="string">&quot;prodtype&quot;</span>&gt;</span></span><br><span class="line">  <span class="tag">&lt;<span class="name">xsd:attribute</span> <span class="attr">name</span>=<span class="string">&quot;pid&quot;</span> <span class="attr">type</span>=<span class="string">&quot;xsd:positiveInteger&quot;</span>/&gt;</span></span><br><span class="line"><span class="tag">&lt;/<span class="name">xsd:complexType</span>&gt;</span></span><br></pre></td></tr></table></figure></li>
+<li><p>包含其他元素的元素</p>
+<figure class="highlight xml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="tag">&lt;<span class="name">employee</span>&gt;</span></span><br><span class="line">  <span class="tag">&lt;<span class="name">firstname</span>&gt;</span>John<span class="tag">&lt;/<span class="name">firstname</span>&gt;</span></span><br><span class="line">  <span class="tag">&lt;<span class="name">lastname</span>&gt;</span>Smith<span class="tag">&lt;/<span class="name">lastname</span>&gt;</span></span><br><span class="line"><span class="tag">&lt;/<span class="name">employee</span>&gt;</span></span><br></pre></td></tr></table></figure>
+
+<figure class="highlight xml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line"><span class="tag">&lt;<span class="name">xsd:element</span> <span class="attr">name</span>=<span class="string">&quot;employee&quot;</span> <span class="attr">type</span>=<span class="string">&quot;employeetype&quot;</span>/&gt;</span></span><br><span class="line"></span><br><span class="line"><span class="tag">&lt;<span class="name">xsd:complexType</span> <span class="attr">name</span>=<span class="string">&quot;employeetype&quot;</span>&gt;</span></span><br><span class="line">  <span class="tag">&lt;<span class="name">xsd:sequence</span>&gt;</span></span><br><span class="line">    <span class="tag">&lt;<span class="name">xsd:element</span> <span class="attr">name</span>=<span class="string">&quot;firstname&quot;</span> <span class="attr">type</span>=<span class="string">&quot;xsd:string&quot;</span>/&gt;</span></span><br><span class="line">    <span class="tag">&lt;<span class="name">xsd:element</span> <span class="attr">name</span>=<span class="string">&quot;lastname&quot;</span> <span class="attr">type</span>=<span class="string">&quot;xsd:string&quot;</span>/&gt;</span></span><br><span class="line">  <span class="tag">&lt;/<span class="name">xsd:sequence</span>&gt;</span></span><br><span class="line"><span class="tag">&lt;/<span class="name">xsd:complexType</span>&gt;</span></span><br></pre></td></tr></table></figure></li>
+<li><p>仅包含文本的元素</p>
+<figure class="highlight xml"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="tag">&lt;<span class="name">food</span> <span class="attr">type</span>=<span class="string">&quot;dessert&quot;</span>&gt;</span>Ice cream<span class="tag">&lt;/<span class="name">food</span>&gt;</span></span><br></pre></td></tr></table></figure>
+
+<figure class="highlight xml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line"><span class="tag">&lt;<span class="name">xsd:element</span> <span class="attr">name</span>=<span class="string">&quot;food&quot;</span> <span class="attr">type</span>=<span class="string">&quot;foodtype&quot;</span>/&gt;</span></span><br><span class="line"></span><br><span class="line"><span class="tag">&lt;<span class="name">xsd:complexType</span> <span class="attr">name</span>=<span class="string">&quot;foodtype&quot;</span>&gt;</span></span><br><span class="line">  <span class="tag">&lt;<span class="name">xsd:simpleContent</span>&gt;</span></span><br><span class="line">    <span class="tag">&lt;<span class="name">xsd:extension</span> <span class="attr">base</span>=<span class="string">&quot;xs:string&quot;</span>&gt;</span></span><br><span class="line">      <span class="tag">&lt;<span class="name">xsd:attribute</span> <span class="attr">name</span>=<span class="string">&quot;dessert&quot;</span> <span class="attr">type</span>=<span class="string">&quot;xsd:string&quot;</span> /&gt;</span></span><br><span class="line">    <span class="tag">&lt;/<span class="name">xsd:extension</span>&gt;</span></span><br><span class="line">  <span class="tag">&lt;/<span class="name">xsd:simpleContent</span>&gt;</span></span><br><span class="line"><span class="tag">&lt;/<span class="name">xsd:complexType</span>&gt;</span></span><br></pre></td></tr></table></figure></li>
+<li><p>包含元素和文本的元素</p>
+<figure class="highlight xml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="tag">&lt;<span class="name">description</span>&gt;</span></span><br><span class="line">It happened on <span class="tag">&lt;<span class="name">date</span>&gt;</span>03.03.99<span class="tag">&lt;/<span class="name">date</span>&gt;</span> </span><br><span class="line"><span class="tag">&lt;/<span class="name">description</span>&gt;</span></span><br></pre></td></tr></table></figure>
+
+<figure class="highlight xml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line"><span class="tag">&lt;<span class="name">xsd:element</span> <span class="attr">name</span>=<span class="string">&quot;description&quot;</span> <span class="attr">type</span>=<span class="string">&quot;descriptiontype&quot;</span>/&gt;</span></span><br><span class="line"></span><br><span class="line"><span class="tag">&lt;<span class="name">xsd:complexType</span> <span class="attr">name</span>=<span class="string">&quot;descriptiontype&quot;</span> <span class="attr">mixed</span>=<span class="string">&quot;true&quot;</span>&gt;</span></span><br><span class="line">  <span class="tag">&lt;<span class="name">xsd:sequence</span>&gt;</span></span><br><span class="line">    <span class="tag">&lt;<span class="name">xsd:element</span> <span class="attr">name</span>=<span class="string">&quot;date&quot;</span> <span class="attr">type</span>=<span class="string">&quot;xs:date&quot;</span>/&gt;</span></span><br><span class="line">  <span class="tag">&lt;/<span class="name">xsd:sequence</span>&gt;</span></span><br><span class="line"><span class="tag">&lt;/<span class="name">xsd:complexType</span>&gt;</span></span><br></pre></td></tr></table></figure></li>
+</ul>
+</li>
+</ul>
+<h4 id="指示器"><a href="#指示器" class="headerlink" title="指示器"></a>指示器</h4><p>有七种指示器：</p>
+<p>Order 指示器：</p>
+<ul>
+<li>All 规定子元素可以按照任意顺序出现，且每个子元素必须只出现一次</li>
+<li>Choice 指示器规定可出现某个子元素或者可出现另外一个子元素（非此即彼）</li>
+<li>Sequence 规定子元素必须按照特定的顺序出现</li>
+</ul>
+<p>Occurrence 指示器：</p>
+<ul>
+<li>maxOccurs 指示器可规定某个元素可出现的最大次数</li>
+<li>minOccurs 指示器可规定某个元素能够出现的最小次数</li>
+</ul>
+<p>Group 指示器：</p>
+<ul>
+<li>Group name 定义相关的数批元素</li>
+<li>attributeGroup name</li>
+</ul>
+<h4 id="元素"><a href="#元素" class="headerlink" title=" 元素"></a><any> 元素</h4><p><any> 元素使我们有能力通过未被 schema 规定的元素来拓展 XML 文档</p>
+<figure class="highlight xml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line"><span class="tag">&lt;<span class="name">xsd:element</span> <span class="attr">name</span>=<span class="string">&quot;person&quot;</span>&gt;</span></span><br><span class="line">  <span class="tag">&lt;<span class="name">xsd:complexType</span>&gt;</span></span><br><span class="line">    <span class="tag">&lt;<span class="name">xsd:sequence</span>&gt;</span></span><br><span class="line">      <span class="tag">&lt;<span class="name">xsd:element</span> <span class="attr">name</span>=<span class="string">&quot;firstname&quot;</span> <span class="attr">type</span>=<span class="string">&quot;xsd:string&quot;</span>/&gt;</span></span><br><span class="line">      <span class="tag">&lt;<span class="name">xsd:element</span> <span class="attr">name</span>=<span class="string">&quot;lastname&quot;</span> <span class="attr">type</span>=<span class="string">&quot;xsd:string&quot;</span>/&gt;</span></span><br><span class="line">      <span class="tag">&lt;<span class="name">xsd:any</span> <span class="attr">minOccurs</span>=<span class="string">&quot;0&quot;</span>/&gt;</span></span><br><span class="line">    <span class="tag">&lt;/<span class="name">xsd:sequence</span>&gt;</span></span><br><span class="line">  <span class="tag">&lt;/<span class="name">xsd:complexType</span>&gt;</span></span><br><span class="line"><span class="tag">&lt;/<span class="name">xsd:element</span>&gt;</span></span><br></pre></td></tr></table></figure>
+
+<p>假如有另一个xsd定义了chidren节点，我们就可以通过any把children加入person节点之下</p>
+<figure class="highlight xml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line"><span class="tag">&lt;<span class="name">person</span>&gt;</span></span><br><span class="line">  <span class="tag">&lt;<span class="name">firstname</span>&gt;</span>Hege<span class="tag">&lt;/<span class="name">firstname</span>&gt;</span></span><br><span class="line">  <span class="tag">&lt;<span class="name">lastname</span>&gt;</span>Refsnes<span class="tag">&lt;/<span class="name">lastname</span>&gt;</span></span><br><span class="line">  <span class="tag">&lt;<span class="name">children</span>&gt;</span></span><br><span class="line">    <span class="tag">&lt;<span class="name">childname</span>&gt;</span>Cecilie<span class="tag">&lt;/<span class="name">childname</span>&gt;</span></span><br><span class="line">  <span class="tag">&lt;/<span class="name">children</span>&gt;</span></span><br><span class="line"><span class="tag">&lt;/<span class="name">person</span>&gt;</span></span><br><span class="line"></span><br><span class="line"><span class="tag">&lt;<span class="name">person</span>&gt;</span></span><br><span class="line">  <span class="tag">&lt;<span class="name">firstname</span>&gt;</span>Stale<span class="tag">&lt;/<span class="name">firstname</span>&gt;</span></span><br><span class="line">  <span class="tag">&lt;<span class="name">lastname</span>&gt;</span>Refsnes<span class="tag">&lt;/<span class="name">lastname</span>&gt;</span></span><br><span class="line"><span class="tag">&lt;/<span class="name">person</span>&gt;</span></span><br></pre></td></tr></table></figure>
+
+<h4 id="元素-1"><a href="#元素-1" class="headerlink" title=" 元素"></a><anyAttribute> 元素</h4><p><anyAttribute> 元素使我们有能力通过未被 schema 规定的属性来扩展 XML 文档</p>
+<h2 id="构造Bean"><a href="#构造Bean" class="headerlink" title="构造Bean"></a>构造Bean</h2><h2 id="META-INF下增加spring-schemas"><a href="#META-INF下增加spring-schemas" class="headerlink" title="META-INF下增加spring.schemas"></a>META-INF下增加spring.schemas</h2><p>如：http://code.alibabatech.com/schema/dubbo/dubbo.xsd=META-INF/dubbo.xsd</p>
+<h2 id="继承NamespaceHandlerSupport实现处理器"><a href="#继承NamespaceHandlerSupport实现处理器" class="headerlink" title="继承NamespaceHandlerSupport实现处理器"></a>继承NamespaceHandlerSupport实现处理器</h2><p><img src="https://user-images.githubusercontent.com/7789698/39589196-18f58e0e-4f30-11e8-8506-2748fd00c55b.png" alt="image"></p>
+<p>继承NamespaceHandlerSupport后需要实现init方法</p>
+<p>如：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">DubboNamespaceHandler</span> <span class="keyword">extends</span> <span class="title">NamespaceHandlerSupport</span> </span>&#123;</span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">init</span><span class="params">()</span> </span>&#123;</span><br><span class="line">        registerBeanDefinitionParser(<span class="string">&quot;application&quot;</span>, <span class="keyword">new</span> DubboBeanDefinitionParser(ApplicationConfig.class, <span class="keyword">true</span>));</span><br><span class="line">        registerBeanDefinitionParser(<span class="string">&quot;module&quot;</span>, <span class="keyword">new</span> DubboBeanDefinitionParser(ModuleConfig.class, <span class="keyword">true</span>));</span><br><span class="line">        registerBeanDefinitionParser(<span class="string">&quot;registry&quot;</span>, <span class="keyword">new</span> DubboBeanDefinitionParser(RegistryConfig.class, <span class="keyword">true</span>));</span><br><span class="line">        registerBeanDefinitionParser(<span class="string">&quot;monitor&quot;</span>, <span class="keyword">new</span> DubboBeanDefinitionParser(MonitorConfig.class, <span class="keyword">true</span>));</span><br><span class="line">        registerBeanDefinitionParser(<span class="string">&quot;provider&quot;</span>, <span class="keyword">new</span> DubboBeanDefinitionParser(ProviderConfig.class, <span class="keyword">true</span>));</span><br><span class="line">        registerBeanDefinitionParser(<span class="string">&quot;consumer&quot;</span>, <span class="keyword">new</span> DubboBeanDefinitionParser(ConsumerConfig.class, <span class="keyword">true</span>));</span><br><span class="line">        registerBeanDefinitionParser(<span class="string">&quot;protocol&quot;</span>, <span class="keyword">new</span> DubboBeanDefinitionParser(ProtocolConfig.class, <span class="keyword">true</span>));</span><br><span class="line">        registerBeanDefinitionParser(<span class="string">&quot;service&quot;</span>, <span class="keyword">new</span> DubboBeanDefinitionParser(ServiceBean.class, <span class="keyword">true</span>));</span><br><span class="line">        registerBeanDefinitionParser(<span class="string">&quot;reference&quot;</span>, <span class="keyword">new</span> DubboBeanDefinitionParser(ReferenceBean.class, <span class="keyword">false</span>));</span><br><span class="line">        registerBeanDefinitionParser(<span class="string">&quot;annotation&quot;</span>, <span class="keyword">new</span> AnnotationBeanDefinitionParser());</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>这样实现了：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line">* dubbo:application-&gt;ApplicationConfig</span><br><span class="line">* dubbo:module-&gt;ModuleConfig</span><br><span class="line">* dubbo:registry-&gt;RegistryConfig</span><br><span class="line">* dubbo:monitor-&gt;MonitorConfig</span><br><span class="line">* dubbo:provider-&gt;ProviderConfig</span><br><span class="line">* dubbo:consumer-&gt;ConsumerConfig</span><br><span class="line">* dubbo:protocol-&gt;ProtocolConfig</span><br><span class="line">* dubbo:service-&gt;ServiceBean</span><br><span class="line">* dubbo:reference-&gt;ReferenceBean</span><br><span class="line">* dubbo:annotation -&gt;使用继承了AbstractSingleBeanDefinitionParser的解析器AnnotationBeanDefinitionParser</span><br></pre></td></tr></table></figure>
+
+<h2 id="实现BeanDefinitionParser接口实现多个解析器"><a href="#实现BeanDefinitionParser接口实现多个解析器" class="headerlink" title="实现BeanDefinitionParser接口实现多个解析器"></a>实现BeanDefinitionParser接口实现多个解析器</h2><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">interface</span> <span class="title">BeanDefinitionParser</span> </span>&#123;</span><br><span class="line"></span><br><span class="line">   <span class="function">BeanDefinition <span class="title">parse</span><span class="params">(Element element, ParserContext parserContext)</span></span>;</span><br><span class="line"></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>BeanDefinitionParser只有一个接口</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">LightningXCacheBeanParser</span> <span class="keyword">implements</span> <span class="title">BeanDefinitionParser</span> </span>&#123;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">private</span> <span class="keyword">final</span> Class&lt;?&gt; beanClass;</span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="title">LightningXCacheBeanParser</span><span class="params">(Class&lt;?&gt; beanClass)</span> </span>&#123;</span><br><span class="line">        <span class="keyword">this</span>.beanClass = beanClass;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="meta">@Override</span></span><br><span class="line">    <span class="function"><span class="keyword">public</span> BeanDefinition <span class="title">parse</span><span class="params">(Element element, ParserContext parserContext)</span> </span>&#123;</span><br><span class="line">        RootBeanDefinition beanDefinition = <span class="keyword">new</span> RootBeanDefinition();</span><br><span class="line">        beanDefinition.setBeanClass(beanClass);</span><br><span class="line">        beanDefinition.setLazyInit(<span class="keyword">false</span>);</span><br><span class="line">        String application = element.getAttribute(<span class="string">&quot;application&quot;</span>);</span><br><span class="line">        beanDefinition.getPropertyValues().addPropertyValue(<span class="string">&quot;application&quot;</span>, application);</span><br><span class="line"></span><br><span class="line">        <span class="comment">//注册到spring容器</span></span><br><span class="line">        parserContext.getRegistry().registerBeanDefinition(beanClass.getName(), beanDefinition);</span><br><span class="line">        <span class="keyword">return</span> beanDefinition;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<h2 id="META-INF下增加spring-handlers"><a href="#META-INF下增加spring-handlers" class="headerlink" title="META-INF下增加spring.handlers"></a>META-INF下增加spring.handlers</h2><p>如：http://code.alibabatech.com/schema/dubbo=com.alibaba.dubbo.config.spring.schema.DubboNamespaceHandler</p>
+<p>参考：</p>
+<p><a target="_blank" rel="noopener" href="http://www.runoob.com/schema/schema-tutorial.html">http://www.runoob.com/schema/schema-tutorial.html</a></p>
+
+    </div>
+
+    
+    
+    
+
+    <footer class="post-footer">
+          <div class="reward-container">
+  <div>Buy me a coffee</div>
+  <button>
+    Donate
+  </button>
+  <div class="post-reward">
+      <div>
+        <img src="/hexo/images/wechatpay.png" alt="Absurd WeChat Pay">
+        <span>WeChat Pay</span>
+      </div>
+
+  </div>
+</div>
+
+          <div class="post-tags">
+              <a href="/hexo/tags/spring/" rel="tag"># spring</a>
+          </div>
+
+        
+
+          <div class="post-nav">
+            <div class="post-nav-item">
+                <a href="/hexo/post/1ac0c692.html" rel="prev" title="自定义拓展日志">
+                  <i class="fa fa-chevron-left"></i> 自定义拓展日志
+                </a>
+            </div>
+            <div class="post-nav-item">
+                <a href="/hexo/post/1442ae52.html" rel="next" title="sharding-jdbc源码解析-入门使用（序言）">
+                  sharding-jdbc源码解析-入门使用（序言） <i class="fa fa-chevron-right"></i>
+                </a>
+            </div>
+          </div>
+    </footer>
+  </article>
+</div>
+
+
+
+
+
+
+</div>
+  </main>
+
+  <footer class="footer">
+    <div class="footer-inner">
+
+
+<div class="copyright">
+  &copy; 
+  <span itemprop="copyrightYear">2022</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">Absurd</span>
+</div>
+  <div class="powered-by">Powered by <a href="https://hexo.io/" rel="noopener" target="_blank">Hexo</a> & <a href="https://theme-next.js.org/mist/" rel="noopener" target="_blank">NexT.Mist</a>
+  </div>
+
+    </div>
+  </footer>
+
+  
+  <script src="https://cdn.jsdelivr.net/npm/animejs@3.2.1/lib/anime.min.js" integrity="sha256-XL2inqUJaslATFnHdJOi9GfQ60on8Wx1C2H8DYiN1xY=" crossorigin="anonymous"></script>
+<script src="/hexo/js/comments.js"></script><script src="/hexo/js/utils.js"></script><script src="/hexo/js/motion.js"></script><script src="/hexo/js/schemes/muse.js"></script><script src="/hexo/js/next-boot.js"></script>
+
+  
+<script src="https://cdn.jsdelivr.net/npm/hexo-generator-searchdb@1.4.0/dist/search.js" integrity="sha256-vXZMYLEqsROAXkEw93GGIvaB2ab+QW6w3+1ahD9nXXA=" crossorigin="anonymous"></script>
+<script src="/hexo/js/third-party/search/local-search.js"></script>
+
+
+
+
+
+  
+
+
+
+
+
+</body>
+</html>

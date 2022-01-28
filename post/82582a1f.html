@@ -1,0 +1,520 @@
+<!DOCTYPE html>
+<html lang="zh-Hans">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width">
+<meta name="theme-color" content="#222" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#222" media="(prefers-color-scheme: dark)">
+<meta name="generator" content="Hexo 6.0.0">
+
+
+  <link rel="apple-touch-icon" sizes="180x180" href="/hexo/images/apple-touch-icon-next.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/hexo/images/favicon-32x32-next.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/hexo/images/favicon-16x16-next.png">
+  <link rel="mask-icon" href="/hexo/images/logo.svg" color="#222">
+
+<link rel="stylesheet" href="/hexo/css/main.css">
+
+
+
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@5.15.4/css/all.min.css" integrity="sha256-mUZM63G8m73Mcidfrv5E+Y61y7a12O5mW4ezU3bxqW4=" crossorigin="anonymous">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/animate.css@3.1.1/animate.min.css" integrity="sha256-PR7ttpcvz8qrF57fur/yAx1qXMFJeJFiA6pSzWi0OIE=" crossorigin="anonymous">
+
+<script class="next-config" data-name="main" type="application/json">{"hostname":"www1350.github.io","root":"/hexo/","images":"/hexo/images","scheme":"Mist","darkmode":true,"version":"8.9.0","exturl":false,"sidebar":{"position":"left","display":"post","padding":18,"offset":12},"copycode":false,"bookmark":{"enable":false,"color":"#222","save":"auto"},"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"stickytabs":false,"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"fadeInDown","post_body":"fadeInDown","coll_header":"fadeInLeft","sidebar":"fadeInUp"}},"prism":false,"i18n":{"placeholder":"Searching...","empty":"We didn't find any results for the search: ${query}","hits_time":"${hits} results found in ${time} ms","hits":"${hits} results found"},"path":"/hexo/search.xml","localsearch":{"enable":true,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":true}}</script><script src="/hexo/js/config.js"></script>
+<meta name="description" content="HighGui界面初步图像的载入imread函数，用在读取图像到Mat矩阵，可以看下官方注释  这个函数从指定文件加载图片返回，如果图片无法读取，就会返回空矩阵(Mat::data &#x3D;&#x3D; null)，支持如下格式 windows位图，*.bmp, *.dib JPEG文件，*.jpeg, *.jpg, *.jpe JPEG2000文件，*.jp2 便携式文件格式，*.pbm, *.pgm, *.p">
+<meta property="og:type" content="article">
+<meta property="og:title" content="从0开始学习opencv（二）-highGui初步">
+<meta property="og:url" content="https://www1350.github.io/hexo/post/82582a1f.html">
+<meta property="og:site_name" content="Absurd博客">
+<meta property="og:description" content="HighGui界面初步图像的载入imread函数，用在读取图像到Mat矩阵，可以看下官方注释  这个函数从指定文件加载图片返回，如果图片无法读取，就会返回空矩阵(Mat::data &#x3D;&#x3D; null)，支持如下格式 windows位图，*.bmp, *.dib JPEG文件，*.jpeg, *.jpg, *.jpe JPEG2000文件，*.jp2 便携式文件格式，*.pbm, *.pgm, *.p">
+<meta property="og:locale">
+<meta property="article:published_time" content="2019-11-16T13:33:06.000Z">
+<meta property="article:modified_time" content="2022-01-28T07:09:17.740Z">
+<meta property="article:author" content="Absurd">
+<meta property="article:tag" content="opencv">
+<meta name="twitter:card" content="summary">
+
+
+<link rel="canonical" href="https://www1350.github.io/hexo/post/82582a1f.html">
+
+
+
+<script class="next-config" data-name="page" type="application/json">{"sidebar":"","isHome":false,"isPost":true,"lang":"zh-Hans","comments":true,"permalink":"https://www1350.github.io/hexo/post/82582a1f.html","path":"post/82582a1f.html","title":"从0开始学习opencv（二）-highGui初步"}</script>
+
+<script class="next-config" data-name="calendar" type="application/json">""</script>
+<title>从0开始学习opencv（二）-highGui初步 | Absurd博客</title>
+  
+
+
+
+
+  <noscript>
+    <link rel="stylesheet" href="/hexo/css/noscript.css">
+  </noscript>
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage" class="use-motion">
+  <div class="headband"></div>
+
+  <main class="main">
+    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="Toggle navigation bar" role="button">
+        <span class="toggle-line"></span>
+        <span class="toggle-line"></span>
+        <span class="toggle-line"></span>
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/hexo/" class="brand" rel="start">
+      <i class="logo-line"></i>
+      <p class="site-title">Absurd博客</p>
+      <i class="logo-line"></i>
+    </a>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger">
+        <i class="fa fa-search fa-fw fa-lg"></i>
+    </div>
+  </div>
+</div>
+
+
+
+<nav class="site-nav">
+  <ul class="main-menu menu">
+        <li class="menu-item menu-item-home"><a href="/hexo/" rel="section"><i class="fa fa-home fa-fw"></i>Home</a></li>
+        <li class="menu-item menu-item-about"><a href="/hexo/about/" rel="section"><i class="fa fa-user fa-fw"></i>About</a></li>
+        <li class="menu-item menu-item-tags"><a href="/hexo/tags/" rel="section"><i class="fa fa-tags fa-fw"></i>Tags</a></li>
+        <li class="menu-item menu-item-categories"><a href="/hexo/categories/" rel="section"><i class="fa fa-th fa-fw"></i>Categories</a></li>
+        <li class="menu-item menu-item-archives"><a href="/hexo/archives/" rel="section"><i class="fa fa-archive fa-fw"></i>Archives</a></li>
+        <li class="menu-item menu-item-bookmarks"><a href="/hexo/bookmarks/" rel="section"><i class="fa fa-archive fa-fw"></i>bookmarks</a></li>
+      <li class="menu-item menu-item-search">
+        <a role="button" class="popup-trigger"><i class="fa fa-search fa-fw"></i>Search
+        </a>
+      </li>
+  </ul>
+</nav>
+
+
+
+  <div class="search-pop-overlay">
+    <div class="popup search-popup"><div class="search-header">
+  <span class="search-icon">
+    <i class="fa fa-search"></i>
+  </span>
+  <div class="search-input-container">
+    <input autocomplete="off" autocapitalize="off" maxlength="80"
+           placeholder="Searching..." spellcheck="false"
+           type="search" class="search-input">
+  </div>
+  <span class="popup-btn-close" role="button">
+    <i class="fa fa-times-circle"></i>
+  </span>
+</div>
+<div class="search-result-container no-result">
+  <div class="search-result-icon">
+    <i class="fa fa-spinner fa-pulse fa-5x"></i>
+  </div>
+</div>
+
+    </div>
+  </div>
+
+</div>
+        
+  
+  <div class="toggle sidebar-toggle" role="button">
+    <span class="toggle-line"></span>
+    <span class="toggle-line"></span>
+    <span class="toggle-line"></span>
+  </div>
+
+  <aside class="sidebar">
+
+    <div class="sidebar-inner sidebar-nav-active sidebar-toc-active">
+      <ul class="sidebar-nav">
+        <li class="sidebar-nav-toc">
+          Table of Contents
+        </li>
+        <li class="sidebar-nav-overview">
+          Overview
+        </li>
+      </ul>
+
+      <div class="sidebar-panel-container">
+        <!--noindex-->
+        <div class="post-toc-wrap sidebar-panel">
+            <div class="post-toc animated"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#HighGui%E7%95%8C%E9%9D%A2%E5%88%9D%E6%AD%A5"><span class="nav-number">1.</span> <span class="nav-text">HighGui界面初步</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%9B%BE%E5%83%8F%E7%9A%84%E8%BD%BD%E5%85%A5"><span class="nav-number">1.1.</span> <span class="nav-text">图像的载入</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%9B%BE%E5%83%8F%E7%9A%84%E6%98%BE%E7%A4%BA"><span class="nav-number">1.2.</span> <span class="nav-text">图像的显示</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#InputArray%E7%B1%BB%E5%9E%8B"><span class="nav-number">1.2.1.</span> <span class="nav-text">InputArray类型</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%88%9B%E5%BB%BA%E7%AA%97%E5%8F%A3namedWindow-%E5%87%BD%E6%95%B0"><span class="nav-number">1.3.</span> <span class="nav-text">创建窗口namedWindow()函数</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E8%BE%93%E5%87%BA%E5%9B%BE%E5%83%8F%E5%88%B0%E6%96%87%E4%BB%B6%EF%BC%9Aimwrite"><span class="nav-number">1.4.</span> <span class="nav-text">输出图像到文件：imwrite()</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E6%BB%91%E5%8A%A8%E6%9D%A1%E5%88%9B%E5%BB%BA%E5%92%8C%E4%BD%BF%E7%94%A8"><span class="nav-number">1.5.</span> <span class="nav-text">滑动条创建和使用</span></a></li></ol></li></ol></div>
+        </div>
+        <!--/noindex-->
+
+        <div class="site-overview-wrap sidebar-panel">
+          <div class="site-author site-overview-item animated" itemprop="author" itemscope itemtype="http://schema.org/Person">
+    <img class="site-author-image" itemprop="image" alt="Absurd"
+      src="/hexo/images/avatar.gif">
+  <p class="site-author-name" itemprop="name">Absurd</p>
+  <div class="site-description" itemprop="description"></div>
+</div>
+<div class="site-state-wrap site-overview-item animated">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+        <a href="/hexo/archives/">
+          <span class="site-state-item-count">75</span>
+          <span class="site-state-item-name">posts</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+          <a href="/hexo/categories/">
+        <span class="site-state-item-count">17</span>
+        <span class="site-state-item-name">categories</span></a>
+      </div>
+      <div class="site-state-item site-state-tags">
+          <a href="/hexo/tags/">
+        <span class="site-state-item-count">46</span>
+        <span class="site-state-item-name">tags</span></a>
+      </div>
+  </nav>
+</div>
+  <div class="links-of-author site-overview-item animated">
+      <span class="links-of-author-item">
+        <a href="https://github.com/www1350" title="GitHub → https:&#x2F;&#x2F;github.com&#x2F;www1350" rel="noopener" target="_blank"><i class="fab fa-github fa-fw"></i>GitHub</a>
+      </span>
+      <span class="links-of-author-item">
+        <a href="mailto:www_1350@163.com" title="E-Mail → mailto:www_1350@163.com" rel="noopener" target="_blank"><i class="fa fa-envelope fa-fw"></i>E-Mail</a>
+      </span>
+  </div>
+
+
+
+        </div>
+      </div>
+    </div>
+  </aside>
+  <div class="sidebar-dimmer"></div>
+
+
+    </header>
+
+    
+  <div class="back-to-top" role="button" aria-label="Back to top">
+    <i class="fa fa-arrow-up"></i>
+    <span>0%</span>
+  </div>
+
+<noscript>
+  <div class="noscript-warning">Theme NexT works best with JavaScript enabled</div>
+</noscript>
+
+
+    <div class="main-inner post posts-expand">
+
+
+  
+
+
+<div class="post-block">
+  
+  
+
+  <article itemscope itemtype="http://schema.org/Article" class="post-content" lang="zh-Hans">
+    <link itemprop="mainEntityOfPage" href="https://www1350.github.io/hexo/post/82582a1f.html">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/hexo/images/avatar.gif">
+      <meta itemprop="name" content="Absurd">
+      <meta itemprop="description" content="">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Absurd博客">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          从0开始学习opencv（二）-highGui初步
+        </h1>
+
+        <div class="post-meta-container">
+          <div class="post-meta">
+    <span class="post-meta-item">
+      <span class="post-meta-item-icon">
+        <i class="far fa-calendar"></i>
+      </span>
+      <span class="post-meta-item-text">Posted on</span>
+
+      <time title="Created: 2019-11-16 21:33:06" itemprop="dateCreated datePublished" datetime="2019-11-16T21:33:06+08:00">2019-11-16</time>
+    </span>
+    <span class="post-meta-item">
+      <span class="post-meta-item-icon">
+        <i class="far fa-calendar-check"></i>
+      </span>
+      <span class="post-meta-item-text">Edited on</span>
+      <time title="Modified: 2022-01-28 15:09:17" itemprop="dateModified" datetime="2022-01-28T15:09:17+08:00">2022-01-28</time>
+    </span>
+    <span class="post-meta-item">
+      <span class="post-meta-item-icon">
+        <i class="far fa-folder"></i>
+      </span>
+      <span class="post-meta-item-text">In</span>
+        <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+          <a href="/hexo/categories/%E6%B8%B8%E6%88%8F/" itemprop="url" rel="index"><span itemprop="name">游戏</span></a>
+        </span>
+    </span>
+
+  
+</div>
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+        <h1 id="HighGui界面初步"><a href="#HighGui界面初步" class="headerlink" title="HighGui界面初步"></a>HighGui界面初步</h1><h2 id="图像的载入"><a href="#图像的载入" class="headerlink" title="图像的载入"></a>图像的载入</h2><p>imread函数，用在读取图像到Mat矩阵，可以看下官方注释</p>
+<ul>
+<li>这个函数从指定文件加载图片返回，如果图片无法读取，就会返回空矩阵(Mat::data == null)，支持如下格式<ul>
+<li>windows位图，*.bmp, *.dib</li>
+<li>JPEG文件，*.jpeg, *.jpg, *.jpe</li>
+<li>JPEG2000文件，*.jp2</li>
+<li>便携式文件格式，*.pbm, *.pgm, *.ppm *.pxm, *.pnm</li>
+<li>Sun rasters光栅文件，*.sr, *.ras </li>
+<li>TIFF文件，*.tiff, *.tif</li>
+<li>OpenEXR图片文件，*.exr </li>
+<li>HDR文件，*.hdr, *.pic </li>
+<li>栅格和矢量地理空间数据</li>
+</ul>
+</li>
+<li>第二个参数，载入标识，指定一个加载图片的颜色类型，自带的默认值为1。也就是三通道BGR。<ul>
+<li>flag&gt;0 返回一个三通道的彩色图像</li>
+<li>flag=0 返回灰度图像</li>
+<li>flag&lt;0 返回包含alpha通道加载图像</li>
+</ul>
+</li>
+</ul>
+<figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br></pre></td><td class="code"><pre><span class="line"><span class="class"><span class="keyword">enum</span> <span class="title">ImreadModes</span> &#123;</span></span><br><span class="line">       IMREAD_UNCHANGED            = <span class="number">-1</span>, <span class="comment">//!&lt; If set, return the loaded image as is (with alpha channel, otherwise it gets cropped).已废弃</span></span><br><span class="line">       IMREAD_GRAYSCALE            = <span class="number">0</span>,  <span class="comment">//!&lt; If set, always convert image to the single channel grayscale image (codec internal conversion).转成灰度</span></span><br><span class="line">       IMREAD_COLOR                = <span class="number">1</span>,  <span class="comment">//!&lt; If set, always convert image to the 3 channel BGR color image.</span></span><br><span class="line">       IMREAD_ANYDEPTH             = <span class="number">2</span>,  <span class="comment">//!&lt; If set, return 16-bit/32-bit image when the input has the corresponding depth, otherwise convert it to 8-bit.载入16或32位深度图像，否则转化为8位返回</span></span><br><span class="line">       IMREAD_ANYCOLOR             = <span class="number">4</span>,  <span class="comment">//!&lt; If set, the image is read in any possible color format. </span></span><br><span class="line">       IMREAD_LOAD_GDAL            = <span class="number">8</span>,  <span class="comment">//!&lt; If set, use the gdal driver for loading the image.</span></span><br><span class="line">       IMREAD_REDUCED_GRAYSCALE_2  = <span class="number">16</span>, <span class="comment">//!&lt; If set, always convert image to the single channel grayscale image and the image size reduced 1/2.</span></span><br><span class="line">       IMREAD_REDUCED_COLOR_2      = <span class="number">17</span>, <span class="comment">//!&lt; If set, always convert image to the 3 channel BGR color image and the image size reduced 1/2.</span></span><br><span class="line">       IMREAD_REDUCED_GRAYSCALE_4  = <span class="number">32</span>, <span class="comment">//!&lt; If set, always convert image to the single channel grayscale image and the image size reduced 1/4.</span></span><br><span class="line">       IMREAD_REDUCED_COLOR_4      = <span class="number">33</span>, <span class="comment">//!&lt; If set, always convert image to the 3 channel BGR color image and the image size reduced 1/4.</span></span><br><span class="line">       IMREAD_REDUCED_GRAYSCALE_8  = <span class="number">64</span>, <span class="comment">//!&lt; If set, always convert image to the single channel grayscale image and the image size reduced 1/8.</span></span><br><span class="line">       IMREAD_REDUCED_COLOR_8      = <span class="number">65</span>, <span class="comment">//!&lt; If set, always convert image to the 3 channel BGR color image and the image size reduced 1/8.</span></span><br><span class="line">       IMREAD_IGNORE_ORIENTATION   = <span class="number">128</span> <span class="comment">//!&lt; If set, do not rotate the image according to EXIF&#x27;s orientation flag.</span></span><br><span class="line">     &#125;;</span><br></pre></td></tr></table></figure>
+
+
+
+<figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br></pre></td><td class="code"><pre><span class="line"></span><br><span class="line">The function imread loads an image from the specified file <span class="keyword">and</span> returns it. <span class="function">If the image cannot be</span></span><br><span class="line"><span class="function"><span class="title">read</span> <span class="params">(because of missing file, improper permissions, unsupported <span class="keyword">or</span> invalid format)</span>, the function</span></span><br><span class="line"><span class="function">returns an empty <span class="title">matrix</span> <span class="params">( Mat::data==<span class="literal">NULL</span> )</span>.</span></span><br><span class="line"><span class="function"></span></span><br><span class="line"><span class="function">Currently, the following file formats are supported:</span></span><br><span class="line"><span class="function"></span></span><br><span class="line"><span class="function">-   Windows bitmaps - \*.bmp, \*.dib (always supported)</span></span><br><span class="line"><span class="function">-   JPEG files - \*.jpeg, \*.jpg, \*.jpe (see the *Note* section)</span></span><br><span class="line"><span class="function">-   JPEG <span class="number">2000</span> files - \*.jp2 (see the *Note* section)</span></span><br><span class="line"><span class="function">-   Portable Network Graphics - \*.png (see the *Note* section)</span></span><br><span class="line"><span class="function">-   WebP - \*.webp (see the *Note* section)</span></span><br><span class="line"><span class="function">-   Portable image format - \*.pbm, \*.pgm, \*.ppm \*.pxm, \*.pnm (always supported)</span></span><br><span class="line"><span class="function">-   Sun rasters - \*.sr, \*.ras (always supported)</span></span><br><span class="line"><span class="function">-   TIFF files - \*.tiff, \*.tif (see the *Note* section)</span></span><br><span class="line"><span class="function">-   OpenEXR Image files - \*.exr (see the *Note* section)</span></span><br><span class="line"><span class="function">-   Radiance HDR - \*.hdr, \*.pic (always supported)</span></span><br><span class="line"><span class="function">-   Raster and Vector geospatial data supported by GDAL (see the *Note* section)</span></span><br><span class="line"><span class="function"></span></span><br><span class="line"><span class="function">@note</span></span><br><span class="line"><span class="function">-   The function determines the type of an image by the content, not by the file extension.</span></span><br><span class="line"><span class="function">-   In the case of color images, the decoded images will have the channels stored in **B G R** order.</span></span><br><span class="line"><span class="function">-   When using IMREAD_GRAYSCALE, the codec<span class="string">&#x27;s internal grayscale conversion will be used, if available.</span></span></span><br><span class="line"><span class="string"><span class="function">    Results may differ to the output of cvtColor()</span></span></span><br><span class="line"><span class="string"><span class="function">-   On Microsoft Windows\* OS and MacOSX\*, the codecs shipped with an OpenCV image (libjpeg,</span></span></span><br><span class="line"><span class="string"><span class="function">    libpng, libtiff, and libjasper) are used by default. So, OpenCV can always read JPEGs, PNGs,</span></span></span><br><span class="line"><span class="string"><span class="function">    and TIFFs. On MacOSX, there is also an option to use native MacOSX image readers. But beware</span></span></span><br><span class="line"><span class="string"><span class="function">    that currently these native image loaders give images with different pixel values because of</span></span></span><br><span class="line"><span class="string"><span class="function">    the color management embedded into MacOSX.</span></span></span><br><span class="line"><span class="string"><span class="function">-   On Linux\*, BSD flavors and other Unix-like open-source operating systems, OpenCV looks for</span></span></span><br><span class="line"><span class="string"><span class="function">    codecs supplied with an OS image. Install the relevant packages (do not forget the development</span></span></span><br><span class="line"><span class="string"><span class="function">    files, for example, &quot;libjpeg-dev&quot;, in Debian\* and Ubuntu\*) to get the codec support or turn</span></span></span><br><span class="line"><span class="string"><span class="function">    on the OPENCV_BUILD_3RDPARTY_LIBS flag in CMake.</span></span></span><br><span class="line"><span class="string"><span class="function">-   In the case you set *WITH_GDAL* flag to true in CMake and @ref IMREAD_LOAD_GDAL to load the image,</span></span></span><br><span class="line"><span class="string"><span class="function">    then the [GDAL](http://www.gdal.org) driver will be used in order to decode the image, supporting</span></span></span><br><span class="line"><span class="string"><span class="function">    the following formats: [Raster](http://www.gdal.org/formats_list.html),</span></span></span><br><span class="line"><span class="string"><span class="function">    [Vector](http://www.gdal.org/ogr_formats.html).</span></span></span><br><span class="line"><span class="string"><span class="function">-   If EXIF information are embedded in the image file, the EXIF orientation will be taken into account</span></span></span><br><span class="line"><span class="string"><span class="function">    and thus the image will be rotated accordingly except if the flag @ref IMREAD_IGNORE_ORIENTATION is passed.</span></span></span><br><span class="line"><span class="string"><span class="function">-   By default number of pixels must be less than 2^30. Limit can be set using system</span></span></span><br><span class="line"><span class="string"><span class="function">    variable OPENCV_IO_MAX_IMAGE_PIXELS</span></span></span><br><span class="line"><span class="string"><span class="function"></span></span></span><br><span class="line"><span class="string"><span class="function">@param filename Name of file to be loaded.</span></span></span><br><span class="line"><span class="string"><span class="function">@param flags Flag that can take values of cv::ImreadModes</span></span></span><br><span class="line"><span class="string"><span class="function">*/</span></span></span><br><span class="line"><span class="string"><span class="function">CV_EXPORTS_W Mat imread( const String&amp; filename, int flags = IMREAD_COLOR );</span></span></span><br></pre></td></tr></table></figure>
+
+
+
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">Mat img = imread(&quot;a.jpg&quot;, 2 | 4); //载入无损源图像</span><br><span class="line">Mat img = imread(&quot;a.jpg&quot;, 0); //载入灰度图</span><br></pre></td></tr></table></figure>
+
+<h2 id="图像的显示"><a href="#图像的显示" class="headerlink" title="图像的显示"></a>图像的显示</h2><p>imshow函数，用在指定界面显示图像</p>
+<ul>
+<li>如果窗口使用cv::WINDOW_AUTOSIZE创建，会显示原始大小（还是会受限屏幕），否则会将图片缩放适合窗口。缩放图像取决于深度：<ul>
+<li>8位无符号，显示图像原来样子</li>
+<li>16位无符号或32位整型，用像素值除以256，值在 [0,255]</li>
+<li>如果图像是32位或64位浮点型，像素乘以255，[0,1] 映射到[0,255]</li>
+</ul>
+</li>
+<li>如果窗口创建，设定了支持openGL，imshow 还支持 ogl::Buffer , ogl::Texture2D 和<br>cuda::GpuMat 作为输入.</li>
+<li>如果你需要显示图像大于屏幕，在imshow前需要调用namedWindow(“”, WINDOW_NORMAL).</li>
+</ul>
+<figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br></pre></td><td class="code"><pre><span class="line"></span><br><span class="line"><span class="comment">/** @brief Displays an image in the specified window.</span></span><br><span class="line"><span class="comment"></span></span><br><span class="line"><span class="comment">The function imshow displays an image in the specified window. If the window was created with the</span></span><br><span class="line"><span class="comment">cv::WINDOW_AUTOSIZE flag, the image is shown with its original size, however it is still limited by the screen resolution.</span></span><br><span class="line"><span class="comment">Otherwise, the image is scaled to fit the window. The function may scale the image, depending on its depth:</span></span><br><span class="line"><span class="comment"></span></span><br><span class="line"><span class="comment">-   If the image is 8-bit unsigned, it is displayed as is.</span></span><br><span class="line"><span class="comment">-   If the image is 16-bit unsigned or 32-bit integer, the pixels are divided by 256. That is, the</span></span><br><span class="line"><span class="comment">    value range [0,255\*256] is mapped to [0,255].</span></span><br><span class="line"><span class="comment">-   If the image is 32-bit or 64-bit floating-point, the pixel values are multiplied by 255. That is, the</span></span><br><span class="line"><span class="comment">    value range [0,1] is mapped to [0,255].</span></span><br><span class="line"><span class="comment"></span></span><br><span class="line"><span class="comment">If window was created with OpenGL support, cv::imshow also support ogl::Buffer , ogl::Texture2D and</span></span><br><span class="line"><span class="comment">cuda::GpuMat as input.</span></span><br><span class="line"><span class="comment"></span></span><br><span class="line"><span class="comment">If the window was not created before this function, it is assumed creating a window with cv::WINDOW_AUTOSIZE.</span></span><br><span class="line"><span class="comment"></span></span><br><span class="line"><span class="comment">If you need to show an image that is bigger than the screen resolution, you will need to call namedWindow(&quot;&quot;, WINDOW_NORMAL) before the imshow.</span></span><br><span class="line"><span class="comment"></span></span><br><span class="line"><span class="comment">@note This function should be followed by cv::waitKey function which displays the image for specified</span></span><br><span class="line"><span class="comment">milliseconds. Otherwise, it won&#x27;t display the image. For example, **waitKey(0)** will display the window</span></span><br><span class="line"><span class="comment">infinitely until any keypress (it is suitable for image display). **waitKey(25)** will display a frame</span></span><br><span class="line"><span class="comment">for 25 ms, after which display will be automatically closed. (If you put it in a loop to read</span></span><br><span class="line"><span class="comment">videos, it will display the video frame-by-frame)</span></span><br><span class="line"><span class="comment"></span></span><br><span class="line"><span class="comment">@note</span></span><br><span class="line"><span class="comment"></span></span><br><span class="line"><span class="comment">[__Windows Backend Only__] Pressing Ctrl+C will copy the image to the clipboard.</span></span><br><span class="line"><span class="comment"></span></span><br><span class="line"><span class="comment">[__Windows Backend Only__] Pressing Ctrl+S will show a dialog to save the image.</span></span><br><span class="line"><span class="comment"></span></span><br><span class="line"><span class="comment">@param winname Name of the window.</span></span><br><span class="line"><span class="comment">@param mat Image to be shown.</span></span><br><span class="line"><span class="comment"> */</span></span><br><span class="line"><span class="function">CV_EXPORTS_W <span class="keyword">void</span> <span class="title">imshow</span><span class="params">(<span class="keyword">const</span> String&amp; winname, InputArray mat)</span></span>;</span><br></pre></td></tr></table></figure>
+
+<h3 id="InputArray类型"><a href="#InputArray类型" class="headerlink" title="InputArray类型"></a>InputArray类型</h3><figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">typedef</span> <span class="keyword">const</span> _InputArray&amp; InputArray;</span><br></pre></td></tr></table></figure>
+
+
+
+<p>_InputArray在core.hpp头文件里面</p>
+<figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br><span class="line">65</span><br><span class="line">66</span><br><span class="line">67</span><br><span class="line">68</span><br><span class="line">69</span><br><span class="line">70</span><br><span class="line">71</span><br><span class="line">72</span><br><span class="line">73</span><br><span class="line">74</span><br><span class="line">75</span><br><span class="line">76</span><br><span class="line">77</span><br><span class="line">78</span><br><span class="line">79</span><br><span class="line">80</span><br><span class="line">81</span><br><span class="line">82</span><br><span class="line">83</span><br><span class="line">84</span><br><span class="line">85</span><br><span class="line">86</span><br><span class="line">87</span><br><span class="line">88</span><br><span class="line">89</span><br><span class="line">90</span><br><span class="line">91</span><br><span class="line">92</span><br><span class="line">93</span><br><span class="line">94</span><br><span class="line">95</span><br><span class="line">96</span><br><span class="line">97</span><br><span class="line">98</span><br><span class="line">99</span><br><span class="line">100</span><br><span class="line">101</span><br><span class="line">102</span><br><span class="line">103</span><br><span class="line">104</span><br><span class="line">105</span><br><span class="line">106</span><br><span class="line">107</span><br><span class="line">108</span><br><span class="line">109</span><br><span class="line">110</span><br><span class="line">111</span><br><span class="line">112</span><br><span class="line">113</span><br><span class="line">114</span><br><span class="line">115</span><br><span class="line">116</span><br><span class="line">117</span><br><span class="line">118</span><br><span class="line">119</span><br><span class="line">120</span><br><span class="line">121</span><br><span class="line">122</span><br><span class="line">123</span><br><span class="line">124</span><br><span class="line">125</span><br><span class="line">126</span><br><span class="line">127</span><br><span class="line">128</span><br><span class="line">129</span><br><span class="line">130</span><br><span class="line">131</span><br><span class="line">132</span><br><span class="line">133</span><br><span class="line">134</span><br><span class="line">135</span><br><span class="line">136</span><br><span class="line">137</span><br><span class="line">138</span><br><span class="line">139</span><br><span class="line">140</span><br><span class="line">141</span><br><span class="line">142</span><br><span class="line">143</span><br><span class="line">144</span><br><span class="line">145</span><br><span class="line">146</span><br><span class="line">147</span><br><span class="line">148</span><br><span class="line">149</span><br><span class="line">150</span><br><span class="line">151</span><br><span class="line">152</span><br><span class="line">153</span><br><span class="line">154</span><br><span class="line">155</span><br><span class="line">156</span><br><span class="line">157</span><br><span class="line">158</span><br><span class="line">159</span><br><span class="line">160</span><br><span class="line">161</span><br><span class="line">162</span><br><span class="line">163</span><br><span class="line">164</span><br><span class="line">165</span><br><span class="line">166</span><br><span class="line">167</span><br><span class="line">168</span><br><span class="line">169</span><br><span class="line">170</span><br><span class="line">171</span><br><span class="line">172</span><br><span class="line">173</span><br><span class="line">174</span><br><span class="line">175</span><br><span class="line">176</span><br><span class="line">177</span><br><span class="line">178</span><br><span class="line">179</span><br><span class="line">180</span><br><span class="line">181</span><br><span class="line">182</span><br><span class="line">183</span><br><span class="line">184</span><br><span class="line">185</span><br><span class="line">186</span><br><span class="line">187</span><br><span class="line">188</span><br><span class="line">189</span><br><span class="line">190</span><br><span class="line">191</span><br><span class="line">192</span><br><span class="line">193</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">//////////////////////// Input/Output Array Arguments /////////////////////////////////</span></span><br><span class="line"></span><br><span class="line"><span class="comment">/** @brief This is the proxy class for passing read-only input arrays into OpenCV functions.</span></span><br><span class="line"><span class="comment"></span></span><br><span class="line"><span class="comment">It is defined as:</span></span><br><span class="line"><span class="comment">@code</span></span><br><span class="line"><span class="comment">    typedef const _InputArray&amp; InputArray;</span></span><br><span class="line"><span class="comment">@endcode</span></span><br><span class="line"><span class="comment">where _InputArray is a class that can be constructed from `Mat`, `Mat_&lt;T&gt;`, `Matx&lt;T, m, n&gt;`,</span></span><br><span class="line"><span class="comment">`std::vector&lt;T&gt;`, `std::vector&lt;std::vector&lt;T&gt; &gt;`, `std::vector&lt;Mat&gt;`, `std::vector&lt;Mat_&lt;T&gt; &gt;`,</span></span><br><span class="line"><span class="comment">`UMat`, `std::vector&lt;UMat&gt;` or `double`. It can also be constructed from a matrix expression.</span></span><br><span class="line"><span class="comment"></span></span><br><span class="line"><span class="comment">Since this is mostly implementation-level class, and its interface may change in future versions, we</span></span><br><span class="line"><span class="comment">do not describe it in details. There are a few key things, though, that should be kept in mind:</span></span><br><span class="line"><span class="comment"></span></span><br><span class="line"><span class="comment">-   When you see in the reference manual or in OpenCV source code a function that takes</span></span><br><span class="line"><span class="comment">    InputArray, it means that you can actually pass `Mat`, `Matx`, `vector&lt;T&gt;` etc. (see above the</span></span><br><span class="line"><span class="comment">    complete list).</span></span><br><span class="line"><span class="comment">-   Optional input arguments: If some of the input arrays may be empty, pass cv::noArray() (or</span></span><br><span class="line"><span class="comment">    simply cv::Mat() as you probably did before).</span></span><br><span class="line"><span class="comment">-   The class is designed solely for passing parameters. That is, normally you *should not*</span></span><br><span class="line"><span class="comment">    declare class members, local and global variables of this type.</span></span><br><span class="line"><span class="comment">-   If you want to design your own function or a class method that can operate of arrays of</span></span><br><span class="line"><span class="comment">    multiple types, you can use InputArray (or OutputArray) for the respective parameters. Inside</span></span><br><span class="line"><span class="comment">    a function you should use _InputArray::getMat() method to construct a matrix header for the</span></span><br><span class="line"><span class="comment">    array (without copying data). _InputArray::kind() can be used to distinguish Mat from</span></span><br><span class="line"><span class="comment">    `vector&lt;&gt;` etc., but normally it is not needed.</span></span><br><span class="line"><span class="comment"></span></span><br><span class="line"><span class="comment">Here is how you can use a function that takes InputArray :</span></span><br><span class="line"><span class="comment">@code</span></span><br><span class="line"><span class="comment">    std::vector&lt;Point2f&gt; vec;</span></span><br><span class="line"><span class="comment">    // points or a circle</span></span><br><span class="line"><span class="comment">    for( int i = 0; i &lt; 30; i++ )</span></span><br><span class="line"><span class="comment">        vec.push_back(Point2f((float)(100 + 30*cos(i*CV_PI*2/5)),</span></span><br><span class="line"><span class="comment">                              (float)(100 - 30*sin(i*CV_PI*2/5))));</span></span><br><span class="line"><span class="comment">    cv::transform(vec, vec, cv::Matx23f(0.707, -0.707, 10, 0.707, 0.707, 20));</span></span><br><span class="line"><span class="comment">@endcode</span></span><br><span class="line"><span class="comment">That is, we form an STL vector containing points, and apply in-place affine transformation to the</span></span><br><span class="line"><span class="comment">vector using the 2x3 matrix created inline as `Matx&lt;float, 2, 3&gt;` instance.</span></span><br><span class="line"><span class="comment"></span></span><br><span class="line"><span class="comment">Here is how such a function can be implemented (for simplicity, we implement a very specific case of</span></span><br><span class="line"><span class="comment">it, according to the assertion statement inside) :</span></span><br><span class="line"><span class="comment">@code</span></span><br><span class="line"><span class="comment">    void myAffineTransform(InputArray _src, OutputArray _dst, InputArray _m)</span></span><br><span class="line"><span class="comment">    &#123;</span></span><br><span class="line"><span class="comment">        // get Mat headers for input arrays. This is O(1) operation,</span></span><br><span class="line"><span class="comment">        // unless _src and/or _m are matrix expressions.</span></span><br><span class="line"><span class="comment">        Mat src = _src.getMat(), m = _m.getMat();</span></span><br><span class="line"><span class="comment">        CV_Assert( src.type() == CV_32FC2 &amp;&amp; m.type() == CV_32F &amp;&amp; m.size() == Size(3, 2) );</span></span><br><span class="line"><span class="comment"></span></span><br><span class="line"><span class="comment">        // [re]create the output array so that it has the proper size and type.</span></span><br><span class="line"><span class="comment">        // In case of Mat it calls Mat::create, in case of STL vector it calls vector::resize.</span></span><br><span class="line"><span class="comment">        _dst.create(src.size(), src.type());</span></span><br><span class="line"><span class="comment">        Mat dst = _dst.getMat();</span></span><br><span class="line"><span class="comment"></span></span><br><span class="line"><span class="comment">        for( int i = 0; i &lt; src.rows; i++ )</span></span><br><span class="line"><span class="comment">            for( int j = 0; j &lt; src.cols; j++ )</span></span><br><span class="line"><span class="comment">            &#123;</span></span><br><span class="line"><span class="comment">                Point2f pt = src.at&lt;Point2f&gt;(i, j);</span></span><br><span class="line"><span class="comment">                dst.at&lt;Point2f&gt;(i, j) = Point2f(m.at&lt;float&gt;(0, 0)*pt.x +</span></span><br><span class="line"><span class="comment">                                                m.at&lt;float&gt;(0, 1)*pt.y +</span></span><br><span class="line"><span class="comment">                                                m.at&lt;float&gt;(0, 2),</span></span><br><span class="line"><span class="comment">                                                m.at&lt;float&gt;(1, 0)*pt.x +</span></span><br><span class="line"><span class="comment">                                                m.at&lt;float&gt;(1, 1)*pt.y +</span></span><br><span class="line"><span class="comment">                                                m.at&lt;float&gt;(1, 2));</span></span><br><span class="line"><span class="comment">            &#125;</span></span><br><span class="line"><span class="comment">    &#125;</span></span><br><span class="line"><span class="comment">@endcode</span></span><br><span class="line"><span class="comment">There is another related type, InputArrayOfArrays, which is currently defined as a synonym for</span></span><br><span class="line"><span class="comment">InputArray:</span></span><br><span class="line"><span class="comment">@code</span></span><br><span class="line"><span class="comment">    typedef InputArray InputArrayOfArrays;</span></span><br><span class="line"><span class="comment">@endcode</span></span><br><span class="line"><span class="comment">It denotes function arguments that are either vectors of vectors or vectors of matrices. A separate</span></span><br><span class="line"><span class="comment">synonym is needed to generate Python/Java etc. wrappers properly. At the function implementation</span></span><br><span class="line"><span class="comment">level their use is similar, but _InputArray::getMat(idx) should be used to get header for the</span></span><br><span class="line"><span class="comment">idx-th component of the outer vector and _InputArray::size().area() should be used to find the</span></span><br><span class="line"><span class="comment">number of components (vectors/matrices) of the outer vector.</span></span><br><span class="line"><span class="comment"></span></span><br><span class="line"><span class="comment">In general, type support is limited to cv::Mat types. Other types are forbidden.</span></span><br><span class="line"><span class="comment">But in some cases we need to support passing of custom non-general Mat types, like arrays of cv::KeyPoint, cv::DMatch, etc.</span></span><br><span class="line"><span class="comment">This data is not intented to be interpreted as an image data, or processed somehow like regular cv::Mat.</span></span><br><span class="line"><span class="comment">To pass such custom type use rawIn() / rawOut() / rawInOut() wrappers.</span></span><br><span class="line"><span class="comment">Custom type is wrapped as Mat-compatible `CV_8UC&lt;N&gt;` values (N = sizeof(T), N &lt;= CV_CN_MAX).</span></span><br><span class="line"><span class="comment"> */</span></span><br><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">CV_EXPORTS</span> _<span class="title">InputArray</span></span></span><br><span class="line"><span class="class">&#123;</span></span><br><span class="line"><span class="keyword">public</span>:</span><br><span class="line">    <span class="class"><span class="keyword">enum</span> &#123;</span></span><br><span class="line">        KIND_SHIFT = <span class="number">16</span>,</span><br><span class="line">        FIXED_TYPE = <span class="number">0x8000</span> &lt;&lt; KIND_SHIFT,</span><br><span class="line">        FIXED_SIZE = <span class="number">0x4000</span> &lt;&lt; KIND_SHIFT,</span><br><span class="line">        KIND_MASK = <span class="number">31</span> &lt;&lt; KIND_SHIFT,</span><br><span class="line"></span><br><span class="line">        NONE              = <span class="number">0</span> &lt;&lt; KIND_SHIFT,</span><br><span class="line">        MAT               = <span class="number">1</span> &lt;&lt; KIND_SHIFT,</span><br><span class="line">        MATX              = <span class="number">2</span> &lt;&lt; KIND_SHIFT,</span><br><span class="line">        STD_VECTOR        = <span class="number">3</span> &lt;&lt; KIND_SHIFT,</span><br><span class="line">        STD_VECTOR_VECTOR = <span class="number">4</span> &lt;&lt; KIND_SHIFT,</span><br><span class="line">        STD_VECTOR_MAT    = <span class="number">5</span> &lt;&lt; KIND_SHIFT,</span><br><span class="line">        EXPR              = <span class="number">6</span> &lt;&lt; KIND_SHIFT,</span><br><span class="line">        OPENGL_BUFFER     = <span class="number">7</span> &lt;&lt; KIND_SHIFT,</span><br><span class="line">        CUDA_HOST_MEM     = <span class="number">8</span> &lt;&lt; KIND_SHIFT,</span><br><span class="line">        CUDA_GPU_MAT      = <span class="number">9</span> &lt;&lt; KIND_SHIFT,</span><br><span class="line">        UMAT              =<span class="number">10</span> &lt;&lt; KIND_SHIFT,</span><br><span class="line">        STD_VECTOR_UMAT   =<span class="number">11</span> &lt;&lt; KIND_SHIFT,</span><br><span class="line">        STD_BOOL_VECTOR   =<span class="number">12</span> &lt;&lt; KIND_SHIFT,</span><br><span class="line">        STD_VECTOR_CUDA_GPU_MAT = <span class="number">13</span> &lt;&lt; KIND_SHIFT,</span><br><span class="line">        STD_ARRAY         =<span class="number">14</span> &lt;&lt; KIND_SHIFT,</span><br><span class="line">        STD_ARRAY_MAT     =<span class="number">15</span> &lt;&lt; KIND_SHIFT</span><br><span class="line">    &#125;;</span><br><span class="line"></span><br><span class="line">    _InputArray();</span><br><span class="line">    _InputArray(<span class="keyword">int</span> _flags, <span class="keyword">void</span>* _obj);</span><br><span class="line">    _InputArray(<span class="keyword">const</span> Mat&amp; m);</span><br><span class="line">    _InputArray(<span class="keyword">const</span> MatExpr&amp; expr);</span><br><span class="line">    _InputArray(<span class="keyword">const</span> std::vector&lt;Mat&gt;&amp; vec);</span><br><span class="line">    <span class="keyword">template</span>&lt;<span class="keyword">typename</span> _Tp&gt; _InputArray(<span class="keyword">const</span> Mat_&lt;_Tp&gt;&amp; m);</span><br><span class="line">    <span class="keyword">template</span>&lt;<span class="keyword">typename</span> _Tp&gt; _InputArray(<span class="keyword">const</span> std::vector&lt;_Tp&gt;&amp; vec);</span><br><span class="line">    _InputArray(<span class="keyword">const</span> std::vector&lt;<span class="keyword">bool</span>&gt;&amp; vec);</span><br><span class="line">    <span class="keyword">template</span>&lt;<span class="keyword">typename</span> _Tp&gt; _InputArray(<span class="keyword">const</span> std::vector&lt;std::vector&lt;_Tp&gt; &gt;&amp; vec);</span><br><span class="line">    _InputArray(<span class="keyword">const</span> std::vector&lt;std::vector&lt;<span class="keyword">bool</span>&gt; &gt;&amp;);</span><br><span class="line">    <span class="keyword">template</span>&lt;<span class="keyword">typename</span> _Tp&gt; _InputArray(<span class="keyword">const</span> std::vector&lt;Mat_&lt;_Tp&gt; &gt;&amp; vec);</span><br><span class="line">    <span class="keyword">template</span>&lt;<span class="keyword">typename</span> _Tp&gt; _InputArray(<span class="keyword">const</span> _Tp* vec, <span class="keyword">int</span> n);</span><br><span class="line">    <span class="keyword">template</span>&lt;<span class="keyword">typename</span> _Tp, <span class="keyword">int</span> m, <span class="keyword">int</span> n&gt; _InputArray(<span class="keyword">const</span> Matx&lt;_Tp, m, n&gt;&amp; matx);</span><br><span class="line">    _InputArray(<span class="keyword">const</span> <span class="keyword">double</span>&amp; val);</span><br><span class="line">    _InputArray(<span class="keyword">const</span> cuda::GpuMat&amp; d_mat);</span><br><span class="line">    _InputArray(<span class="keyword">const</span> std::vector&lt;cuda::GpuMat&gt;&amp; d_mat_array);</span><br><span class="line">    _InputArray(<span class="keyword">const</span> ogl::Buffer&amp; buf);</span><br><span class="line">    _InputArray(<span class="keyword">const</span> cuda::HostMem&amp; cuda_mem);</span><br><span class="line">    <span class="keyword">template</span>&lt;<span class="keyword">typename</span> _Tp&gt; _InputArray(<span class="keyword">const</span> cudev::GpuMat_&lt;_Tp&gt;&amp; m);</span><br><span class="line">    _InputArray(<span class="keyword">const</span> UMat&amp; um);</span><br><span class="line">    _InputArray(<span class="keyword">const</span> std::vector&lt;UMat&gt;&amp; umv);</span><br><span class="line"></span><br><span class="line"><span class="meta">#<span class="meta-keyword">ifdef</span> CV_CXX_STD_ARRAY</span></span><br><span class="line">    <span class="keyword">template</span>&lt;<span class="keyword">typename</span> _Tp, std::<span class="keyword">size_t</span> _Nm&gt; _InputArray(<span class="keyword">const</span> std::array&lt;_Tp, _Nm&gt;&amp; arr);</span><br><span class="line">    <span class="keyword">template</span>&lt;std::<span class="keyword">size_t</span> _Nm&gt; _InputArray(<span class="keyword">const</span> std::array&lt;Mat, _Nm&gt;&amp; arr);</span><br><span class="line"><span class="meta">#<span class="meta-keyword">endif</span></span></span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">template</span>&lt;<span class="keyword">typename</span> _Tp&gt; <span class="keyword">static</span> _InputArray <span class="title">rawIn</span><span class="params">(<span class="keyword">const</span> std::vector&lt;_Tp&gt;&amp; vec)</span></span>;</span><br><span class="line"><span class="meta">#<span class="meta-keyword">ifdef</span> CV_CXX_STD_ARRAY</span></span><br><span class="line">    <span class="function"><span class="keyword">template</span>&lt;<span class="keyword">typename</span> _Tp, std::<span class="keyword">size_t</span> _Nm&gt; <span class="keyword">static</span> _InputArray <span class="title">rawIn</span><span class="params">(<span class="keyword">const</span> std::array&lt;_Tp, _Nm&gt;&amp; arr)</span></span>;</span><br><span class="line"><span class="meta">#<span class="meta-keyword">endif</span></span></span><br><span class="line"></span><br><span class="line">    <span class="function">Mat <span class="title">getMat</span><span class="params">(<span class="keyword">int</span> idx=<span class="number">-1</span>)</span> <span class="keyword">const</span></span>;</span><br><span class="line">    <span class="function">Mat <span class="title">getMat_</span><span class="params">(<span class="keyword">int</span> idx=<span class="number">-1</span>)</span> <span class="keyword">const</span></span>;</span><br><span class="line">    <span class="function">UMat <span class="title">getUMat</span><span class="params">(<span class="keyword">int</span> idx=<span class="number">-1</span>)</span> <span class="keyword">const</span></span>;</span><br><span class="line">    <span class="function"><span class="keyword">void</span> <span class="title">getMatVector</span><span class="params">(std::vector&lt;Mat&gt;&amp; mv)</span> <span class="keyword">const</span></span>;</span><br><span class="line">    <span class="function"><span class="keyword">void</span> <span class="title">getUMatVector</span><span class="params">(std::vector&lt;UMat&gt;&amp; umv)</span> <span class="keyword">const</span></span>;</span><br><span class="line">    <span class="function"><span class="keyword">void</span> <span class="title">getGpuMatVector</span><span class="params">(std::vector&lt;cuda::GpuMat&gt;&amp; gpumv)</span> <span class="keyword">const</span></span>;</span><br><span class="line">    <span class="function">cuda::GpuMat <span class="title">getGpuMat</span><span class="params">()</span> <span class="keyword">const</span></span>;</span><br><span class="line">    <span class="function">ogl::Buffer <span class="title">getOGlBuffer</span><span class="params">()</span> <span class="keyword">const</span></span>;</span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">int</span> <span class="title">getFlags</span><span class="params">()</span> <span class="keyword">const</span></span>;</span><br><span class="line">    <span class="function"><span class="keyword">void</span>* <span class="title">getObj</span><span class="params">()</span> <span class="keyword">const</span></span>;</span><br><span class="line">    <span class="function">Size <span class="title">getSz</span><span class="params">()</span> <span class="keyword">const</span></span>;</span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">int</span> <span class="title">kind</span><span class="params">()</span> <span class="keyword">const</span></span>;</span><br><span class="line">    <span class="function"><span class="keyword">int</span> <span class="title">dims</span><span class="params">(<span class="keyword">int</span> i=<span class="number">-1</span>)</span> <span class="keyword">const</span></span>;</span><br><span class="line">    <span class="function"><span class="keyword">int</span> <span class="title">cols</span><span class="params">(<span class="keyword">int</span> i=<span class="number">-1</span>)</span> <span class="keyword">const</span></span>;</span><br><span class="line">    <span class="function"><span class="keyword">int</span> <span class="title">rows</span><span class="params">(<span class="keyword">int</span> i=<span class="number">-1</span>)</span> <span class="keyword">const</span></span>;</span><br><span class="line">    <span class="function">Size <span class="title">size</span><span class="params">(<span class="keyword">int</span> i=<span class="number">-1</span>)</span> <span class="keyword">const</span></span>;</span><br><span class="line">    <span class="function"><span class="keyword">int</span> <span class="title">sizend</span><span class="params">(<span class="keyword">int</span>* sz, <span class="keyword">int</span> i=<span class="number">-1</span>)</span> <span class="keyword">const</span></span>;</span><br><span class="line">    <span class="function"><span class="keyword">bool</span> <span class="title">sameSize</span><span class="params">(<span class="keyword">const</span> _InputArray&amp; arr)</span> <span class="keyword">const</span></span>;</span><br><span class="line">    <span class="function"><span class="keyword">size_t</span> <span class="title">total</span><span class="params">(<span class="keyword">int</span> i=<span class="number">-1</span>)</span> <span class="keyword">const</span></span>;</span><br><span class="line">    <span class="function"><span class="keyword">int</span> <span class="title">type</span><span class="params">(<span class="keyword">int</span> i=<span class="number">-1</span>)</span> <span class="keyword">const</span></span>;</span><br><span class="line">    <span class="function"><span class="keyword">int</span> <span class="title">depth</span><span class="params">(<span class="keyword">int</span> i=<span class="number">-1</span>)</span> <span class="keyword">const</span></span>;</span><br><span class="line">    <span class="function"><span class="keyword">int</span> <span class="title">channels</span><span class="params">(<span class="keyword">int</span> i=<span class="number">-1</span>)</span> <span class="keyword">const</span></span>;</span><br><span class="line">    <span class="function"><span class="keyword">bool</span> <span class="title">isContinuous</span><span class="params">(<span class="keyword">int</span> i=<span class="number">-1</span>)</span> <span class="keyword">const</span></span>;</span><br><span class="line">    <span class="function"><span class="keyword">bool</span> <span class="title">isSubmatrix</span><span class="params">(<span class="keyword">int</span> i=<span class="number">-1</span>)</span> <span class="keyword">const</span></span>;</span><br><span class="line">    <span class="function"><span class="keyword">bool</span> <span class="title">empty</span><span class="params">()</span> <span class="keyword">const</span></span>;</span><br><span class="line">    <span class="function"><span class="keyword">void</span> <span class="title">copyTo</span><span class="params">(<span class="keyword">const</span> _OutputArray&amp; arr)</span> <span class="keyword">const</span></span>;</span><br><span class="line">    <span class="function"><span class="keyword">void</span> <span class="title">copyTo</span><span class="params">(<span class="keyword">const</span> _OutputArray&amp; arr, <span class="keyword">const</span> _InputArray &amp; mask)</span> <span class="keyword">const</span></span>;</span><br><span class="line">    <span class="function"><span class="keyword">size_t</span> <span class="title">offset</span><span class="params">(<span class="keyword">int</span> i=<span class="number">-1</span>)</span> <span class="keyword">const</span></span>;</span><br><span class="line">    <span class="function"><span class="keyword">size_t</span> <span class="title">step</span><span class="params">(<span class="keyword">int</span> i=<span class="number">-1</span>)</span> <span class="keyword">const</span></span>;</span><br><span class="line">    <span class="function"><span class="keyword">bool</span> <span class="title">isMat</span><span class="params">()</span> <span class="keyword">const</span></span>;</span><br><span class="line">    <span class="function"><span class="keyword">bool</span> <span class="title">isUMat</span><span class="params">()</span> <span class="keyword">const</span></span>;</span><br><span class="line">    <span class="function"><span class="keyword">bool</span> <span class="title">isMatVector</span><span class="params">()</span> <span class="keyword">const</span></span>;</span><br><span class="line">    <span class="function"><span class="keyword">bool</span> <span class="title">isUMatVector</span><span class="params">()</span> <span class="keyword">const</span></span>;</span><br><span class="line">    <span class="function"><span class="keyword">bool</span> <span class="title">isMatx</span><span class="params">()</span> <span class="keyword">const</span></span>;</span><br><span class="line">    <span class="function"><span class="keyword">bool</span> <span class="title">isVector</span><span class="params">()</span> <span class="keyword">const</span></span>;</span><br><span class="line">    <span class="function"><span class="keyword">bool</span> <span class="title">isGpuMat</span><span class="params">()</span> <span class="keyword">const</span></span>;</span><br><span class="line">    <span class="function"><span class="keyword">bool</span> <span class="title">isGpuMatVector</span><span class="params">()</span> <span class="keyword">const</span></span>;</span><br><span class="line">    ~_InputArray();</span><br><span class="line"></span><br><span class="line"><span class="keyword">protected</span>:</span><br><span class="line">    <span class="keyword">int</span> flags;</span><br><span class="line">    <span class="keyword">void</span>* obj;</span><br><span class="line">    Size sz;</span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">void</span> <span class="title">init</span><span class="params">(<span class="keyword">int</span> _flags, <span class="keyword">const</span> <span class="keyword">void</span>* _obj)</span></span>;</span><br><span class="line">    <span class="function"><span class="keyword">void</span> <span class="title">init</span><span class="params">(<span class="keyword">int</span> _flags, <span class="keyword">const</span> <span class="keyword">void</span>* _obj, Size _sz)</span></span>;</span><br><span class="line">&#125;;</span><br></pre></td></tr></table></figure>
+
+<ul>
+<li>如果你看到使用InputArray,可以当成 <code>Mat</code>, <code>Matx</code>, <code>vector&lt;T&gt;</code> 等</li>
+</ul>
+<h2 id="创建窗口namedWindow-函数"><a href="#创建窗口namedWindow-函数" class="headerlink" title="创建窗口namedWindow()函数"></a>创建窗口namedWindow()函数</h2><p>上面说过，简单显示不需要调用，如果需要用到窗口则需要用到.</p>
+<ul>
+<li>如果窗口名已经存在，则不做任何处理</li>
+<li>调用 cv::destroyWindow 或 cv::destroyAllWindows 关闭窗口 释放内存空间。如果是简单程序，退出时，资源会被系统释放掉</li>
+</ul>
+<figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">/** @brief Creates a window.</span></span><br><span class="line"><span class="comment"></span></span><br><span class="line"><span class="comment">The function namedWindow creates a window that can be used as a placeholder for images and</span></span><br><span class="line"><span class="comment">trackbars. Created windows are referred to by their names.</span></span><br><span class="line"><span class="comment"></span></span><br><span class="line"><span class="comment">If a window with the same name already exists, the function does nothing.</span></span><br><span class="line"><span class="comment"></span></span><br><span class="line"><span class="comment">You can call cv::destroyWindow or cv::destroyAllWindows to close the window and de-allocate any associated</span></span><br><span class="line"><span class="comment">memory usage. For a simple program, you do not really have to call these functions because all the</span></span><br><span class="line"><span class="comment">resources and windows of the application are closed automatically by the operating system upon exit.</span></span><br><span class="line"><span class="comment"></span></span><br><span class="line"><span class="comment">@note</span></span><br><span class="line"><span class="comment"></span></span><br><span class="line"><span class="comment">Qt backend supports additional flags:</span></span><br><span class="line"><span class="comment"> -   **WINDOW_NORMAL or WINDOW_AUTOSIZE:** WINDOW_NORMAL enables you to resize the</span></span><br><span class="line"><span class="comment">     window, whereas WINDOW_AUTOSIZE adjusts automatically the window size to fit the</span></span><br><span class="line"><span class="comment">     displayed image (see imshow ), and you cannot change the window size manually.</span></span><br><span class="line"><span class="comment"> -   **WINDOW_FREERATIO or WINDOW_KEEPRATIO:** WINDOW_FREERATIO adjusts the image</span></span><br><span class="line"><span class="comment">     with no respect to its ratio, whereas WINDOW_KEEPRATIO keeps the image ratio.</span></span><br><span class="line"><span class="comment"> -   **WINDOW_GUI_NORMAL or WINDOW_GUI_EXPANDED:** WINDOW_GUI_NORMAL is the old way to draw the window</span></span><br><span class="line"><span class="comment">     without statusbar and toolbar, whereas WINDOW_GUI_EXPANDED is a new enhanced GUI.</span></span><br><span class="line"><span class="comment">By default, flags == WINDOW_AUTOSIZE | WINDOW_KEEPRATIO | WINDOW_GUI_EXPANDED</span></span><br><span class="line"><span class="comment"></span></span><br><span class="line"><span class="comment">@param winname Name of the window in the window caption that may be used as a window identifier.</span></span><br><span class="line"><span class="comment">@param flags Flags of the window. The supported flags are: (cv::WindowFlags)</span></span><br><span class="line"><span class="comment"> */</span></span><br><span class="line"><span class="function">CV_EXPORTS_W <span class="keyword">void</span> <span class="title">namedWindow</span><span class="params">(<span class="keyword">const</span> String&amp; winname, <span class="keyword">int</span> flags = WINDOW_AUTOSIZE)</span></span>;</span><br></pre></td></tr></table></figure>
+
+<ul>
+<li>第二个参数flags，窗口标识<ul>
+<li>WINDOW_NORMAL，用户可以改变窗口大小</li>
+<li>WINDOW_AUTOSIZE，窗口自动适应显示图像，无法手动改变</li>
+<li>WINDOW_OPENGL, 支持openGL</li>
+<li>WINDOW_FULLSCREEN， 全屏</li>
+</ul>
+</li>
+</ul>
+<figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">//! Flags for cv::namedWindow</span></span><br><span class="line"><span class="class"><span class="keyword">enum</span> <span class="title">WindowFlags</span> &#123;</span></span><br><span class="line">       WINDOW_NORMAL     = <span class="number">0x00000000</span>, <span class="comment">//!&lt; the user can resize the window (no constraint) / also use to switch a fullscreen window to a normal size.</span></span><br><span class="line">       WINDOW_AUTOSIZE   = <span class="number">0x00000001</span>, <span class="comment">//!&lt; the user cannot resize the window, the size is constrainted by the image displayed.</span></span><br><span class="line">       WINDOW_OPENGL     = <span class="number">0x00001000</span>, <span class="comment">//!&lt; window with opengl support.</span></span><br><span class="line"></span><br><span class="line">       WINDOW_FULLSCREEN = <span class="number">1</span>,          <span class="comment">//!&lt; change the window to fullscreen.</span></span><br><span class="line">       WINDOW_FREERATIO  = <span class="number">0x00000100</span>, <span class="comment">//!&lt; the image expends as much as it can (no ratio constraint).</span></span><br><span class="line">       WINDOW_KEEPRATIO  = <span class="number">0x00000000</span>, <span class="comment">//!&lt; the ratio of the image is respected.</span></span><br><span class="line">       WINDOW_GUI_EXPANDED=<span class="number">0x00000000</span>, <span class="comment">//!&lt; status bar and tool bar</span></span><br><span class="line">       WINDOW_GUI_NORMAL = <span class="number">0x00000010</span>, <span class="comment">//!&lt; old fashious way</span></span><br><span class="line">    &#125;;</span><br></pre></td></tr></table></figure>
+
+<h2 id="输出图像到文件：imwrite"><a href="#输出图像到文件：imwrite" class="headerlink" title="输出图像到文件：imwrite()"></a>输出图像到文件：imwrite()</h2><p>函数会写入到指定文件，图像格式基于拓展名。只有8位单通道或者3通道BGR图像可以使用这个函数写入，</p>
+<ul>
+<li><p>16位无符号图像可以保存PNG, JPEG 2000, and TIFF 格式</p>
+</li>
+<li><p>32位浮点可以保存TIFF, OpenEXR, and Radiance HDR格式；3通道TIFF图像可以使用LogLuv高动态范围编码（每像素4字节）保存</p>
+</li>
+<li><p>可以保存带有alpha通道的PNG图像。8或16位的4通道BGRA图像（最后一个通道是alpha通道）。把alpha设置为0就是透明像素，完全不透明像素应将alpha设置为255/65535</p>
+</li>
+<li><p>如果格式、通道、深度不同，用Mat::convertTo 和 cv::cvtColor转换或者使用通用文件存储I/O</p>
+<p>函数将图像保存为XML或YAML格式</p>
+</li>
+</ul>
+<figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">/** @brief Saves an image to a specified file.</span></span><br><span class="line"><span class="comment"></span></span><br><span class="line"><span class="comment">The function imwrite saves the image to the specified file. The image format is chosen based on the</span></span><br><span class="line"><span class="comment">filename extension (see cv::imread for the list of extensions). In general, only 8-bit</span></span><br><span class="line"><span class="comment">single-channel or 3-channel (with &#x27;BGR&#x27; channel order) images</span></span><br><span class="line"><span class="comment">can be saved using this function, with these exceptions:</span></span><br><span class="line"><span class="comment"></span></span><br><span class="line"><span class="comment">- 16-bit unsigned (CV_16U) images can be saved in the case of PNG, JPEG 2000, and TIFF formats</span></span><br><span class="line"><span class="comment">- 32-bit float (CV_32F) images can be saved in TIFF, OpenEXR, and Radiance HDR formats; 3-channel</span></span><br><span class="line"><span class="comment">(CV_32FC3) TIFF images will be saved using the LogLuv high dynamic range encoding (4 bytes per pixel)</span></span><br><span class="line"><span class="comment">- PNG images with an alpha channel can be saved using this function. To do this, create</span></span><br><span class="line"><span class="comment">8-bit (or 16-bit) 4-channel image BGRA, where the alpha channel goes last. Fully transparent pixels</span></span><br><span class="line"><span class="comment">should have alpha set to 0, fully opaque pixels should have alpha set to 255/65535 (see the code sample below).</span></span><br><span class="line"><span class="comment"></span></span><br><span class="line"><span class="comment">If the format, depth or channel order is different, use</span></span><br><span class="line"><span class="comment">Mat::convertTo and cv::cvtColor to convert it before saving. Or, use the universal FileStorage I/O</span></span><br><span class="line"><span class="comment">functions to save the image to XML or YAML format.</span></span><br><span class="line"><span class="comment"></span></span><br><span class="line"><span class="comment">The sample below shows how to create a BGRA image and save it to a PNG file. It also demonstrates how to set custom</span></span><br><span class="line"><span class="comment">compression parameters:</span></span><br><span class="line"><span class="comment">@include snippets/imgcodecs_imwrite.cpp</span></span><br><span class="line"><span class="comment">@param filename Name of the file.</span></span><br><span class="line"><span class="comment">@param img Image to be saved.</span></span><br><span class="line"><span class="comment">@param params Format-specific parameters encoded as pairs (paramId_1, paramValue_1, paramId_2, paramValue_2, ... .) see cv::ImwriteFlags</span></span><br><span class="line"><span class="comment">*/</span></span><br><span class="line"><span class="function">CV_EXPORTS_W <span class="keyword">bool</span> <span class="title">imwrite</span><span class="params">( <span class="keyword">const</span> String&amp; filename, InputArray img,</span></span></span><br><span class="line"><span class="params"><span class="function">              <span class="keyword">const</span> std::vector&lt;<span class="keyword">int</span>&gt;&amp; params = std::vector&lt;<span class="keyword">int</span>&gt;())</span></span>;</span><br></pre></td></tr></table></figure>
+
+<ul>
+<li>第一个参数filename，文件名需要带拓展名</li>
+<li>第二个参数输入一个矩阵Mat</li>
+<li>第三个参数是为特定格式保存的参数编码。有默认值，一般不需要填。<ul>
+<li>JPEG格式图片，这个参数0-100(CV_IMWRITE_JPEG_QUALITY),默认95</li>
+<li>PNG格式，压缩级别0-9（CV_IMWRITE_PNG_COMPRESSION），数值越大表明更小尺寸更长压缩时间，默认3</li>
+<li>PPM，PGM或PBM，表示二进制格式标示（CV_IMWRITE_PXM_BINARY），参数0-1，默认1</li>
+</ul>
+</li>
+</ul>
+<figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br></pre></td><td class="code"><pre><span class="line"><span class="class"><span class="keyword">enum</span></span></span><br><span class="line"><span class="class">&#123;</span></span><br><span class="line">    CV_IMWRITE_JPEG_QUALITY =<span class="number">1</span>,</span><br><span class="line">    CV_IMWRITE_JPEG_PROGRESSIVE =<span class="number">2</span>,</span><br><span class="line">    CV_IMWRITE_JPEG_OPTIMIZE =<span class="number">3</span>,</span><br><span class="line">    CV_IMWRITE_JPEG_RST_INTERVAL =<span class="number">4</span>,</span><br><span class="line">    CV_IMWRITE_JPEG_LUMA_QUALITY =<span class="number">5</span>,</span><br><span class="line">    CV_IMWRITE_JPEG_CHROMA_QUALITY =<span class="number">6</span>,</span><br><span class="line">    CV_IMWRITE_PNG_COMPRESSION =<span class="number">16</span>,</span><br><span class="line">    CV_IMWRITE_PNG_STRATEGY =<span class="number">17</span>,</span><br><span class="line">    CV_IMWRITE_PNG_BILEVEL =<span class="number">18</span>,</span><br><span class="line">    CV_IMWRITE_PNG_STRATEGY_DEFAULT =<span class="number">0</span>,</span><br><span class="line">    CV_IMWRITE_PNG_STRATEGY_FILTERED =<span class="number">1</span>,</span><br><span class="line">    CV_IMWRITE_PNG_STRATEGY_HUFFMAN_ONLY =<span class="number">2</span>,</span><br><span class="line">    CV_IMWRITE_PNG_STRATEGY_RLE =<span class="number">3</span>,</span><br><span class="line">    CV_IMWRITE_PNG_STRATEGY_FIXED =<span class="number">4</span>,</span><br><span class="line">    CV_IMWRITE_PXM_BINARY =<span class="number">32</span>,</span><br><span class="line">    CV_IMWRITE_EXR_TYPE = <span class="number">48</span>,</span><br><span class="line">    CV_IMWRITE_WEBP_QUALITY =<span class="number">64</span>,</span><br><span class="line">    CV_IMWRITE_PAM_TUPLETYPE = <span class="number">128</span>,</span><br><span class="line">    CV_IMWRITE_PAM_FORMAT_NULL = <span class="number">0</span>,</span><br><span class="line">    CV_IMWRITE_PAM_FORMAT_BLACKANDWHITE = <span class="number">1</span>,</span><br><span class="line">    CV_IMWRITE_PAM_FORMAT_GRAYSCALE = <span class="number">2</span>,</span><br><span class="line">    CV_IMWRITE_PAM_FORMAT_GRAYSCALE_ALPHA = <span class="number">3</span>,</span><br><span class="line">    CV_IMWRITE_PAM_FORMAT_RGB = <span class="number">4</span>,</span><br><span class="line">    CV_IMWRITE_PAM_FORMAT_RGB_ALPHA = <span class="number">5</span>,</span><br><span class="line">&#125;;</span><br></pre></td></tr></table></figure>
+
+<h2 id="滑动条创建和使用"><a href="#滑动条创建和使用" class="headerlink" title="滑动条创建和使用"></a>滑动条创建和使用</h2><ul>
+<li><p>创建滑动条，这个函数通过指定名字和范围来创建一个滑动条。</p>
+<ul>
+<li>第一个参数trackbarname，滑动条名字</li>
+<li>第二个参数winname，滑动条要依附的窗口名</li>
+<li>第三个参数value，指针，表示滑块的位置</li>
+<li>第四个参数count，表示滑块可以到达的最大位置</li>
+<li>第五个参数onChange，指向回调函数的指针，每次滑块改变位置都会回调该函数<ul>
+<li>第一个参数是滑块条的位置</li>
+<li>第二个参数是用户数据</li>
+</ul>
+</li>
+</ul>
+<figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">/** @brief Callback function for Trackbar see cv::createTrackbar</span></span><br><span class="line"><span class="comment">@param pos current position of the specified trackbar.</span></span><br><span class="line"><span class="comment">@param userdata The optional parameter.</span></span><br><span class="line"><span class="comment"> */</span></span><br><span class="line"><span class="function"><span class="keyword">typedef</span> <span class="title">void</span> <span class="params">(*TrackbarCallback)</span><span class="params">(<span class="keyword">int</span> pos, <span class="keyword">void</span>* userdata)</span></span>;</span><br></pre></td></tr></table></figure>
+
+<ul>
+<li>用户数据指针将会被传递到滑块回调函数</li>
+</ul>
+</li>
+</ul>
+<figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">/** @brief Creates a trackbar and attaches it to the specified window.</span></span><br><span class="line"><span class="comment"></span></span><br><span class="line"><span class="comment">The function createTrackbar creates a trackbar (a slider or range control) with the specified name</span></span><br><span class="line"><span class="comment">and range, assigns a variable value to be a position synchronized with the trackbar and specifies</span></span><br><span class="line"><span class="comment">the callback function onChange to be called on the trackbar position change. The created trackbar is</span></span><br><span class="line"><span class="comment">displayed in the specified window winname.</span></span><br><span class="line"><span class="comment"></span></span><br><span class="line"><span class="comment">@note</span></span><br><span class="line"><span class="comment"></span></span><br><span class="line"><span class="comment">[__Qt Backend Only__] winname can be empty (or NULL) if the trackbar should be attached to the</span></span><br><span class="line"><span class="comment">control panel.</span></span><br><span class="line"><span class="comment"></span></span><br><span class="line"><span class="comment">Clicking the label of each trackbar enables editing the trackbar values manually.</span></span><br><span class="line"><span class="comment"></span></span><br><span class="line"><span class="comment">@param trackbarname Name of the created trackbar.</span></span><br><span class="line"><span class="comment">@param winname Name of the window that will be used as a parent of the created trackbar.</span></span><br><span class="line"><span class="comment">@param value Optional pointer to an integer variable whose value reflects the position of the</span></span><br><span class="line"><span class="comment">slider. Upon creation, the slider position is defined by this variable.</span></span><br><span class="line"><span class="comment">@param count Maximal position of the slider. The minimal position is always 0.</span></span><br><span class="line"><span class="comment">@param onChange Pointer to the function to be called every time the slider changes position. This</span></span><br><span class="line"><span class="comment">function should be prototyped as void Foo(int,void\*); , where the first parameter is the trackbar</span></span><br><span class="line"><span class="comment">position and the second parameter is the user data (see the next parameter). If the callback is</span></span><br><span class="line"><span class="comment">the NULL pointer, no callbacks are called, but only value is updated.</span></span><br><span class="line"><span class="comment">@param userdata User data that is passed as is to the callback. It can be used to handle trackbar</span></span><br><span class="line"><span class="comment">events without using global variables.</span></span><br><span class="line"><span class="comment"> */</span></span><br><span class="line"><span class="function">CV_EXPORTS <span class="keyword">int</span> <span class="title">createTrackbar</span><span class="params">(<span class="keyword">const</span> String&amp; trackbarname, <span class="keyword">const</span> String&amp; winname,</span></span></span><br><span class="line"><span class="params"><span class="function">                              <span class="keyword">int</span>* value, <span class="keyword">int</span> count,</span></span></span><br><span class="line"><span class="params"><span class="function">                              TrackbarCallback onChange = <span class="number">0</span>,</span></span></span><br><span class="line"><span class="params"><span class="function">                              <span class="keyword">void</span>* userdata = <span class="number">0</span>)</span></span>;</span><br></pre></td></tr></table></figure>
+
+<ul>
+<li>获取当前滑动条位置.<ul>
+<li>第一个参数指定要获取的滑动条名</li>
+<li>第二个参数指定滑块归属的窗口名</li>
+</ul>
+</li>
+</ul>
+<figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">/** @brief Returns the trackbar position.</span></span><br><span class="line"><span class="comment"></span></span><br><span class="line"><span class="comment">The function returns the current position of the specified trackbar.</span></span><br><span class="line"><span class="comment"></span></span><br><span class="line"><span class="comment">@note</span></span><br><span class="line"><span class="comment"></span></span><br><span class="line"><span class="comment">[__Qt Backend Only__] winname can be empty (or NULL) if the trackbar is attached to the control</span></span><br><span class="line"><span class="comment">panel.</span></span><br><span class="line"><span class="comment"></span></span><br><span class="line"><span class="comment">@param trackbarname Name of the trackbar.</span></span><br><span class="line"><span class="comment">@param winname Name of the window that is the parent of the trackbar.</span></span><br><span class="line"><span class="comment"> */</span></span><br><span class="line"><span class="function">CV_EXPORTS_W <span class="keyword">int</span> <span class="title">getTrackbarPos</span><span class="params">(<span class="keyword">const</span> String&amp; trackbarname, <span class="keyword">const</span> String&amp; winname)</span></span>;</span><br></pre></td></tr></table></figure>
+
+<ul>
+<li><p>鼠标操作。</p>
+<figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">/** @brief Sets mouse handler for the specified window</span></span><br><span class="line"><span class="comment"></span></span><br><span class="line"><span class="comment">@param winname Name of the window.</span></span><br><span class="line"><span class="comment">@param onMouse Callback function for mouse events. See OpenCV samples on how to specify and use the callback.</span></span><br><span class="line"><span class="comment">@param userdata The optional parameter passed to the callback.</span></span><br><span class="line"><span class="comment"> */</span></span><br><span class="line"><span class="function">CV_EXPORTS <span class="keyword">void</span> <span class="title">setMouseCallback</span><span class="params">(<span class="keyword">const</span> String&amp; winname, MouseCallback onMouse, <span class="keyword">void</span>* userdata = <span class="number">0</span>)</span></span>;</span><br></pre></td></tr></table></figure>
+
+<ul>
+<li><p>第一个参数，窗口名</p>
+</li>
+<li><p>第二个参数onMouse,鼠标事件回调函数</p>
+<ul>
+<li>事件</li>
+</ul>
+<figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">//! Mouse Events see cv::MouseCallback</span></span><br><span class="line"><span class="class"><span class="keyword">enum</span> <span class="title">MouseEventTypes</span> &#123;</span></span><br><span class="line">       EVENT_MOUSEMOVE      = <span class="number">0</span>, <span class="comment">//!&lt; indicates that the mouse pointer has moved over the window.</span></span><br><span class="line">       EVENT_LBUTTONDOWN    = <span class="number">1</span>, <span class="comment">//!&lt; indicates that the left mouse button is pressed.</span></span><br><span class="line">       EVENT_RBUTTONDOWN    = <span class="number">2</span>, <span class="comment">//!&lt; indicates that the right mouse button is pressed.</span></span><br><span class="line">       EVENT_MBUTTONDOWN    = <span class="number">3</span>, <span class="comment">//!&lt; indicates that the middle mouse button is pressed.</span></span><br><span class="line">       EVENT_LBUTTONUP      = <span class="number">4</span>, <span class="comment">//!&lt; indicates that left mouse button is released.</span></span><br><span class="line">       EVENT_RBUTTONUP      = <span class="number">5</span>, <span class="comment">//!&lt; indicates that right mouse button is released.</span></span><br><span class="line">       EVENT_MBUTTONUP      = <span class="number">6</span>, <span class="comment">//!&lt; indicates that middle mouse button is released.</span></span><br><span class="line">       EVENT_LBUTTONDBLCLK  = <span class="number">7</span>, <span class="comment">//!&lt; indicates that left mouse button is double clicked.</span></span><br><span class="line">       EVENT_RBUTTONDBLCLK  = <span class="number">8</span>, <span class="comment">//!&lt; indicates that right mouse button is double clicked.</span></span><br><span class="line">       EVENT_MBUTTONDBLCLK  = <span class="number">9</span>, <span class="comment">//!&lt; indicates that middle mouse button is double clicked.</span></span><br><span class="line">       EVENT_MOUSEWHEEL     = <span class="number">10</span>,<span class="comment">//!&lt; positive and negative values mean forward and backward scrolling, respectively.</span></span><br><span class="line">       EVENT_MOUSEHWHEEL    = <span class="number">11</span> <span class="comment">//!&lt; positive and negative values mean right and left scrolling, respectively.</span></span><br><span class="line">     &#125;;</span><br></pre></td></tr></table></figure>
+
+
+
+<figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">//! Mouse Event Flags see cv::MouseCallback</span></span><br><span class="line"><span class="class"><span class="keyword">enum</span> <span class="title">MouseEventFlags</span> &#123;</span></span><br><span class="line">       EVENT_FLAG_LBUTTON   = <span class="number">1</span>, <span class="comment">//!&lt; indicates that the left mouse button is down.</span></span><br><span class="line">       EVENT_FLAG_RBUTTON   = <span class="number">2</span>, <span class="comment">//!&lt; indicates that the right mouse button is down.</span></span><br><span class="line">       EVENT_FLAG_MBUTTON   = <span class="number">4</span>, <span class="comment">//!&lt; indicates that the middle mouse button is down.</span></span><br><span class="line">       EVENT_FLAG_CTRLKEY   = <span class="number">8</span>, <span class="comment">//!&lt; indicates that CTRL Key is pressed.</span></span><br><span class="line">       EVENT_FLAG_SHIFTKEY  = <span class="number">16</span>,<span class="comment">//!&lt; indicates that SHIFT Key is pressed.</span></span><br><span class="line">       EVENT_FLAG_ALTKEY    = <span class="number">32</span> <span class="comment">//!&lt; indicates that ALT Key is pressed.</span></span><br><span class="line">     &#125;;</span><br></pre></td></tr></table></figure></li>
+</ul>
+<figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">/** @brief Callback function for mouse events. see cv::setMouseCallback</span></span><br><span class="line"><span class="comment">@param event one of the cv::MouseEventTypes constants.</span></span><br><span class="line"><span class="comment">@param x The x-coordinate of the mouse event.</span></span><br><span class="line"><span class="comment">@param y The y-coordinate of the mouse event.</span></span><br><span class="line"><span class="comment">@param flags one of the cv::MouseEventFlags constants.</span></span><br><span class="line"><span class="comment">@param userdata The optional parameter.</span></span><br><span class="line"><span class="comment"> */</span></span><br><span class="line"><span class="function"><span class="keyword">typedef</span> <span class="title">void</span> <span class="params">(*MouseCallback)</span><span class="params">(<span class="keyword">int</span> event, <span class="keyword">int</span> x, <span class="keyword">int</span> y, <span class="keyword">int</span> flags, <span class="keyword">void</span>* userdata)</span></span>;</span><br><span class="line"></span><br></pre></td></tr></table></figure>
+
+<ul>
+<li>第三个参数是传递给回调的用户数据指针</li>
+</ul>
+</li>
+</ul>
+
+    </div>
+
+    
+    
+    
+
+    <footer class="post-footer">
+          <div class="reward-container">
+  <div>Buy me a coffee</div>
+  <button>
+    Donate
+  </button>
+  <div class="post-reward">
+      <div>
+        <img src="/hexo/images/wechatpay.png" alt="Absurd WeChat Pay">
+        <span>WeChat Pay</span>
+      </div>
+
+  </div>
+</div>
+
+          <div class="post-tags">
+              <a href="/hexo/tags/opencv/" rel="tag"># opencv</a>
+          </div>
+
+        
+
+          <div class="post-nav">
+            <div class="post-nav-item">
+                <a href="/hexo/post/a2eaa8a6.html" rel="prev" title="从0开始学习opencv（一）-配置环境">
+                  <i class="fa fa-chevron-left"></i> 从0开始学习opencv（一）-配置环境
+                </a>
+            </div>
+            <div class="post-nav-item">
+                <a href="/hexo/post/b34a8cb1.html" rel="next" title="uu加速器">
+                  uu加速器 <i class="fa fa-chevron-right"></i>
+                </a>
+            </div>
+          </div>
+    </footer>
+  </article>
+</div>
+
+
+
+
+
+
+</div>
+  </main>
+
+  <footer class="footer">
+    <div class="footer-inner">
+
+
+<div class="copyright">
+  &copy; 
+  <span itemprop="copyrightYear">2022</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">Absurd</span>
+</div>
+  <div class="powered-by">Powered by <a href="https://hexo.io/" rel="noopener" target="_blank">Hexo</a> & <a href="https://theme-next.js.org/mist/" rel="noopener" target="_blank">NexT.Mist</a>
+  </div>
+
+    </div>
+  </footer>
+
+  
+  <script src="https://cdn.jsdelivr.net/npm/animejs@3.2.1/lib/anime.min.js" integrity="sha256-XL2inqUJaslATFnHdJOi9GfQ60on8Wx1C2H8DYiN1xY=" crossorigin="anonymous"></script>
+<script src="/hexo/js/comments.js"></script><script src="/hexo/js/utils.js"></script><script src="/hexo/js/motion.js"></script><script src="/hexo/js/schemes/muse.js"></script><script src="/hexo/js/next-boot.js"></script>
+
+  
+<script src="https://cdn.jsdelivr.net/npm/hexo-generator-searchdb@1.4.0/dist/search.js" integrity="sha256-vXZMYLEqsROAXkEw93GGIvaB2ab+QW6w3+1ahD9nXXA=" crossorigin="anonymous"></script>
+<script src="/hexo/js/third-party/search/local-search.js"></script>
+
+
+
+
+
+  
+
+
+
+
+
+</body>
+</html>

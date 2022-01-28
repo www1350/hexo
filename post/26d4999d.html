@@ -1,0 +1,445 @@
+<!DOCTYPE html>
+<html lang="zh-Hans">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width">
+<meta name="theme-color" content="#222" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#222" media="(prefers-color-scheme: dark)">
+<meta name="generator" content="Hexo 6.0.0">
+
+
+  <link rel="apple-touch-icon" sizes="180x180" href="/hexo/images/apple-touch-icon-next.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/hexo/images/favicon-32x32-next.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/hexo/images/favicon-16x16-next.png">
+  <link rel="mask-icon" href="/hexo/images/logo.svg" color="#222">
+
+<link rel="stylesheet" href="/hexo/css/main.css">
+
+
+
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@5.15.4/css/all.min.css" integrity="sha256-mUZM63G8m73Mcidfrv5E+Y61y7a12O5mW4ezU3bxqW4=" crossorigin="anonymous">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/animate.css@3.1.1/animate.min.css" integrity="sha256-PR7ttpcvz8qrF57fur/yAx1qXMFJeJFiA6pSzWi0OIE=" crossorigin="anonymous">
+
+<script class="next-config" data-name="main" type="application/json">{"hostname":"www1350.github.io","root":"/hexo/","images":"/hexo/images","scheme":"Mist","darkmode":true,"version":"8.9.0","exturl":false,"sidebar":{"position":"left","display":"post","padding":18,"offset":12},"copycode":false,"bookmark":{"enable":false,"color":"#222","save":"auto"},"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"stickytabs":false,"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"fadeInDown","post_body":"fadeInDown","coll_header":"fadeInLeft","sidebar":"fadeInUp"}},"prism":false,"i18n":{"placeholder":"Searching...","empty":"We didn't find any results for the search: ${query}","hits_time":"${hits} results found in ${time} ms","hits":"${hits} results found"},"path":"/hexo/search.xml","localsearch":{"enable":true,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":true}}</script><script src="/hexo/js/config.js"></script>
+<meta name="description" content="关于详细介绍：http:&#x2F;&#x2F;blog.csdn.net&#x2F;column&#x2F;details&#x2F;rabbitmq.htmlRabbitMQ：基于AMQP协议（Advanced Message Queue Protocol）介绍：http:&#x2F;&#x2F;www.infoq.com&#x2F;cn&#x2F;articles&#x2F;AMQP-RabbitMQ&#x2F;ActiveMQ：基于STOMP协议 所需环境：1.Erlang2.RabbitMQ3.">
+<meta property="og:type" content="article">
+<meta property="og:title" content="RabbitMQ消息队列">
+<meta property="og:url" content="https://www1350.github.io/hexo/post/26d4999d.html">
+<meta property="og:site_name" content="Absurd博客">
+<meta property="og:description" content="关于详细介绍：http:&#x2F;&#x2F;blog.csdn.net&#x2F;column&#x2F;details&#x2F;rabbitmq.htmlRabbitMQ：基于AMQP协议（Advanced Message Queue Protocol）介绍：http:&#x2F;&#x2F;www.infoq.com&#x2F;cn&#x2F;articles&#x2F;AMQP-RabbitMQ&#x2F;ActiveMQ：基于STOMP协议 所需环境：1.Erlang2.RabbitMQ3.">
+<meta property="og:locale">
+<meta property="og:image" content="https://cloud.githubusercontent.com/assets/7789698/16560356/6d0cda70-4225-11e6-97bd-96f3a557078e.png">
+<meta property="og:image" content="https://cloud.githubusercontent.com/assets/7789698/16560357/764b5ce2-4225-11e6-91fe-9988a6a12df3.png">
+<meta property="og:image" content="https://cloud.githubusercontent.com/assets/7789698/16560366/7ed92a88-4225-11e6-8334-e986473d9530.png">
+<meta property="article:published_time" content="2016-07-04T13:50:32.000Z">
+<meta property="article:modified_time" content="2022-01-28T07:09:17.724Z">
+<meta property="article:author" content="Absurd">
+<meta property="article:tag" content="RabbitMQ">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="https://cloud.githubusercontent.com/assets/7789698/16560356/6d0cda70-4225-11e6-97bd-96f3a557078e.png">
+
+
+<link rel="canonical" href="https://www1350.github.io/hexo/post/26d4999d.html">
+
+
+
+<script class="next-config" data-name="page" type="application/json">{"sidebar":"","isHome":false,"isPost":true,"lang":"zh-Hans","comments":true,"permalink":"https://www1350.github.io/hexo/post/26d4999d.html","path":"post/26d4999d.html","title":"RabbitMQ消息队列"}</script>
+
+<script class="next-config" data-name="calendar" type="application/json">""</script>
+<title>RabbitMQ消息队列 | Absurd博客</title>
+  
+
+
+
+
+  <noscript>
+    <link rel="stylesheet" href="/hexo/css/noscript.css">
+  </noscript>
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage" class="use-motion">
+  <div class="headband"></div>
+
+  <main class="main">
+    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="Toggle navigation bar" role="button">
+        <span class="toggle-line"></span>
+        <span class="toggle-line"></span>
+        <span class="toggle-line"></span>
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/hexo/" class="brand" rel="start">
+      <i class="logo-line"></i>
+      <p class="site-title">Absurd博客</p>
+      <i class="logo-line"></i>
+    </a>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger">
+        <i class="fa fa-search fa-fw fa-lg"></i>
+    </div>
+  </div>
+</div>
+
+
+
+<nav class="site-nav">
+  <ul class="main-menu menu">
+        <li class="menu-item menu-item-home"><a href="/hexo/" rel="section"><i class="fa fa-home fa-fw"></i>Home</a></li>
+        <li class="menu-item menu-item-about"><a href="/hexo/about/" rel="section"><i class="fa fa-user fa-fw"></i>About</a></li>
+        <li class="menu-item menu-item-tags"><a href="/hexo/tags/" rel="section"><i class="fa fa-tags fa-fw"></i>Tags</a></li>
+        <li class="menu-item menu-item-categories"><a href="/hexo/categories/" rel="section"><i class="fa fa-th fa-fw"></i>Categories</a></li>
+        <li class="menu-item menu-item-archives"><a href="/hexo/archives/" rel="section"><i class="fa fa-archive fa-fw"></i>Archives</a></li>
+        <li class="menu-item menu-item-bookmarks"><a href="/hexo/bookmarks/" rel="section"><i class="fa fa-archive fa-fw"></i>bookmarks</a></li>
+      <li class="menu-item menu-item-search">
+        <a role="button" class="popup-trigger"><i class="fa fa-search fa-fw"></i>Search
+        </a>
+      </li>
+  </ul>
+</nav>
+
+
+
+  <div class="search-pop-overlay">
+    <div class="popup search-popup"><div class="search-header">
+  <span class="search-icon">
+    <i class="fa fa-search"></i>
+  </span>
+  <div class="search-input-container">
+    <input autocomplete="off" autocapitalize="off" maxlength="80"
+           placeholder="Searching..." spellcheck="false"
+           type="search" class="search-input">
+  </div>
+  <span class="popup-btn-close" role="button">
+    <i class="fa fa-times-circle"></i>
+  </span>
+</div>
+<div class="search-result-container no-result">
+  <div class="search-result-icon">
+    <i class="fa fa-spinner fa-pulse fa-5x"></i>
+  </div>
+</div>
+
+    </div>
+  </div>
+
+</div>
+        
+  
+  <div class="toggle sidebar-toggle" role="button">
+    <span class="toggle-line"></span>
+    <span class="toggle-line"></span>
+    <span class="toggle-line"></span>
+  </div>
+
+  <aside class="sidebar">
+
+    <div class="sidebar-inner sidebar-overview-active">
+      <ul class="sidebar-nav">
+        <li class="sidebar-nav-toc">
+          Table of Contents
+        </li>
+        <li class="sidebar-nav-overview">
+          Overview
+        </li>
+      </ul>
+
+      <div class="sidebar-panel-container">
+        <!--noindex-->
+        <div class="post-toc-wrap sidebar-panel">
+        </div>
+        <!--/noindex-->
+
+        <div class="site-overview-wrap sidebar-panel">
+          <div class="site-author site-overview-item animated" itemprop="author" itemscope itemtype="http://schema.org/Person">
+    <img class="site-author-image" itemprop="image" alt="Absurd"
+      src="/hexo/images/avatar.gif">
+  <p class="site-author-name" itemprop="name">Absurd</p>
+  <div class="site-description" itemprop="description"></div>
+</div>
+<div class="site-state-wrap site-overview-item animated">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+        <a href="/hexo/archives/">
+          <span class="site-state-item-count">75</span>
+          <span class="site-state-item-name">posts</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+          <a href="/hexo/categories/">
+        <span class="site-state-item-count">17</span>
+        <span class="site-state-item-name">categories</span></a>
+      </div>
+      <div class="site-state-item site-state-tags">
+          <a href="/hexo/tags/">
+        <span class="site-state-item-count">46</span>
+        <span class="site-state-item-name">tags</span></a>
+      </div>
+  </nav>
+</div>
+  <div class="links-of-author site-overview-item animated">
+      <span class="links-of-author-item">
+        <a href="https://github.com/www1350" title="GitHub → https:&#x2F;&#x2F;github.com&#x2F;www1350" rel="noopener" target="_blank"><i class="fab fa-github fa-fw"></i>GitHub</a>
+      </span>
+      <span class="links-of-author-item">
+        <a href="mailto:www_1350@163.com" title="E-Mail → mailto:www_1350@163.com" rel="noopener" target="_blank"><i class="fa fa-envelope fa-fw"></i>E-Mail</a>
+      </span>
+  </div>
+
+
+
+        </div>
+      </div>
+    </div>
+  </aside>
+  <div class="sidebar-dimmer"></div>
+
+
+    </header>
+
+    
+  <div class="back-to-top" role="button" aria-label="Back to top">
+    <i class="fa fa-arrow-up"></i>
+    <span>0%</span>
+  </div>
+
+<noscript>
+  <div class="noscript-warning">Theme NexT works best with JavaScript enabled</div>
+</noscript>
+
+
+    <div class="main-inner post posts-expand">
+
+
+  
+
+
+<div class="post-block">
+  
+  
+
+  <article itemscope itemtype="http://schema.org/Article" class="post-content" lang="zh-Hans">
+    <link itemprop="mainEntityOfPage" href="https://www1350.github.io/hexo/post/26d4999d.html">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/hexo/images/avatar.gif">
+      <meta itemprop="name" content="Absurd">
+      <meta itemprop="description" content="">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Absurd博客">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          RabbitMQ消息队列
+        </h1>
+
+        <div class="post-meta-container">
+          <div class="post-meta">
+    <span class="post-meta-item">
+      <span class="post-meta-item-icon">
+        <i class="far fa-calendar"></i>
+      </span>
+      <span class="post-meta-item-text">Posted on</span>
+
+      <time title="Created: 2016-07-04 21:50:32" itemprop="dateCreated datePublished" datetime="2016-07-04T21:50:32+08:00">2016-07-04</time>
+    </span>
+    <span class="post-meta-item">
+      <span class="post-meta-item-icon">
+        <i class="far fa-calendar-check"></i>
+      </span>
+      <span class="post-meta-item-text">Edited on</span>
+      <time title="Modified: 2022-01-28 15:09:17" itemprop="dateModified" datetime="2022-01-28T15:09:17+08:00">2022-01-28</time>
+    </span>
+    <span class="post-meta-item">
+      <span class="post-meta-item-icon">
+        <i class="far fa-folder"></i>
+      </span>
+      <span class="post-meta-item-text">In</span>
+        <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+          <a href="/hexo/categories/%E6%B6%88%E6%81%AF%E9%98%9F%E5%88%97/" itemprop="url" rel="index"><span itemprop="name">消息队列</span></a>
+        </span>
+    </span>
+
+  
+</div>
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+        <p>关于详细介绍：<a target="_blank" rel="noopener" href="http://blog.csdn.net/column/details/rabbitmq.html">http://blog.csdn.net/column/details/rabbitmq.html</a><br>RabbitMQ：基于AMQP协议（Advanced Message Queue Protocol）介绍：<a target="_blank" rel="noopener" href="http://www.infoq.com/cn/articles/AMQP-RabbitMQ/">http://www.infoq.com/cn/articles/AMQP-RabbitMQ/</a><br>ActiveMQ：基于STOMP协议</p>
+<p>所需环境：<br>1.Erlang<br>2.RabbitMQ<br>3.rabbit-client.jar  <a target="_blank" rel="noopener" href="http://www.rabbitmq.com/api-guide.html">api</a></p>
+<p><a target="_blank" rel="noopener" href="http://www.lxway.com/991402946.htm">http://www.lxway.com/991402946.htm</a><br>Direct Exchange – 处理路由键。需要将一个队列绑定到交换机上，要求该消息与一个特定的路由键完全匹配。这是一个完整的匹配。如果一个队列绑定到该交换机上要求路由键 “dog”，则只有被标记为“dog”的消息才被转发，不会转发dog.puppy，也不会转发dog.guard，只会转发dog。<br><img src="https://cloud.githubusercontent.com/assets/7789698/16560356/6d0cda70-4225-11e6-97bd-96f3a557078e.png" alt="image"></p>
+<p>Fanout Exchange – 不处理路由键。你只需要简单的将队列绑定到交换机上。一个发送到交换机的消息都会被转发到与该交换机绑定的所有队列上。很像子网广播，每台子网内的主机都获得了一份复制的消息。Fanout交换机转发消息是最快的。<br><img src="https://cloud.githubusercontent.com/assets/7789698/16560357/764b5ce2-4225-11e6-91fe-9988a6a12df3.png" alt="image"></p>
+<p>Topic Exchange – 将路由键和某模式进行匹配。此时队列需要绑定要一个模式上。符号“#”匹配一个或多个词，符号“_”匹配不多不少一个词。因此“audit.#”能够匹配到“audit.irs.corporate”，但是“audit._” 只会匹配到“audit.irs”。我在RedHat的朋友做了一张不错的图，来表明topic交换机是如何工作的：<br><img src="https://cloud.githubusercontent.com/assets/7789698/16560366/7ed92a88-4225-11e6-8334-e986473d9530.png" alt="image"></p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line"> ConnectionFactory connFactory = new ConnectionFactory();//创建连接连接到MabbitMQ </span><br><span class="line">  connFactory.setUri(uri);//或 factory.setHost(&quot;localhost&quot;);  设置ip、uri或host</span><br><span class="line">Connection connection = factory.newConnection();  //创建一个连接</span><br><span class="line">  Channel channel = connection.createChannel();  //创建一个Channel </span><br><span class="line">channel.queueDeclare(queue, true, false, false, null);//指定队列</span><br><span class="line">        channel.basicPublish(&quot;&quot;, QUEUE_NAME, null, message.getBytes());     //往队列中发出一条消息  </span><br><span class="line"> //关闭频道和连接  </span><br><span class="line"> channel.close();  </span><br><span class="line">connection.close();  </span><br><span class="line"></span><br></pre></td></tr></table></figure>
+
+<p>Connecting to a broker</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line">ConnectionFactory factory = new ConnectionFactory();</span><br><span class="line">factory.setUsername(userName);</span><br><span class="line">factory.setPassword(password);</span><br><span class="line">factory.setVirtualHost(virtualHost);</span><br><span class="line">factory.setHost(hostName);</span><br><span class="line">factory.setPort(portNumber);</span><br><span class="line">Connection conn = factory.newConnection();</span><br></pre></td></tr></table></figure>
+
+<p><a target="_blank" rel="noopener" href="http://www.rabbitmq.com/uri-spec.html">uri</a></p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">ConnectionFactory factory = new ConnectionFactory();</span><br><span class="line">factory.setUri(&quot;amqp://userName:password@hostName:portNumber/virtualHost&quot;);</span><br><span class="line">Connection conn = factory.newConnection();</span><br></pre></td></tr></table></figure>
+
+<p>Using Exchanges and Queues<br>声明一个exchange然后把队列和exchange和队列绑定起来（只有绑定以后，往exchange投递才会跑到相应队列）</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">channel.exchangeDeclare(exchangeName, &quot;direct&quot;, true);</span><br><span class="line">String queueName = channel.queueDeclare().getQueue();</span><br><span class="line">channel.queueBind(queueName, exchangeName, routingKey);</span><br></pre></td></tr></table></figure>
+
+<p>（完整的绑定过程）</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">channel.exchangeDeclare(exchangeName, &quot;direct&quot;, true);</span><br><span class="line">channel.queueDeclare(queueName, true, false, false, null);</span><br><span class="line">channel.queueBind(queueName, exchangeName, routingKey);</span><br></pre></td></tr></table></figure>
+
+<p>Publishing messages</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">byte[] messageBodyBytes = &quot;Hello, world!&quot;.getBytes();</span><br><span class="line">channel.basicPublish(exchangeName, routingKey, null, messageBodyBytes);</span><br></pre></td></tr></table></figure>
+
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">channel.basicPublish(exchangeName, routingKey, mandatory,</span><br><span class="line">                     MessageProperties.PERSISTENT_TEXT_PLAIN,</span><br><span class="line">                     messageBodyBytes);</span><br></pre></td></tr></table></figure>
+
+<p>delivery mode 2 (persistent), priority 1 , content-type “text/plain”.</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line">channel.basicPublish(exchangeName, routingKey,</span><br><span class="line">             new AMQP.BasicProperties.Builder()</span><br><span class="line">               .contentType(&quot;text/plain&quot;)</span><br><span class="line">               .deliveryMode(2)</span><br><span class="line">               .priority(1)</span><br><span class="line">               .userId(&quot;bob&quot;)</span><br><span class="line">               .build()),</span><br><span class="line">               messageBodyBytes);</span><br></pre></td></tr></table></figure>
+
+<p>自定义header</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line">Map&lt;String, Object&gt; headers = new HashMap&lt;String, Object&gt;();</span><br><span class="line">headers.put(&quot;latitude&quot;,  51.5252949);</span><br><span class="line">headers.put(&quot;longitude&quot;, -0.0905493);</span><br><span class="line"></span><br><span class="line">channel.basicPublish(exchangeName, routingKey,</span><br><span class="line">             new AMQP.BasicProperties.Builder()</span><br><span class="line">               .headers(headers)</span><br><span class="line">               .build()),</span><br><span class="line">               messageBodyBytes);</span><br></pre></td></tr></table></figure>
+
+<p>expiration</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">channel.basicPublish(exchangeName, routingKey,</span><br><span class="line">             new AMQP.BasicProperties.Builder()</span><br><span class="line">               .expiration(&quot;60000&quot;)</span><br><span class="line">               .build()),</span><br><span class="line">               messageBodyBytes);</span><br></pre></td></tr></table></figure>
+
+<p>在确认模式下发布大量的信息到一个通道,等待确认</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br><span class="line">65</span><br><span class="line">66</span><br><span class="line">67</span><br><span class="line">68</span><br><span class="line">69</span><br><span class="line">70</span><br><span class="line">71</span><br><span class="line">72</span><br><span class="line">73</span><br><span class="line">74</span><br><span class="line">75</span><br><span class="line">76</span><br><span class="line">77</span><br><span class="line">78</span><br><span class="line">79</span><br><span class="line">80</span><br><span class="line">81</span><br><span class="line">82</span><br><span class="line">83</span><br><span class="line">84</span><br><span class="line">85</span><br><span class="line">86</span><br><span class="line">87</span><br><span class="line">88</span><br><span class="line">89</span><br><span class="line">90</span><br><span class="line">91</span><br></pre></td><td class="code"><pre><span class="line">package com.rabbitmq.examples;</span><br><span class="line"></span><br><span class="line">import java.io.IOException;</span><br><span class="line"></span><br><span class="line">import com.rabbitmq.client.Channel;</span><br><span class="line">import com.rabbitmq.client.Connection;</span><br><span class="line">import com.rabbitmq.client.ConnectionFactory;</span><br><span class="line">import com.rabbitmq.client.MessageProperties;</span><br><span class="line">import com.rabbitmq.client.QueueingConsumer;</span><br><span class="line"></span><br><span class="line">public class ConfirmDontLoseMessages &#123;</span><br><span class="line">    static int msgCount = 10000;</span><br><span class="line">    final static String QUEUE_NAME = &quot;confirm-test&quot;;</span><br><span class="line">    static ConnectionFactory connectionFactory;</span><br><span class="line"></span><br><span class="line">    public static void main(String[] args)</span><br><span class="line">        throws IOException, InterruptedException</span><br><span class="line">    &#123;</span><br><span class="line">        if (args.length &gt; 0) &#123;</span><br><span class="line">                msgCount = Integer.parseInt(args[0]);</span><br><span class="line">        &#125;</span><br><span class="line"></span><br><span class="line">        connectionFactory = new ConnectionFactory();</span><br><span class="line"></span><br><span class="line">        // Consume msgCount messages.</span><br><span class="line">        (new Thread(new Consumer())).start();</span><br><span class="line">        // Publish msgCount messages and wait for confirms.</span><br><span class="line">        (new Thread(new Publisher())).start();</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    @SuppressWarnings(&quot;ThrowablePrintedToSystemOut&quot;)</span><br><span class="line">    static class Publisher implements Runnable &#123;</span><br><span class="line">        public void run() &#123;</span><br><span class="line">            try &#123;</span><br><span class="line">                long startTime = System.currentTimeMillis();</span><br><span class="line"></span><br><span class="line">                // Setup</span><br><span class="line">                Connection conn = connectionFactory.newConnection();</span><br><span class="line">                Channel ch = conn.createChannel();</span><br><span class="line">                ch.queueDeclare(QUEUE_NAME, true, false, false, null);</span><br><span class="line">                ch.confirmSelect();</span><br><span class="line"></span><br><span class="line">                // Publish</span><br><span class="line">                for (long i = 0; i &lt; msgCount; ++i) &#123;</span><br><span class="line">                    ch.basicPublish(&quot;&quot;, QUEUE_NAME,</span><br><span class="line">                                    MessageProperties.PERSISTENT_BASIC,</span><br><span class="line">                                    &quot;nop&quot;.getBytes());</span><br><span class="line">                &#125;</span><br><span class="line"></span><br><span class="line">                ch.waitForConfirmsOrDie();</span><br><span class="line"></span><br><span class="line">                // Cleanup</span><br><span class="line">                ch.queueDelete(QUEUE_NAME);</span><br><span class="line">                ch.close();</span><br><span class="line">                conn.close();</span><br><span class="line"></span><br><span class="line">                long endTime = System.currentTimeMillis();</span><br><span class="line">                System.out.printf(&quot;Test took %.3fs\n&quot;,</span><br><span class="line">                                  (float)(endTime - startTime)/1000);</span><br><span class="line">            &#125; catch (Throwable e) &#123;</span><br><span class="line">                System.out.println(&quot;foobar :(&quot;);</span><br><span class="line">                System.out.print(e);</span><br><span class="line">            &#125;</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    static class Consumer implements Runnable &#123;</span><br><span class="line">        public void run() &#123;</span><br><span class="line">            try &#123;</span><br><span class="line">                // Setup</span><br><span class="line">                Connection conn = connectionFactory.newConnection();</span><br><span class="line">                Channel ch = conn.createChannel();</span><br><span class="line">                ch.queueDeclare(QUEUE_NAME, true, false, false, null);</span><br><span class="line"></span><br><span class="line">                // Consume</span><br><span class="line">                QueueingConsumer qc = new QueueingConsumer(ch);</span><br><span class="line">                ch.basicConsume(QUEUE_NAME, true, qc);</span><br><span class="line">                for (int i = 0; i &lt; msgCount; ++i) &#123;</span><br><span class="line">                    qc.nextDelivery();</span><br><span class="line">                &#125;</span><br><span class="line"></span><br><span class="line">                // Cleanup</span><br><span class="line">                ch.close();</span><br><span class="line">                conn.close();</span><br><span class="line">            &#125; catch (Throwable e) &#123;</span><br><span class="line">                System.out.println(&quot;Whoosh!&quot;);</span><br><span class="line">                System.out.print(e);</span><br><span class="line">            &#125;</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>*(the AMQP specification document)[<a target="_blank" rel="noopener" href="http://www.amqp.org/]">http://www.amqp.org/]</a></p>
+<p>接收消息的最有效的方法是建立一个订阅使用消费者接口。将自动被交付的消息到达,而不必显式地请求</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br></pre></td><td class="code"><pre><span class="line">boolean autoAck = false;</span><br><span class="line">channel.basicConsume(queueName, autoAck, &quot;myConsumerTag&quot;,</span><br><span class="line">     new DefaultConsumer(channel) &#123;</span><br><span class="line">         @Override</span><br><span class="line">         public void handleDelivery(String consumerTag,</span><br><span class="line">                                    Envelope envelope,</span><br><span class="line">                                    AMQP.BasicProperties properties,</span><br><span class="line">                                    byte[] body)</span><br><span class="line">             throws IOException</span><br><span class="line">         &#123;</span><br><span class="line">             String routingKey = envelope.getRoutingKey();</span><br><span class="line">             String contentType = properties.getContentType();</span><br><span class="line">             long deliveryTag = envelope.getDeliveryTag();</span><br><span class="line">             // (process the message components here ...)</span><br><span class="line">             channel.basicAck(deliveryTag, false);</span><br><span class="line">         &#125;</span><br><span class="line">     &#125;);</span><br></pre></td></tr></table></figure>
+
+<p>接收个别信息</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line">boolean autoAck = false;</span><br><span class="line">GetResponse response = channel.basicGet(queueName, autoAck);</span><br><span class="line">if (response == null) &#123;</span><br><span class="line">    // No message retrieved.</span><br><span class="line">&#125; else &#123;</span><br><span class="line">    AMQP.BasicProperties props = response.getProps();</span><br><span class="line">    byte[] body = response.getBody();</span><br><span class="line">    long deliveryTag = response.getEnvelope().getDeliveryTag();</span><br><span class="line">    ...</span><br><span class="line">    channel.basicAck(method.deliveryTag, false); //  autoAck = false必须设置 Channel.basicAck来确认已经接受消息</span><br></pre></td></tr></table></figure>
+
+<p>处理不被路由的消息<br>假如一个信息被设置强制性（mandatory）的flag不被路由的话会被送到发送端。<br>如果客户端没有配置返回特定通道侦听器,将放弃返回的相关消息。<br>为了获取这个消息，客户端可以实现ReturnListener 接口还有调用 Channel.setReturnListener</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line">channel.setReturnListener(new ReturnListener() &#123;</span><br><span class="line">    public void handleBasicReturn(int replyCode,</span><br><span class="line">                                  String replyText,</span><br><span class="line">                                  String exchange,</span><br><span class="line">                                  String routingKey,</span><br><span class="line">                                  AMQP.BasicProperties properties,</span><br><span class="line">                                  byte[] body)</span><br><span class="line">    throws IOException &#123;</span><br><span class="line">        ...</span><br><span class="line">    &#125;</span><br><span class="line">&#125;);</span><br></pre></td></tr></table></figure>
+
+<p>关闭协议</p>
+<p>The AMQP 0-9-1 connection and channel have the following lifecycle states:</p>
+<p>open: the object is ready to use<br>closing: the object has been explicitly notified to shut down locally, has issued a shutdown request to any supporting lower-layer objects, and is waiting for their shutdown procedures to complete<br>closed: the object has received all shutdown-complete notification(s) from any lower-layer objects, and as a consequence has shut itself down</p>
+<p>The AMQP connection and channel objects possess the following shutdown-related methods:</p>
+<p>addShutdownListener(ShutdownListener listener) and removeShutdownListener(ShutdownListener listener), to manage any listeners, which will be fired when the object transitions to closed state. Note that, adding a ShutdownListener to an object that is already closed will fire the listener immediately<br>getCloseReason(), to allow the investigation of what was the reason of the object’s shutdown<br>isOpen(), useful for testing whether the object is in an open state<br>close(int closeCode, String closeMessage), to explictly notify the object to shut down.</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line">import com.rabbitmq.client.ShutdownSignalException;</span><br><span class="line">import com.rabbitmq.client.ShutdownListener;</span><br><span class="line"></span><br><span class="line">connection.addShutdownListener(new ShutdownListener() &#123;</span><br><span class="line">    public void shutdownCompleted(ShutdownSignalException cause)</span><br><span class="line">    &#123;</span><br><span class="line">        ...</span><br><span class="line">    &#125;</span><br><span class="line">&#125;);</span><br></pre></td></tr></table></figure>
+
+<p>ShutdownSignalException包含了关闭时的错误异常</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br></pre></td><td class="code"><pre><span class="line">public void shutdownCompleted(ShutdownSignalException cause)</span><br><span class="line">&#123;</span><br><span class="line">  if (cause.isHardError())</span><br><span class="line">  &#123;</span><br><span class="line">    Connection conn = (Connection)cause.getReference();</span><br><span class="line">    if (!cause.isInitiatedByApplication())</span><br><span class="line">    &#123;</span><br><span class="line">      Method reason = cause.getReason();</span><br><span class="line">      ...</span><br><span class="line">    &#125;</span><br><span class="line">    ...</span><br><span class="line">  &#125; else &#123;</span><br><span class="line">    Channel ch = (Channel)cause.getReference();</span><br><span class="line">    ...</span><br><span class="line">  &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>原子性的使用open</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line">public void brokenMethod(Channel channel)</span><br><span class="line">&#123;</span><br><span class="line">    if (channel.isOpen())</span><br><span class="line">    &#123;</span><br><span class="line">        // The following code depends on the channel being in open state.</span><br><span class="line">        // However there is a possibility of the change in the channel state</span><br><span class="line">        // between isOpen() and basicQos(1) call</span><br><span class="line">        ...</span><br><span class="line">        channel.basicQos(1);//告诉RabbitMQ同一时间给一个消息给消费者  </span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>处于无效状态时应该抓取异常</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br></pre></td><td class="code"><pre><span class="line">public void validMethod(Channel channel)</span><br><span class="line">&#123;</span><br><span class="line">    try &#123;</span><br><span class="line">        ...</span><br><span class="line">        channel.basicQos(1);</span><br><span class="line">    &#125; catch (ShutdownSignalException sse) &#123;</span><br><span class="line">        // possibly check if channel was closed</span><br><span class="line">        // by the time we started action and reasons for</span><br><span class="line">        // closing it</span><br><span class="line">        ...</span><br><span class="line">    &#125; catch (IOException ioe) &#123;</span><br><span class="line">        // check why connection was closed</span><br><span class="line">        ...</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>连接设置<br>设置pool数</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">ExecutorService es = Executors.newFixedThreadPool(20);</span><br><span class="line">Connection conn = factory.newConnection(es);</span><br></pre></td></tr></table></figure>
+
+<p>使用地址列表</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">Address[] addrArr = new Address[]&#123; new Address(hostname1, portnumber1)</span><br><span class="line">                                 , new Address(hostname2, portnumber2)&#125;;</span><br><span class="line">Connection conn = factory.newConnection(addrArr);</span><br></pre></td></tr></table></figure>
+
+<p>心跳超时（Heartbeat Timeout）  <a target="_blank" rel="noopener" href="http://www.rabbitmq.com/heartbeats.html">Heartbeats guide</a><br>自定义线程工厂</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">import com.google.appengine.api.ThreadManager;</span><br><span class="line"></span><br><span class="line">ConnectionFactory cf = new ConnectionFactory();</span><br><span class="line">cf.setThreadFactory(ThreadManager.backgroundThreadFactory());</span><br></pre></td></tr></table></figure>
+
+<p>Automatic Recovery From Network Failures</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br></pre></td><td class="code"><pre><span class="line">ConnectionFactory factory = new ConnectionFactory();</span><br><span class="line">factory.setUsername(userName);</span><br><span class="line">factory.setPassword(password);</span><br><span class="line">factory.setVirtualHost(virtualHost);</span><br><span class="line">factory.setHost(hostName);</span><br><span class="line">factory.setPort(portNumber);</span><br><span class="line">factory.setAutomaticRecoveryEnabled(true);</span><br><span class="line">// connection that will recover automatically</span><br><span class="line">Connection conn = factory.newConnection();</span><br><span class="line"></span><br><span class="line"></span><br><span class="line">ConnectionFactory factory = new ConnectionFactory();</span><br><span class="line">// attempt recovery every 10 seconds</span><br><span class="line">factory.setNetworkRecoveryInterval(10000);</span><br><span class="line"></span><br><span class="line"></span><br><span class="line">ConnectionFactory factory = new ConnectionFactory();</span><br><span class="line"></span><br><span class="line">Address[] addresses = &#123;new Address(&quot;192.168.1.4&quot;), new Address(&quot;192.168.1.5&quot;)&#125;;</span><br><span class="line">factory.newConnection(addresses);</span><br></pre></td></tr></table></figure>
+
+<p>The RPC (Request/Reply) Pattern</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line">import com.rabbitmq.client.RpcClient;</span><br><span class="line"></span><br><span class="line">RpcClient rpc = new RpcClient(channel, exchangeName, routingKey);</span><br><span class="line"></span><br><span class="line"></span><br><span class="line"></span><br><span class="line">byte[] primitiveCall(byte[] message);</span><br><span class="line">String stringCall(String message)</span><br><span class="line">Map mapCall(Map message)</span><br><span class="line">Map mapCall(Object[] keyValuePairs)</span><br></pre></td></tr></table></figure>
+    </div>
+
+    
+    
+    
+
+    <footer class="post-footer">
+          <div class="reward-container">
+  <div>Buy me a coffee</div>
+  <button>
+    Donate
+  </button>
+  <div class="post-reward">
+      <div>
+        <img src="/hexo/images/wechatpay.png" alt="Absurd WeChat Pay">
+        <span>WeChat Pay</span>
+      </div>
+
+  </div>
+</div>
+
+          <div class="post-tags">
+              <a href="/hexo/tags/RabbitMQ/" rel="tag"># RabbitMQ</a>
+          </div>
+
+        
+
+          <div class="post-nav">
+            <div class="post-nav-item">
+                <a href="/hexo/post/45ab4f18.html" rel="prev" title="使用gradle构建一个web项目">
+                  <i class="fa fa-chevron-left"></i> 使用gradle构建一个web项目
+                </a>
+            </div>
+            <div class="post-nav-item">
+                <a href="/hexo/post/effa6b88.html" rel="next" title="mongodb">
+                  mongodb <i class="fa fa-chevron-right"></i>
+                </a>
+            </div>
+          </div>
+    </footer>
+  </article>
+</div>
+
+
+
+
+
+
+</div>
+  </main>
+
+  <footer class="footer">
+    <div class="footer-inner">
+
+
+<div class="copyright">
+  &copy; 
+  <span itemprop="copyrightYear">2022</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">Absurd</span>
+</div>
+  <div class="powered-by">Powered by <a href="https://hexo.io/" rel="noopener" target="_blank">Hexo</a> & <a href="https://theme-next.js.org/mist/" rel="noopener" target="_blank">NexT.Mist</a>
+  </div>
+
+    </div>
+  </footer>
+
+  
+  <script src="https://cdn.jsdelivr.net/npm/animejs@3.2.1/lib/anime.min.js" integrity="sha256-XL2inqUJaslATFnHdJOi9GfQ60on8Wx1C2H8DYiN1xY=" crossorigin="anonymous"></script>
+<script src="/hexo/js/comments.js"></script><script src="/hexo/js/utils.js"></script><script src="/hexo/js/motion.js"></script><script src="/hexo/js/schemes/muse.js"></script><script src="/hexo/js/next-boot.js"></script>
+
+  
+<script src="https://cdn.jsdelivr.net/npm/hexo-generator-searchdb@1.4.0/dist/search.js" integrity="sha256-vXZMYLEqsROAXkEw93GGIvaB2ab+QW6w3+1ahD9nXXA=" crossorigin="anonymous"></script>
+<script src="/hexo/js/third-party/search/local-search.js"></script>
+
+
+
+
+
+  
+
+
+
+
+
+</body>
+</html>

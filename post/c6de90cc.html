@@ -1,0 +1,1574 @@
+<!DOCTYPE html>
+<html lang="zh-Hans">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width">
+<meta name="theme-color" content="#222" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#222" media="(prefers-color-scheme: dark)">
+<meta name="generator" content="Hexo 6.0.0">
+
+
+  <link rel="apple-touch-icon" sizes="180x180" href="/hexo/images/apple-touch-icon-next.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/hexo/images/favicon-32x32-next.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/hexo/images/favicon-16x16-next.png">
+  <link rel="mask-icon" href="/hexo/images/logo.svg" color="#222">
+
+<link rel="stylesheet" href="/hexo/css/main.css">
+
+
+
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@5.15.4/css/all.min.css" integrity="sha256-mUZM63G8m73Mcidfrv5E+Y61y7a12O5mW4ezU3bxqW4=" crossorigin="anonymous">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/animate.css@3.1.1/animate.min.css" integrity="sha256-PR7ttpcvz8qrF57fur/yAx1qXMFJeJFiA6pSzWi0OIE=" crossorigin="anonymous">
+
+<script class="next-config" data-name="main" type="application/json">{"hostname":"www1350.github.io","root":"/hexo/","images":"/hexo/images","scheme":"Mist","darkmode":true,"version":"8.9.0","exturl":false,"sidebar":{"position":"left","display":"post","padding":18,"offset":12},"copycode":false,"bookmark":{"enable":false,"color":"#222","save":"auto"},"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"stickytabs":false,"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"fadeInDown","post_body":"fadeInDown","coll_header":"fadeInLeft","sidebar":"fadeInUp"}},"prism":false,"i18n":{"placeholder":"Searching...","empty":"We didn't find any results for the search: ${query}","hits_time":"${hits} results found in ${time} ms","hits":"${hits} results found"},"path":"/hexo/search.xml","localsearch":{"enable":true,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":true}}</script><script src="/hexo/js/config.js"></script>
+<meta name="description" content="1.redis数据结构 简单字符串redis专门封装了一个叫SDS的数据结构 1234567891011struct sdshdr &amp;#123;    &#x2F;&#x2F; 记录 buf 数组中已使用字节的数量    &#x2F;&#x2F; 等于 SDS 所保存字符串的长度    int len;    &#x2F;&#x2F; 记录 buf 数组中未使用字节的数量    int free;    &#x2F;&#x2F; 字节数组，用于保存字符串    char bu">
+<meta property="og:type" content="article">
+<meta property="og:title" content="redis设计与实现 阅读笔记">
+<meta property="og:url" content="https://www1350.github.io/hexo/post/c6de90cc.html">
+<meta property="og:site_name" content="Absurd博客">
+<meta property="og:description" content="1.redis数据结构 简单字符串redis专门封装了一个叫SDS的数据结构 1234567891011struct sdshdr &amp;#123;    &#x2F;&#x2F; 记录 buf 数组中已使用字节的数量    &#x2F;&#x2F; 等于 SDS 所保存字符串的长度    int len;    &#x2F;&#x2F; 记录 buf 数组中未使用字节的数量    int free;    &#x2F;&#x2F; 字节数组，用于保存字符串    char bu">
+<meta property="og:locale">
+<meta property="og:image" content="https://user-images.githubusercontent.com/7789698/30947484-9f4c6148-a43c-11e7-8ea0-7c1772c45dab.png">
+<meta property="og:image" content="https://user-images.githubusercontent.com/7789698/30947884-e653020c-a43e-11e7-8692-0afa793643a5.png">
+<meta property="og:image" content="https://user-images.githubusercontent.com/7789698/30947756-fd52851e-a43d-11e7-8401-edab070fb25f.png">
+<meta property="og:image" content="https://user-images.githubusercontent.com/7789698/30947766-13d71c50-a43e-11e7-97c3-79d7595df328.png">
+<meta property="og:image" content="https://user-images.githubusercontent.com/7789698/30947776-2a5fdf48-a43e-11e7-9280-7da4112f1fd5.png">
+<meta property="og:image" content="https://user-images.githubusercontent.com/7789698/30947789-3d2738a6-a43e-11e7-92f8-214bcc0c63ab.png">
+<meta property="og:image" content="https://user-images.githubusercontent.com/7789698/30948189-d2db4002-a440-11e7-8e25-6102a31d740e.png">
+<meta property="og:image" content="https://user-images.githubusercontent.com/7789698/30948205-e30d41b4-a440-11e7-81c8-233008f63d47.png">
+<meta property="og:image" content="https://user-images.githubusercontent.com/7789698/30948239-15dd7988-a441-11e7-94a1-4abf8aea7ec3.png">
+<meta property="og:image" content="https://user-images.githubusercontent.com/7789698/30948262-4073db6a-a441-11e7-9a09-397fda3aad4d.png">
+<meta property="og:image" content="https://user-images.githubusercontent.com/7789698/30948275-4ecc74f6-a441-11e7-95dd-3a949dce7868.png">
+<meta property="og:image" content="https://user-images.githubusercontent.com/7789698/30948471-d65552d4-a442-11e7-9570-3422d7570b40.png">
+<meta property="og:image" content="https://user-images.githubusercontent.com/7789698/30948529-1574ae24-a443-11e7-9c56-87f4047aeb57.png">
+<meta property="og:image" content="https://user-images.githubusercontent.com/7789698/30948577-86fe8d4e-a443-11e7-8700-e9ab993d2bfb.png">
+<meta property="og:image" content="https://user-images.githubusercontent.com/7789698/30948645-d81d4d82-a443-11e7-9f03-1141889620b2.png">
+<meta property="og:image" content="https://user-images.githubusercontent.com/7789698/30949299-1988948a-a448-11e7-999d-3022b762da23.png">
+<meta property="og:image" content="https://user-images.githubusercontent.com/7789698/30949304-28391518-a448-11e7-89b0-409f58f7b079.png">
+<meta property="og:image" content="https://user-images.githubusercontent.com/7789698/30949367-7e5f2860-a448-11e7-8339-6cefb372aa0e.png">
+<meta property="og:image" content="https://user-images.githubusercontent.com/7789698/30951893-ec80c1f0-a457-11e7-8c93-374095b0234f.png">
+<meta property="og:image" content="https://user-images.githubusercontent.com/7789698/30952389-48202166-a45a-11e7-87f9-7f641db990a8.png">
+<meta property="og:image" content="https://user-images.githubusercontent.com/7789698/30952777-c41403b8-a45b-11e7-9cfc-d17d250c8f40.png">
+<meta property="og:image" content="https://user-images.githubusercontent.com/7789698/30952800-da4a106e-a45b-11e7-8b36-32757f62cd40.png">
+<meta property="og:image" content="https://user-images.githubusercontent.com/7789698/30953004-c158d1ca-a45c-11e7-9a67-c8ea8966fcc7.png">
+<meta property="og:image" content="https://user-images.githubusercontent.com/7789698/30953007-c2a45824-a45c-11e7-9ac8-55f067e9898b.png">
+<meta property="og:image" content="https://user-images.githubusercontent.com/7789698/30953216-7d7ff108-a45d-11e7-9f90-ae3426492096.png">
+<meta property="og:image" content="https://user-images.githubusercontent.com/7789698/30953264-a6e83a0a-a45d-11e7-8849-c056d07b85a7.png">
+<meta property="og:image" content="https://user-images.githubusercontent.com/7789698/30953273-b5c7243c-a45d-11e7-8323-b8f25f2b5187.png">
+<meta property="og:image" content="https://user-images.githubusercontent.com/7789698/30953287-c35d0026-a45d-11e7-981d-273db0f853f8.png">
+<meta property="og:image" content="https://user-images.githubusercontent.com/7789698/30953489-c2f6d85e-a45e-11e7-97e7-543618fad97a.png">
+<meta property="og:image" content="https://user-images.githubusercontent.com/7789698/30953604-36ae23ba-a45f-11e7-9264-b9b9ba6565dd.png">
+<meta property="og:image" content="https://user-images.githubusercontent.com/7789698/30954135-a2993f9a-a461-11e7-9eae-d5c8ea98f996.png">
+<meta property="og:image" content="https://user-images.githubusercontent.com/7789698/30954158-baaaab46-a461-11e7-9cb2-8886e331b927.png">
+<meta property="og:image" content="https://user-images.githubusercontent.com/7789698/30954310-404deb50-a462-11e7-8bb7-560f7a946b1e.png">
+<meta property="og:image" content="https://user-images.githubusercontent.com/7789698/30954327-545efdfa-a462-11e7-901f-ef8ea9b90d37.png">
+<meta property="og:image" content="https://user-images.githubusercontent.com/7789698/30954364-7456234a-a462-11e7-9d9c-b775c31ebbf5.png">
+<meta property="og:image" content="https://user-images.githubusercontent.com/7789698/30954458-d2490634-a462-11e7-8dbb-9f61d8058d17.png">
+<meta property="og:image" content="https://user-images.githubusercontent.com/7789698/30954472-e529b758-a462-11e7-92d3-eb843fa11494.png">
+<meta property="og:image" content="https://user-images.githubusercontent.com/7789698/30954508-feab27f2-a462-11e7-9310-a8f06db5899c.png">
+<meta property="og:image" content="https://user-images.githubusercontent.com/7789698/30954520-07d5e196-a463-11e7-833c-a950e122e357.png">
+<meta property="og:image" content="https://user-images.githubusercontent.com/7789698/30954573-44344f1a-a463-11e7-9937-f202bd13f84b.png">
+<meta property="og:image" content="https://user-images.githubusercontent.com/7789698/30954687-abdd05a8-a463-11e7-81d7-23810c2e3c94.png">
+<meta property="og:image" content="https://user-images.githubusercontent.com/7789698/30954715-c2a1bb30-a463-11e7-8ef3-a356a3953cc9.png">
+<meta property="og:image" content="https://user-images.githubusercontent.com/7789698/30955209-67be740e-a465-11e7-81d5-727da5f34484.png">
+<meta property="og:image" content="https://user-images.githubusercontent.com/7789698/30955855-c032d600-a467-11e7-8699-9c88744eba2a.png">
+<meta property="og:image" content="https://user-images.githubusercontent.com/7789698/30956342-98488282-a469-11e7-919d-d0b5af2a405d.png">
+<meta property="og:image" content="https://user-images.githubusercontent.com/7789698/30958265-2cdfc2a2-a46f-11e7-9bed-b456ce0760c9.png">
+<meta property="og:image" content="https://user-images.githubusercontent.com/7789698/30958923-315077b2-a471-11e7-867f-15a4ee350dda.png">
+<meta property="og:image" content="https://user-images.githubusercontent.com/7789698/30959044-950343a2-a471-11e7-925c-f94ce82a3995.png">
+<meta property="og:image" content="https://user-images.githubusercontent.com/7789698/30960298-33b7c72c-a475-11e7-8a1b-f2ffe510df96.png">
+<meta property="og:image" content="https://user-images.githubusercontent.com/7789698/30960377-64b676c0-a475-11e7-9dee-d0edcbcd3a30.png">
+<meta property="og:image" content="https://user-images.githubusercontent.com/7789698/30960614-1ed7a902-a476-11e7-817e-3fe42e095c2b.png">
+<meta property="og:image" content="https://user-images.githubusercontent.com/7789698/30960653-3dd78516-a476-11e7-80a9-b96951fb733c.png">
+<meta property="og:image" content="https://user-images.githubusercontent.com/7789698/30960690-59c4313e-a476-11e7-8652-1eabd5e35054.png">
+<meta property="og:image" content="https://user-images.githubusercontent.com/7789698/30960728-7680800c-a476-11e7-9321-7c17ff15f041.png">
+<meta property="og:image" content="https://user-images.githubusercontent.com/7789698/30962201-75404d30-a47b-11e7-8f0c-29ba45be8932.png">
+<meta property="og:image" content="https://user-images.githubusercontent.com/7789698/30962347-f7021b0a-a47b-11e7-9f53-7db8a3818ab6.png">
+<meta property="og:image" content="https://user-images.githubusercontent.com/7789698/30962355-fe5ce376-a47b-11e7-8373-a0750e4aac54.png">
+<meta property="og:image" content="https://user-images.githubusercontent.com/7789698/30962363-045127f6-a47c-11e7-805e-2a7568d9e580.png">
+<meta property="og:image" content="https://user-images.githubusercontent.com/7789698/30962380-15c00106-a47c-11e7-944f-162fc1594086.png">
+<meta property="og:image" content="https://user-images.githubusercontent.com/7789698/30962518-aaeae3e0-a47c-11e7-9e7e-49d70d108122.png">
+<meta property="article:published_time" content="2017-09-28T14:40:56.000Z">
+<meta property="article:modified_time" content="2022-01-28T07:09:17.736Z">
+<meta property="article:author" content="Absurd">
+<meta property="article:tag" content="笔记">
+<meta property="article:tag" content="redis">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="https://user-images.githubusercontent.com/7789698/30947484-9f4c6148-a43c-11e7-8ea0-7c1772c45dab.png">
+
+
+<link rel="canonical" href="https://www1350.github.io/hexo/post/c6de90cc.html">
+
+
+
+<script class="next-config" data-name="page" type="application/json">{"sidebar":"","isHome":false,"isPost":true,"lang":"zh-Hans","comments":true,"permalink":"https://www1350.github.io/hexo/post/c6de90cc.html","path":"post/c6de90cc.html","title":"redis设计与实现 阅读笔记"}</script>
+
+<script class="next-config" data-name="calendar" type="application/json">""</script>
+<title>redis设计与实现 阅读笔记 | Absurd博客</title>
+  
+
+
+
+
+  <noscript>
+    <link rel="stylesheet" href="/hexo/css/noscript.css">
+  </noscript>
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage" class="use-motion">
+  <div class="headband"></div>
+
+  <main class="main">
+    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="Toggle navigation bar" role="button">
+        <span class="toggle-line"></span>
+        <span class="toggle-line"></span>
+        <span class="toggle-line"></span>
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/hexo/" class="brand" rel="start">
+      <i class="logo-line"></i>
+      <p class="site-title">Absurd博客</p>
+      <i class="logo-line"></i>
+    </a>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger">
+        <i class="fa fa-search fa-fw fa-lg"></i>
+    </div>
+  </div>
+</div>
+
+
+
+<nav class="site-nav">
+  <ul class="main-menu menu">
+        <li class="menu-item menu-item-home"><a href="/hexo/" rel="section"><i class="fa fa-home fa-fw"></i>Home</a></li>
+        <li class="menu-item menu-item-about"><a href="/hexo/about/" rel="section"><i class="fa fa-user fa-fw"></i>About</a></li>
+        <li class="menu-item menu-item-tags"><a href="/hexo/tags/" rel="section"><i class="fa fa-tags fa-fw"></i>Tags</a></li>
+        <li class="menu-item menu-item-categories"><a href="/hexo/categories/" rel="section"><i class="fa fa-th fa-fw"></i>Categories</a></li>
+        <li class="menu-item menu-item-archives"><a href="/hexo/archives/" rel="section"><i class="fa fa-archive fa-fw"></i>Archives</a></li>
+        <li class="menu-item menu-item-bookmarks"><a href="/hexo/bookmarks/" rel="section"><i class="fa fa-archive fa-fw"></i>bookmarks</a></li>
+      <li class="menu-item menu-item-search">
+        <a role="button" class="popup-trigger"><i class="fa fa-search fa-fw"></i>Search
+        </a>
+      </li>
+  </ul>
+</nav>
+
+
+
+  <div class="search-pop-overlay">
+    <div class="popup search-popup"><div class="search-header">
+  <span class="search-icon">
+    <i class="fa fa-search"></i>
+  </span>
+  <div class="search-input-container">
+    <input autocomplete="off" autocapitalize="off" maxlength="80"
+           placeholder="Searching..." spellcheck="false"
+           type="search" class="search-input">
+  </div>
+  <span class="popup-btn-close" role="button">
+    <i class="fa fa-times-circle"></i>
+  </span>
+</div>
+<div class="search-result-container no-result">
+  <div class="search-result-icon">
+    <i class="fa fa-spinner fa-pulse fa-5x"></i>
+  </div>
+</div>
+
+    </div>
+  </div>
+
+</div>
+        
+  
+  <div class="toggle sidebar-toggle" role="button">
+    <span class="toggle-line"></span>
+    <span class="toggle-line"></span>
+    <span class="toggle-line"></span>
+  </div>
+
+  <aside class="sidebar">
+
+    <div class="sidebar-inner sidebar-nav-active sidebar-toc-active">
+      <ul class="sidebar-nav">
+        <li class="sidebar-nav-toc">
+          Table of Contents
+        </li>
+        <li class="sidebar-nav-overview">
+          Overview
+        </li>
+      </ul>
+
+      <div class="sidebar-panel-container">
+        <!--noindex-->
+        <div class="post-toc-wrap sidebar-panel">
+            <div class="post-toc animated"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#%E7%AE%80%E5%8D%95%E5%AD%97%E7%AC%A6%E4%B8%B2"><span class="nav-number">1.</span> <span class="nav-text">简单字符串</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#%E9%93%BE%E8%A1%A8"><span class="nav-number">2.</span> <span class="nav-text">链表</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#%E5%AD%97%E5%85%B8"><span class="nav-number">3.</span> <span class="nav-text">字典</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#%E8%B7%B3%E8%B7%83%E8%A1%A8"><span class="nav-number">4.</span> <span class="nav-text">跳跃表</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#%E6%95%B4%E6%95%B0%E9%9B%86%E5%90%88"><span class="nav-number">5.</span> <span class="nav-text">整数集合</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#%E5%8E%8B%E7%BC%A9%E5%88%97%E8%A1%A8"><span class="nav-number">6.</span> <span class="nav-text">压缩列表</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#%E5%AF%B9%E8%B1%A1"><span class="nav-number">7.</span> <span class="nav-text">对象</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#%E5%8D%95%E6%9C%BA%E6%95%B0%E6%8D%AE%E5%BA%93%E7%9A%84%E5%AE%9E%E7%8E%B0"><span class="nav-number">8.</span> <span class="nav-text">单机数据库的实现</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#%E6%95%B0%E6%8D%AE%E5%BA%93"><span class="nav-number">8.1.</span> <span class="nav-text">数据库</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#RDB-%E6%8C%81%E4%B9%85%E5%8C%96"><span class="nav-number">8.2.</span> <span class="nav-text">RDB 持久化</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#AOF-%E6%8C%81%E4%B9%85%E5%8C%96"><span class="nav-number">8.3.</span> <span class="nav-text">AOF 持久化</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E4%BA%8B%E4%BB%B6"><span class="nav-number">8.4.</span> <span class="nav-text">事件</span></a></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#%E5%A4%9A%E6%9C%BA%E6%95%B0%E6%8D%AE%E5%BA%93%E7%9A%84%E5%AE%9E%E7%8E%B0"><span class="nav-number">9.</span> <span class="nav-text">多机数据库的实现</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#%E6%97%A7%E7%89%88%E5%A4%8D%E5%88%B6%E5%8A%9F%E8%83%BD%E7%9A%84%E5%AE%9E%E7%8E%B0"><span class="nav-number">9.1.</span> <span class="nav-text">旧版复制功能的实现</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#Sentinel"><span class="nav-number">9.2.</span> <span class="nav-text">Sentinel</span></a></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#%E7%8B%AC%E7%AB%8B%E5%8A%9F%E8%83%BD%E7%9A%84%E5%AE%9E%E7%8E%B0"><span class="nav-number">10.</span> <span class="nav-text">独立功能的实现</span></a></li></ol></div>
+        </div>
+        <!--/noindex-->
+
+        <div class="site-overview-wrap sidebar-panel">
+          <div class="site-author site-overview-item animated" itemprop="author" itemscope itemtype="http://schema.org/Person">
+    <img class="site-author-image" itemprop="image" alt="Absurd"
+      src="/hexo/images/avatar.gif">
+  <p class="site-author-name" itemprop="name">Absurd</p>
+  <div class="site-description" itemprop="description"></div>
+</div>
+<div class="site-state-wrap site-overview-item animated">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+        <a href="/hexo/archives/">
+          <span class="site-state-item-count">75</span>
+          <span class="site-state-item-name">posts</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+          <a href="/hexo/categories/">
+        <span class="site-state-item-count">17</span>
+        <span class="site-state-item-name">categories</span></a>
+      </div>
+      <div class="site-state-item site-state-tags">
+          <a href="/hexo/tags/">
+        <span class="site-state-item-count">46</span>
+        <span class="site-state-item-name">tags</span></a>
+      </div>
+  </nav>
+</div>
+  <div class="links-of-author site-overview-item animated">
+      <span class="links-of-author-item">
+        <a href="https://github.com/www1350" title="GitHub → https:&#x2F;&#x2F;github.com&#x2F;www1350" rel="noopener" target="_blank"><i class="fab fa-github fa-fw"></i>GitHub</a>
+      </span>
+      <span class="links-of-author-item">
+        <a href="mailto:www_1350@163.com" title="E-Mail → mailto:www_1350@163.com" rel="noopener" target="_blank"><i class="fa fa-envelope fa-fw"></i>E-Mail</a>
+      </span>
+  </div>
+
+
+
+        </div>
+      </div>
+    </div>
+  </aside>
+  <div class="sidebar-dimmer"></div>
+
+
+    </header>
+
+    
+  <div class="back-to-top" role="button" aria-label="Back to top">
+    <i class="fa fa-arrow-up"></i>
+    <span>0%</span>
+  </div>
+
+<noscript>
+  <div class="noscript-warning">Theme NexT works best with JavaScript enabled</div>
+</noscript>
+
+
+    <div class="main-inner post posts-expand">
+
+
+  
+
+
+<div class="post-block">
+  
+  
+
+  <article itemscope itemtype="http://schema.org/Article" class="post-content" lang="zh-Hans">
+    <link itemprop="mainEntityOfPage" href="https://www1350.github.io/hexo/post/c6de90cc.html">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/hexo/images/avatar.gif">
+      <meta itemprop="name" content="Absurd">
+      <meta itemprop="description" content="">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Absurd博客">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          redis设计与实现 阅读笔记
+        </h1>
+
+        <div class="post-meta-container">
+          <div class="post-meta">
+    <span class="post-meta-item">
+      <span class="post-meta-item-icon">
+        <i class="far fa-calendar"></i>
+      </span>
+      <span class="post-meta-item-text">Posted on</span>
+
+      <time title="Created: 2017-09-28 22:40:56" itemprop="dateCreated datePublished" datetime="2017-09-28T22:40:56+08:00">2017-09-28</time>
+    </span>
+    <span class="post-meta-item">
+      <span class="post-meta-item-icon">
+        <i class="far fa-calendar-check"></i>
+      </span>
+      <span class="post-meta-item-text">Edited on</span>
+      <time title="Modified: 2022-01-28 15:09:17" itemprop="dateModified" datetime="2022-01-28T15:09:17+08:00">2022-01-28</time>
+    </span>
+    <span class="post-meta-item">
+      <span class="post-meta-item-icon">
+        <i class="far fa-folder"></i>
+      </span>
+      <span class="post-meta-item-text">In</span>
+        <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+          <a href="/hexo/categories/%E6%95%B0%E6%8D%AE%E5%BA%93/" itemprop="url" rel="index"><span itemprop="name">数据库</span></a>
+        </span>
+    </span>
+
+  
+</div>
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+        <p>1.redis数据结构</p>
+<h1 id="简单字符串"><a href="#简单字符串" class="headerlink" title="简单字符串"></a>简单字符串</h1><p>redis专门封装了一个叫SDS的数据结构</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line"><span class="class"><span class="keyword">struct</span> <span class="title">sdshdr</span> &#123;</span></span><br><span class="line">    <span class="comment">// 记录 buf 数组中已使用字节的数量</span></span><br><span class="line">    <span class="comment">// 等于 SDS 所保存字符串的长度</span></span><br><span class="line">    <span class="keyword">int</span> len;</span><br><span class="line"></span><br><span class="line">    <span class="comment">// 记录 buf 数组中未使用字节的数量</span></span><br><span class="line">    <span class="keyword">int</span> <span class="built_in">free</span>;</span><br><span class="line"></span><br><span class="line">    <span class="comment">// 字节数组，用于保存字符串</span></span><br><span class="line">    <span class="keyword">char</span> buf[];</span><br><span class="line">&#125;;</span><br></pre></td></tr></table></figure>
+
+
+<ul>
+<li>free 属性的值为 0 ， 表示这个 SDS 没有分配任何未使用空间。</li>
+<li>len 属性的值为 5 ， 表示这个 SDS 保存了一个五字节长的字符串。（strlen的复杂度就从O(n)变为O(1)）</li>
+<li>buf 属性是一个 char 类型的数组， 数组的前五个字节分别保存了 ‘R’ 、 ‘e’ 、 ‘d’ 、 ‘i’ 、 ‘s’ 五个字符， 而最后一个字节则保存了空字符 ‘\0’ 。</li>
+</ul>
+<p><img src="https://user-images.githubusercontent.com/7789698/30947484-9f4c6148-a43c-11e7-8ea0-7c1772c45dab.png" alt="image"></p>
+<p><img src="https://user-images.githubusercontent.com/7789698/30947884-e653020c-a43e-11e7-8692-0afa793643a5.png" alt="2015-09-13_55f50d86a66ae"></p>
+<p>优点：</p>
+<ul>
+<li>常数复杂度获取字符串长度</li>
+<li>杜绝缓冲区溢出<br>举个例子， &lt;string.h&gt;/strcat 函数可以将 src 字符串中的内容拼接到 dest 字符串的末尾：</li>
+</ul>
+<p><code>char *strcat(char *dest, const char *src);</code></p>
+<p>因为 C 字符串不记录自身的长度， 所以 strcat 假定用户在执行这个函数时， 已经为 dest 分配了足够多的内存， 可以容纳 src 字符串中的所有内容， 而一旦这个假定不成立时， 就会产生缓冲区溢出。<br>举个例子， 假设程序里有两个在内存中紧邻着的 C 字符串 s1 和 s2 ， 其中 s1 保存了字符串 “Redis” ， 而 s2 则保存了字符串 “MongoDB”， 如图 2-7 所示。<br><img src="https://user-images.githubusercontent.com/7789698/30947756-fd52851e-a43d-11e7-8401-edab070fb25f.png" alt="2015-09-13_55f50e28c1620"></p>
+<p><code>strcat(s1, &quot; Cluster&quot;);</code></p>
+<p>将 s1 的内容修改为 “Redis Cluster” ， 但粗心的他却忘了在执行 strcat 之前为 s1 分配足够的空间， 那么在 strcat 函数执行之后， s1 的数据将溢出到 s2 所在的空间中， 导致 s2 保存的内容被意外地修改， 如图 2-8 所示。<br><img src="https://user-images.githubusercontent.com/7789698/30947766-13d71c50-a43e-11e7-97c3-79d7595df328.png" alt="2015-09-13_55f50e29e04a2"></p>
+<p>与 C 字符串不同， SDS 的空间分配策略完全杜绝了发生缓冲区溢出的可能性： 当 SDS API 需要对 SDS 进行修改时， API 会先检查 SDS 的空间是否满足修改所需的要求， 如果不满足的话， API 会自动将 SDS 的空间扩展至执行修改所需的大小， 然后才执行实际的修改操作， 所以使用 SDS 既不需要手动修改 SDS 的空间大小， 也不会出现前面所说的缓冲区溢出问题。</p>
+<p>举个例子， SDS 的 API 里面也有一个用于执行拼接操作的 sdscat 函数， 它可以将一个 C 字符串拼接到给定 SDS 所保存的字符串的后面， 但是在执行拼接操作之前， sdscat 会先检查给定 SDS 的空间是否足够， 如果不够的话， sdscat 就会先扩展 SDS 的空间， 然后才执行拼接操作。</p>
+<p><img src="https://user-images.githubusercontent.com/7789698/30947776-2a5fdf48-a43e-11e7-9280-7da4112f1fd5.png" alt="image"></p>
+<p><img src="https://user-images.githubusercontent.com/7789698/30947789-3d2738a6-a43e-11e7-92f8-214bcc0c63ab.png" alt="image"></p>
+<ul>
+<li>减少修改字符串时带来的内存重分配次数<br> 因为 C 字符串并不记录自身的长度， 所以对于一个包含了 N 个字符的 C 字符串来说， 这个 C 字符串的底层实现总是一个 N+1 个字符长的数组（额外的一个字符空间用于保存空字符）。<br> 因为 C 字符串的长度和底层数组的长度之间存在着这种关联性， 所以每次增长或者缩短一个 C 字符串， 程序都总要对保存这个 C 字符串的数组进行一次内存重分配操作：</li>
+</ul>
+<p>如果程序执行的是增长字符串的操作， 比如拼接操作（append）， 那么在执行这个操作之前， 程序需要先通过内存重分配来扩展底层数组的空间大小 —— 如果忘了这一步就会产生缓冲区溢出。<br>如果程序执行的是缩短字符串的操作， 比如截断操作（trim）， 那么在执行这个操作之后， 程序需要通过内存重分配来释放字符串不再使用的那部分空间 —— 如果忘了这一步就会产生内存泄漏。<br>举个例子， 如果我们持有一个值为 “Redis” 的 C 字符串 s ， 那么为了将 s 的值改为 “Redis Cluster” ， 在执行：<br><code>strcat(s, &quot; Cluster&quot;);</code></p>
+<p>为了避免 C 字符串的这种缺陷， SDS 通过未使用空间解除了字符串长度和底层数组长度之间的关联： 在 SDS 中， buf 数组的长度不一定就是字符数量加一， 数组里面可以包含未使用的字节， 而这些字节的数量就由 SDS 的 free 属性记录。<br>通过未使用空间， SDS 实现了空间预分配和惰性空间释放两种优化策略。</p>
+<ul>
+<li>空间预分配<br>空间预分配用于优化 SDS 的字符串增长操作： 当 SDS 的 API 对一个 SDS 进行修改， 并且需要对 SDS 进行空间扩展的时候， 程序不仅会为 SDS 分配修改所必须要的空间， 还会为 SDS 分配额外的未使用空间。</li>
+</ul>
+<p>其中， 额外分配的未使用空间数量由以下公式决定：</p>
+<p>如果对 SDS 进行修改之后， SDS 的长度（也即是 len 属性的值）将小于 1 MB ， 那么程序分配和 len 属性同样大小的未使用空间， 这时 SDS len 属性的值将和 free 属性的值相同。 举个例子， 如果进行修改之后， SDS 的 len 将变成 13 字节， 那么程序也会分配13 字节的未使用空间， SDS 的 buf 数组的实际长度将变成 13 + 13 + 1 = 27 字节（额外的一字节用于保存空字符）。</p>
+<p>如果对 SDS 进行修改之后， SDS 的长度将大于等于 1 MB ， 那么程序会分配 1 MB 的未使用空间。 举个例子， 如果进行修改之后， SDS 的 len 将变成 30 MB ， 那么程序会分配 1 MB 的未使用空间， SDS 的 buf 数组的实际长度将为 30 MB + 1 MB + 1 byte 。</p>
+<p><code>sdscat(s, &quot; Cluster&quot;);</code></p>
+<p>那么 sdscat 将执行一次内存重分配操作， 将 SDS 的长度修改为 13 字节， 并将 SDS 的未使用空间同样修改为 13 字节， 如图 2-12 所示。</p>
+<p><img src="https://user-images.githubusercontent.com/7789698/30948189-d2db4002-a440-11e7-8e25-6102a31d740e.png" alt="2015-09-13_55f50e329713a"></p>
+<p><img src="https://user-images.githubusercontent.com/7789698/30948205-e30d41b4-a440-11e7-81c8-233008f63d47.png" alt="2015-09-13_55f50e33eb3a4"></p>
+<p>如果这时， 我们再次对 s 执行：<br><code>sdscat(s, &quot; Tutorial&quot;);</code><br>那么这次 sdscat 将不需要执行内存重分配： 因为未使用空间里面的 13 字节足以保存 9 字节的 “ Tutorial” ， 执行 sdscat 之后的 SDS 如图 2-13 所示。<br><img src="https://user-images.githubusercontent.com/7789698/30948239-15dd7988-a441-11e7-94a1-4abf8aea7ec3.png" alt="image"></p>
+<p>在扩展 SDS 空间之前， SDS API 会先检查未使用空间是否足够， 如果足够的话， API 就会直接使用未使用空间， 而无须执行内存重分配。</p>
+<p>通过这种预分配策略， SDS 将连续增长 N 次字符串所需的内存重分配次数从必定 N 次降低为最多 N 次。</p>
+<ul>
+<li>惰性空间释放</li>
+</ul>
+<p>惰性空间释放用于优化 SDS 的字符串缩短操作： 当 SDS 的 API 需要缩短 SDS 保存的字符串时， 程序并不立即使用内存重分配来回收缩短后多出来的字节， 而是使用 free 属性将这些字节的数量记录起来， 并等待将来使用。<br>举个例子， sdstrim 函数接受一个 SDS 和一个 C 字符串作为参数， 从 SDS 左右两端分别移除所有在 C 字符串中出现过的字符。</p>
+<p>sdstrim(s, “XY”);   // 移除 SDS 字符串中的所有 ‘X’ 和 ‘Y’</p>
+<p>会将 SDS 修改成图 2-15 所示的样子。</p>
+<p><img src="https://user-images.githubusercontent.com/7789698/30948262-4073db6a-a441-11e7-9a09-397fda3aad4d.png" alt="image"><br><img src="https://user-images.githubusercontent.com/7789698/30948275-4ecc74f6-a441-11e7-95dd-3a949dce7868.png" alt="image"></p>
+<p>注意执行 sdstrim 之后的 SDS 并没有释放多出来的 8 字节空间， 而是将这 8 字节空间作为未使用空间保留在了 SDS 里面， 如果将来要对 SDS 进行增长操作的话， 这些未使用空间就可能会派上用场。</p>
+<ul>
+<li>二进制安全<br> SDS 的 API 都是二进制安全的（binary-safe）： 所有 SDS API 都会以处理二进制的方式来处理 SDS 存放在 buf 数组里的数据， 程序不会对其中的数据做任何限制、过滤、或者假设 —— 数据在写入时是什么样的， 它被读取时就是什么样。</li>
+</ul>
+<ul>
+<li>兼容部分 C 字符串函数</li>
+</ul>
+<img width="938" alt="wx20170928-114705 2x" src="https://user-images.githubusercontent.com/7789698/30948471-d65552d4-a442-11e7-9570-3422d7570b40.png">
+
+
+<img width="937" alt="wx20170928-114913 2x" src="https://user-images.githubusercontent.com/7789698/30948529-1574ae24-a443-11e7-9c56-87f4047aeb57.png">
+
+
+<h1 id="链表"><a href="#链表" class="headerlink" title="链表"></a>链表</h1><figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br></pre></td><td class="code"><pre><span class="line">redis&gt; LLEN integers</span><br><span class="line">(integer) 1024</span><br><span class="line"></span><br><span class="line">redis&gt; LRANGE integers 0 10</span><br><span class="line">1) &quot;1&quot;</span><br><span class="line">2) &quot;2&quot;</span><br><span class="line">3) &quot;3&quot;</span><br><span class="line">4) &quot;4&quot;</span><br><span class="line">5) &quot;5&quot;</span><br><span class="line">6) &quot;6&quot;</span><br><span class="line">7) &quot;7&quot;</span><br><span class="line">8) &quot;8&quot;</span><br><span class="line">9) &quot;9&quot;</span><br><span class="line">10) &quot;10&quot;</span><br><span class="line">11) &quot;11&quot;</span><br></pre></td></tr></table></figure>
+
+
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line">typedef struct listNode &#123;</span><br><span class="line"></span><br><span class="line">    // 前置节点</span><br><span class="line">    struct listNode *prev;</span><br><span class="line"></span><br><span class="line">    // 后置节点</span><br><span class="line">    struct listNode *next;</span><br><span class="line"></span><br><span class="line">    // 节点的值</span><br><span class="line">    void *value;</span><br><span class="line"></span><br><span class="line">&#125; listNode;</span><br></pre></td></tr></table></figure>
+
+<p>多个 listNode 可以通过 prev 和 next 指针组成双端链表， 如图 3-1 所示。</p>
+<p><img src="https://user-images.githubusercontent.com/7789698/30948577-86fe8d4e-a443-11e7-8700-e9ab993d2bfb.png" alt="2015-09-13_55f50fad082e3"></p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br></pre></td><td class="code"><pre><span class="line">typedef struct list &#123;</span><br><span class="line"></span><br><span class="line">    // 表头节点</span><br><span class="line">    listNode *head;</span><br><span class="line"></span><br><span class="line">    // 表尾节点</span><br><span class="line">    listNode *tail;</span><br><span class="line"></span><br><span class="line">    // 链表所包含的节点数量</span><br><span class="line">    unsigned long len;</span><br><span class="line"></span><br><span class="line">    // 节点值复制函数</span><br><span class="line">    void *(*dup)(void *ptr);</span><br><span class="line"></span><br><span class="line">    // 节点值释放函数</span><br><span class="line">    void (*free)(void *ptr);</span><br><span class="line"></span><br><span class="line">    // 节点值对比函数</span><br><span class="line">    int (*match)(void *ptr, void *key);</span><br><span class="line"></span><br><span class="line">&#125; list;</span><br></pre></td></tr></table></figure>
+
+<p>list 结构为链表提供了表头指针 head 、表尾指针 tail ， 以及链表长度计数器 len ， 而 dup 、 free 和 match 成员则是用于实现多态链表所需的类型特定函数：</p>
+<p>dup 函数用于复制链表节点所保存的值；<br>free 函数用于释放链表节点所保存的值；<br>match 函数则用于对比链表节点所保存的值和另一个输入值是否相等。</p>
+<p><img src="https://user-images.githubusercontent.com/7789698/30948645-d81d4d82-a443-11e7-9f03-1141889620b2.png" alt="2015-09-13_55f50fb39b6cb"></p>
+<p>Redis 的链表实现的特性可以总结如下：</p>
+<ol>
+<li>双端： 链表节点带有 prev 和 next 指针， 获取某个节点的前置节点和后置节点的复杂度都是 O(1) 。</li>
+<li>无环： 表头节点的 prev 指针和表尾节点的 next 指针都指向 NULL ， 对链表的访问以 NULL 为终点。</li>
+<li>带表头指针和表尾指针： 通过 list 结构的 head 指针和 tail 指针， 程序获取链表的表头节点和表尾节点的复杂度为 O(1) 。</li>
+<li>带链表长度计数器： 程序使用 list 结构的 len 属性来对 list 持有的链表节点进行计数， 程序获取链表中节点数量的复杂度为 O(1)。</li>
+<li>多态： 链表节点使用 void* 指针来保存节点值， 并且可以通过 list 结构的 dup 、 free 、 match 三个属性为节点值设置类型特定函数， 所以链表可以用于保存各种不同类型的值。</li>
+</ol>
+<img width="932" alt="wx20170928-120027 2x" src="https://user-images.githubusercontent.com/7789698/30949299-1988948a-a448-11e7-999d-3022b762da23.png">
+
+<img width="936" alt="wx20170928-120039 2x" src="https://user-images.githubusercontent.com/7789698/30949304-28391518-a448-11e7-89b0-409f58f7b079.png">
+
+<h1 id="字典"><a href="#字典" class="headerlink" title="字典"></a>字典</h1><p>字典， 又称符号表（symbol table）、关联数组（associative array）或者映射（map）， 是一种用于保存键值对（key-value pair）的抽象数据结构。</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line">redis&gt; HLEN website</span><br><span class="line">(integer) 10086</span><br><span class="line"></span><br><span class="line">redis&gt; HGETALL website</span><br><span class="line">1) &quot;Redis&quot;</span><br><span class="line">2) &quot;Redis.io&quot;</span><br><span class="line">3) &quot;MariaDB&quot;</span><br><span class="line">4) &quot;MariaDB.org&quot;</span><br><span class="line">5) &quot;MongoDB&quot;</span><br><span class="line">6) &quot;MongoDB.org&quot;</span><br><span class="line"># ...</span><br></pre></td></tr></table></figure>
+
+<p>其中一个键值对的键为 “Redis” ， 值为 “Redis.io” 。<br>另一个键值对的键为 “MariaDB” ， 值为 “MariaDB.org” ；<br>还有一个键值对的键为 “MongoDB” ， 值为 “MongoDB.org” ；</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br></pre></td><td class="code"><pre><span class="line">typedef struct dictht &#123;</span><br><span class="line"></span><br><span class="line">    // 哈希表数组</span><br><span class="line">    dictEntry **table;</span><br><span class="line"></span><br><span class="line">    // 哈希表大小</span><br><span class="line">    unsigned long size;</span><br><span class="line"></span><br><span class="line">    // 哈希表大小掩码，用于计算索引值</span><br><span class="line">    // 总是等于 size - 1</span><br><span class="line">    unsigned long sizemask;</span><br><span class="line"></span><br><span class="line">    // 该哈希表已有节点的数量</span><br><span class="line">    unsigned long used;</span><br><span class="line"></span><br><span class="line">&#125; dictht;</span><br></pre></td></tr></table></figure>
+
+<p>table 属性是一个数组， 数组中的每个元素都是一个指向 dict.h/dictEntry 结构的指针， 每个 dictEntry 结构保存着一个键值对。<br>size 属性记录了哈希表的大小， 也即是 table 数组的大小， 而 used 属性则记录了哈希表目前已有节点（键值对）的数量。<br>sizemask 属性的值总是等于 size - 1 ， 这个属性和哈希值一起决定一个键应该被放到 table 数组的哪个索引上面。</p>
+<p><img src="https://user-images.githubusercontent.com/7789698/30949367-7e5f2860-a448-11e7-8339-6cefb372aa0e.png" alt="2015-09-13_55f511fc9428c"></p>
+<ul>
+<li>哈希表节点</li>
+</ul>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br></pre></td><td class="code"><pre><span class="line">typedef struct dictEntry &#123;</span><br><span class="line"></span><br><span class="line">    // 键</span><br><span class="line">    void *key;</span><br><span class="line"></span><br><span class="line">    // 值</span><br><span class="line">    union &#123;</span><br><span class="line">        void *val;</span><br><span class="line">        uint64_t u64;</span><br><span class="line">        int64_t s64;</span><br><span class="line">    &#125; v;</span><br><span class="line"></span><br><span class="line">    // 指向下个哈希表节点，形成链表</span><br><span class="line">    struct dictEntry *next;</span><br><span class="line"></span><br><span class="line">&#125; dictEntry;</span><br></pre></td></tr></table></figure>
+
+<p>key 属性保存着键值对中的键， 而 v 属性则保存着键值对中的值， 其中键值对的值可以是一个指针， 或者是一个 uint64_t 整数， 又或者是一个 int64_t 整数。</p>
+<p>next 属性是指向另一个哈希表节点的指针， 这个指针可以将多个哈希值相同的键值对连接在一次， 以此来解决键冲突（collision）的问题。</p>
+<p>举个例子， 图 4-2 就展示了如何通过 next 指针， 将两个索引值相同的键 k1 和 k0 连接在一起。</p>
+<p><img src="https://user-images.githubusercontent.com/7789698/30951893-ec80c1f0-a457-11e7-8c93-374095b0234f.png" alt="2015-09-13_55f51205335f9"></p>
+<ul>
+<li>字典</li>
+</ul>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br></pre></td><td class="code"><pre><span class="line">typedef struct dict &#123;</span><br><span class="line"></span><br><span class="line">    // 类型特定函数</span><br><span class="line">    dictType *type;</span><br><span class="line"></span><br><span class="line">    // 私有数据</span><br><span class="line">    void *privdata;</span><br><span class="line"></span><br><span class="line">    // 哈希表</span><br><span class="line">    dictht ht[2];</span><br><span class="line"></span><br><span class="line">    // rehash 索引</span><br><span class="line">    // 当 rehash 不在进行时，值为 -1</span><br><span class="line">    int rehashidx; /* rehashing not in progress if rehashidx == -1 */</span><br><span class="line"></span><br><span class="line">&#125; dict;</span><br></pre></td></tr></table></figure>
+
+<p>type 属性和 privdata 属性是针对不同类型的键值对， 为创建多态字典而设置的：</p>
+<p>type 属性是一个指向 dictType 结构的指针， 每个 dictType 结构保存了一簇用于操作特定类型键值对的函数， Redis 会为用途不同的字典设置不同的类型特定函数。</p>
+<p>而 privdata 属性则保存了需要传给那些类型特定函数的可选参数。</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br></pre></td><td class="code"><pre><span class="line">typedef struct dictType &#123;</span><br><span class="line"></span><br><span class="line">    // 计算哈希值的函数</span><br><span class="line">    unsigned int (*hashFunction)(const void *key);</span><br><span class="line"></span><br><span class="line">    // 复制键的函数</span><br><span class="line">    void *(*keyDup)(void *privdata, const void *key);</span><br><span class="line"></span><br><span class="line">    // 复制值的函数</span><br><span class="line">    void *(*valDup)(void *privdata, const void *obj);</span><br><span class="line"></span><br><span class="line">    // 对比键的函数</span><br><span class="line">    int (*keyCompare)(void *privdata, const void *key1, const void *key2);</span><br><span class="line"></span><br><span class="line">    // 销毁键的函数</span><br><span class="line">    void (*keyDestructor)(void *privdata, void *key);</span><br><span class="line"></span><br><span class="line">    // 销毁值的函数</span><br><span class="line">    void (*valDestructor)(void *privdata, void *obj);</span><br><span class="line"></span><br><span class="line">&#125; dictType;</span><br></pre></td></tr></table></figure>
+
+<p>ht 属性是一个包含两个项的数组， 数组中的每个项都是一个 dictht 哈希表， 一般情况下， 字典只使用 ht[0] 哈希表， ht[1] 哈希表只会在对 ht[0] 哈希表进行 rehash 时使用。</p>
+<p>除了 ht[1] 之外， 另一个和 rehash 有关的属性就是 rehashidx ： 它记录了 rehash 目前的进度， 如果目前没有在进行 rehash ， 那么它的值为 -1 。</p>
+<p>图 4-3 展示了一个普通状态下（没有进行 rehash）的字典：</p>
+<p><img src="https://user-images.githubusercontent.com/7789698/30952389-48202166-a45a-11e7-87f9-7f641db990a8.png" alt="2015-09-13_55f5120772706"></p>
+<ul>
+<li>哈希算法</li>
+</ul>
+<p>当要将一个新的键值对添加到字典里面时， 程序需要先根据键值对的键计算出哈希值和索引值， 然后再根据索引值， 将包含新键值对的哈希表节点放到哈希表数组的指定索引上面。</p>
+<p>Redis 计算哈希值和索引值的方法如下：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"># 使用字典设置的哈希函数，计算键 key 的哈希值</span><br><span class="line">hash = dict-&gt;type-&gt;hashFunction(key);</span><br><span class="line"></span><br><span class="line"># 使用哈希表的 sizemask 属性和哈希值，计算出索引值</span><br><span class="line"># 根据情况不同， ht[x] 可以是 ht[0] 或者 ht[1]</span><br><span class="line">index = hash &amp; dict-&gt;ht[x].sizemask;</span><br></pre></td></tr></table></figure>
+
+<p><img src="https://user-images.githubusercontent.com/7789698/30952777-c41403b8-a45b-11e7-9cfc-d17d250c8f40.png" alt="2015-09-13_55f5128c90054"></p>
+<p>举个例子， 对于图 4-4 所示的字典来说， 如果我们要将一个键值对 k0 和 v0 添加到字典里面， 那么程序会先使用语句：<br><code>hash = dict-&gt;type-&gt;hashFunction(k0);</code><br>计算键 k0 的哈希值。<br>假设计算得出的哈希值为 8 ， 那么程序会继续使用语句：<br><code>index = hash &amp; dict-&gt;ht[0].sizemask = 8 &amp; 3 = 0;</code><br>计算出键 k0 的索引值 0 ， 这表示包含键值对 k0 和 v0 的节点应该被放置到哈希表数组的索引 0 位置上， 如图 4-5 所示。<br><img src="https://user-images.githubusercontent.com/7789698/30952800-da4a106e-a45b-11e7-8b36-32757f62cd40.png" alt="2015-09-13_55f51293b4642"></p>
+<p>当字典被用作数据库的底层实现， 或者哈希键的底层实现时， Redis 使用 MurmurHash2 算法来计算键的哈希值。</p>
+<p>MurmurHash 算法最初由 Austin Appleby 于 2008 年发明， 这种算法的优点在于， 即使输入的键是有规律的， 算法仍能给出一个很好的随机分布性， 并且算法的计算速度也非常快。</p>
+<p>MurmurHash 算法目前的最新版本为 MurmurHash3 ， 而 Redis 使用的是 MurmurHash2 ， 关于 MurmurHash 算法的更多信息可以参考该算法的主页： <a target="_blank" rel="noopener" href="http://code.google.com/p/smhasher/">http://code.google.com/p/smhasher/</a> </p>
+<ul>
+<li>解决键冲突</li>
+</ul>
+<p>当有两个或以上数量的键被分配到了哈希表数组的同一个索引上面时， 我们称这些键发生了冲突（collision）。</p>
+<p>Redis 的哈希表使用链地址法（separate chaining）来解决键冲突： 每个哈希表节点都有一个 next 指针， 多个哈希表节点可以用 next 指针构成一个单向链表， 被分配到同一个索引上的多个节点可以用这个单向链表连接起来， 这就解决了键冲突的问题。<br>举个例子， 假设程序要将键值对 k2 和 v2 添加到图 4-6 所示的哈希表里面， 并且计算得出 k2 的索引值为 2 ， 那么键 k1 和 k2 将产生冲突， 而解决冲突的办法就是使用 next 指针将键 k2 和 k1 所在的节点连接起来， 如图 4-7 所示。</p>
+<p><img src="https://user-images.githubusercontent.com/7789698/30953004-c158d1ca-a45c-11e7-9a67-c8ea8966fcc7.png" alt="2015-09-13_55f512c4d7f99"></p>
+<p><img src="https://user-images.githubusercontent.com/7789698/30953007-c2a45824-a45c-11e7-9ac8-55f067e9898b.png" alt="2015-09-13_55f512c2524e5"></p>
+<p>因为 dictEntry 节点组成的链表没有指向链表表尾的指针， 所以为了速度考虑， 程序总是将新节点添加到链表的表头位置（复杂度为 O(1)）， 排在其他已有节点的前面。</p>
+<ul>
+<li>rehash<br>随着操作的不断执行， 哈希表保存的键值对会逐渐地增多或者减少， 为了让哈希表的负载因子（load factor）维持在一个合理的范围之内， 当哈希表保存的键值对数量太多或者太少时， 程序需要对哈希表的大小进行相应的扩展或者收缩。</li>
+</ul>
+<p>扩展和收缩哈希表的工作可以通过执行 rehash （重新散列）操作来完成， Redis 对字典的哈希表执行 rehash 的步骤如下：</p>
+<p>为字典的 ht[1] 哈希表分配空间， 这个哈希表的空间大小取决于要执行的操作， 以及 ht[0] 当前包含的键值对数量 （也即是ht[0].used 属性的值）：<br>如果执行的是扩展操作， 那么 ht[1] 的大小为第一个大于等于 ht[0].used * 2 的 2^n （2 的 n 次方幂）；<br>如果执行的是收缩操作， 那么 ht[1] 的大小为第一个大于等于 ht[0].used 的 2^n 。<br>将保存在 ht[0] 中的所有键值对 rehash 到 ht[1] 上面： rehash 指的是重新计算键的哈希值和索引值， 然后将键值对放置到 ht[1] 哈希表的指定位置上。</p>
+<p>当 ht[0] 包含的所有键值对都迁移到了 ht[1] 之后 （ht[0] 变为空表）， 释放 ht[0] ， 将 ht[1] 设置为 ht[0] ， 并在 ht[1] 新创建一个空白哈希表， 为下一次 rehash 做准备。</p>
+<p>举个例子， 假设程序要对图 4-8 所示字典的 ht[0] 进行扩展操作， 那么程序将执行以下步骤：<br>ht[0].used 当前的值为 4 ， 4 * 2 = 8 ， 而 8 （2^3）恰好是第一个大于等于 4 的 2 的 n 次方， 所以程序会将 ht[1] 哈希表的大小设置为 8 。 图 4-9 展示了 ht[1] 在分配空间之后， 字典的样子。<br>将 ht[0] 包含的四个键值对都 rehash 到 ht[1] ， 如图 4-10 所示。<br>释放 ht[0] ，并将 ht[1] 设置为 ht[0] ，然后为 ht[1] 分配一个空白哈希表，如图 4-11 所示。<br>至此， 对哈希表的扩展操作执行完毕， 程序成功将哈希表的大小从原来的 4 改为了现在的 8 。</p>
+<p><img src="https://user-images.githubusercontent.com/7789698/30953216-7d7ff108-a45d-11e7-9f90-ae3426492096.png" alt="2015-09-13_55f5130162f2d"></p>
+<p><img src="https://user-images.githubusercontent.com/7789698/30953264-a6e83a0a-a45d-11e7-8849-c056d07b85a7.png" alt="2015-09-13_55f51302b6785"></p>
+<p><img src="https://user-images.githubusercontent.com/7789698/30953273-b5c7243c-a45d-11e7-8323-b8f25f2b5187.png" alt="2015-09-13_55f51309b4775"></p>
+<p><img src="https://user-images.githubusercontent.com/7789698/30953287-c35d0026-a45d-11e7-981d-273db0f853f8.png" alt="2015-09-13_55f5130b2ec57"></p>
+<ul>
+<li>哈希表的扩展与收缩</li>
+</ul>
+<p>当以下条件中的任意一个被满足时， 程序会自动开始对哈希表执行扩展操作：</p>
+<p>服务器目前没有在执行 BGSAVE 命令或者 BGREWRITEAOF 命令， 并且哈希表的负载因子大于等于 1 ；<br>服务器目前正在执行 BGSAVE 命令或者 BGREWRITEAOF 命令， 并且哈希表的负载因子大于等于 5 ；<br>其中哈希表的负载因子可以通过公式：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"># 负载因子 = 哈希表已保存节点数量 / 哈希表大小</span><br><span class="line">load_factor = ht[0].used / ht[0].size</span><br></pre></td></tr></table></figure>
+
+<p>计算得出。</p>
+<p>比如说， 对于一个大小为 4 ， 包含 4 个键值对的哈希表来说， 这个哈希表的负载因子为：<br><code>load_factor = 4 / 4 = 1</code></p>
+<p>又比如说， 对于一个大小为 512 ， 包含 256 个键值对的哈希表来说， 这个哈希表的负载因子为：<br><code>load_factor = 256 / 512 = 0.5</code></p>
+<p>根据 BGSAVE 命令或 BGREWRITEAOF 命令是否正在执行， 服务器执行扩展操作所需的负载因子并不相同， 这是因为在执行 BGSAVE 命令或BGREWRITEAOF 命令的过程中， Redis 需要创建当前服务器进程的子进程， 而大多数操作系统都采用写时复制（copy-on-write）技术来优化子进程的使用效率， 所以在子进程存在期间， 服务器会提高执行扩展操作所需的负载因子， 从而尽可能地避免在子进程存在期间进行哈希表扩展操作， 这可以避免不必要的内存写入操作， 最大限度地节约内存。<br>另一方面， 当哈希表的负载因子小于 0.1 时， 程序自动开始对哈希表执行收缩操作。</p>
+<ul>
+<li>渐进式 rehash<br>上一节说过， 扩展或收缩哈希表需要将 ht[0] 里面的所有键值对 rehash 到 ht[1] 里面， 但是， 这个 rehash 动作并不是一次性、集中式地完成的， 而是分多次、渐进式地完成的。</li>
+</ul>
+<p>这样做的原因在于， 如果 ht[0] 里只保存着四个键值对， 那么服务器可以在瞬间就将这些键值对全部 rehash 到 ht[1] ； 但是， 如果哈希表里保存的键值对数量不是四个， 而是四百万、四千万甚至四亿个键值对， 那么要一次性将这些键值对全部 rehash 到 ht[1] 的话， 庞大的计算量可能会导致服务器在一段时间内停止服务。</p>
+<p>因此， 为了避免 rehash 对服务器性能造成影响， 服务器不是一次性将 ht[0] 里面的所有键值对全部 rehash 到 ht[1] ， 而是分多次、渐进式地将 ht[0] 里面的键值对慢慢地 rehash 到 ht[1] 。<br>以下是哈希表渐进式 rehash 的详细步骤：</p>
+<ol>
+<li>为 ht[1] 分配空间， 让字典同时持有 ht[0] 和 ht[1] 两个哈希表。</li>
+<li>在字典中维持一个索引计数器变量 rehashidx ， 并将它的值设置为 0 ， 表示 rehash 工作正式开始。</li>
+<li>在 rehash 进行期间， 每次对字典执行添加、删除、查找或者更新操作时， 程序除了执行指定的操作以外， 还会顺带将 ht[0] 哈希表在 rehashidx 索引上的所有键值对 rehash 到 ht[1] ， 当 rehash 工作完成之后， 程序将 rehashidx 属性的值增一。</li>
+<li>随着字典操作的不断执行， 最终在某个时间点上， ht[0] 的所有键值对都会被 rehash 至 ht[1] ， 这时程序将 rehashidx 属性的值设为 -1 ， 表示 rehash 操作已完成。<br>渐进式 rehash 的好处在于它采取分而治之的方式， 将 rehash 键值对所需的计算工作均滩到对字典的每个添加、删除、查找和更新操作上， 从而避免了集中式 rehash 而带来的庞大计算量。</li>
+</ol>
+<p><a target="_blank" rel="noopener" href="https://www.kancloud.cn/kancloud/redisbook/63842">https://www.kancloud.cn/kancloud/redisbook/63842</a></p>
+<img width="957" alt="wx20170928-150614 2x" src="https://user-images.githubusercontent.com/7789698/30953489-c2f6d85e-a45e-11e7-97e7-543618fad97a.png">
+
+
+<h1 id="跳跃表"><a href="#跳跃表" class="headerlink" title="跳跃表"></a>跳跃表</h1><p>跳跃表（skiplist）是一种有序数据结构， 它通过在每个节点中维持多个指向其他节点的指针， 从而达到快速访问节点的目的。</p>
+<p>跳跃表支持平均 O(\log N) 最坏 O(N) 复杂度的节点查找， 还可以通过顺序性操作来批量处理节点。<br>在大部分情况下， 跳跃表的效率可以和平衡树相媲美， 并且因为跳跃表的实现比平衡树要来得更为简单， 所以有不少程序都使用跳跃表来代替平衡树。</p>
+<p>Redis 使用跳跃表作为有序集合键的底层实现之一： 如果一个有序集合包含的元素数量比较多， 又或者有序集合中元素的成员（member）是比较长的字符串时， Redis 就会使用跳跃表来作为有序集合键的底层实现。</p>
+<p>举个例子， fruit-price 是一个有序集合键， 这个有序集合以水果名为成员， 水果价钱为分值， 保存了 130 款水果的价钱：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line">redis&gt; ZRANGE fruit-price 0 2 WITHSCORES</span><br><span class="line">1) &quot;banana&quot;</span><br><span class="line">2) &quot;5&quot;</span><br><span class="line">3) &quot;cherry&quot;</span><br><span class="line">4) &quot;6.5&quot;</span><br><span class="line">5) &quot;apple&quot;</span><br><span class="line">6) &quot;8&quot;</span><br><span class="line"></span><br><span class="line">redis&gt; ZCARD fruit-price</span><br><span class="line">(integer) 130</span><br></pre></td></tr></table></figure>
+
+<p>fruit-price 有序集合的所有数据都保存在一个跳跃表里面， 其中每个跳跃表节点（node）都保存了一款水果的价钱信息， 所有水果按价钱的高低从低到高在跳跃表里面排序：</p>
+<p>和链表、字典等数据结构被广泛地应用在 Redis 内部不同， Redis 只在两个地方用到了跳跃表， 一个是实现有序集合键， 另一个是在集群节点中用作内部数据结构， 除此之外， 跳跃表在 Redis 里面没有其他用途。</p>
+<p>Redis 的跳跃表由 redis.h/zskiplistNode 和 redis.h/zskiplist 两个结构定义， 其中 zskiplistNode 结构用于表示跳跃表节点， 而 zskiplist结构则用于保存跳跃表节点的相关信息， 比如节点的数量， 以及指向表头节点和表尾节点的指针， 等等。</p>
+<p><img src="https://user-images.githubusercontent.com/7789698/30953604-36ae23ba-a45f-11e7-9264-b9b9ba6565dd.png" alt="2015-09-13_55f51478611a6"></p>
+<p>图 5-1 展示了一个跳跃表示例， 位于图片最左边的是 zskiplist 结构， 该结构包含以下属性：<br>header ：指向跳跃表的表头节点。<br>tail ：指向跳跃表的表尾节点。<br>level ：记录目前跳跃表内，层数最大的那个节点的层数（表头节点的层数不计算在内）。<br>length ：记录跳跃表的长度，也即是，跳跃表目前包含节点的数量（表头节点不计算在内）。<br>位于 zskiplist 结构右方的是四个 zskiplistNode 结构， 该结构包含以下属性：<br>层（level）：节点中用 L1 、 L2 、 L3 等字样标记节点的各个层， L1 代表第一层， L2 代表第二层，以此类推。每个层都带有两个属性：前进指针和跨度。前进指针用于访问位于表尾方向的其他节点，而跨度则记录了前进指针所指向节点和当前节点的距离。在上面的图片中，连线上带有数字的箭头就代表前进指针，而那个数字就是跨度。当程序从表头向表尾进行遍历时，访问会沿着层的前进指针进行。<br>后退（backward）指针：节点中用 BW 字样标记节点的后退指针，它指向位于当前节点的前一个节点。后退指针在程序从表尾向表头遍历时使用。<br>分值（score）：各个节点中的 1.0 、 2.0 和 3.0 是节点所保存的分值。在跳跃表中，节点按各自所保存的分值从小到大排列。<br>成员对象（obj）：各个节点中的 o1 、 o2 和 o3 是节点所保存的成员对象。<br>注意表头节点和其他节点的构造是一样的： 表头节点也有后退指针、分值和成员对象， 不过表头节点的这些属性都不会被用到， 所以图中省略了这些部分， 只显示了表头节点的各个层。</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br></pre></td><td class="code"><pre><span class="line">typedef struct zskiplistNode &#123;</span><br><span class="line"></span><br><span class="line">    // 后退指针</span><br><span class="line">    struct zskiplistNode *backward;</span><br><span class="line"></span><br><span class="line">    // 分值</span><br><span class="line">    double score;</span><br><span class="line"></span><br><span class="line">    // 成员对象</span><br><span class="line">    robj *obj;</span><br><span class="line"></span><br><span class="line">    // 层</span><br><span class="line">    struct zskiplistLevel &#123;</span><br><span class="line"></span><br><span class="line">        // 前进指针</span><br><span class="line">        struct zskiplistNode *forward;</span><br><span class="line"></span><br><span class="line">        // 跨度</span><br><span class="line">        unsigned int span;</span><br><span class="line"></span><br><span class="line">    &#125; level[];</span><br><span class="line"></span><br><span class="line">&#125; zskiplistNode;</span><br></pre></td></tr></table></figure>
+
+<ul>
+<li>层<br>跳跃表节点的 level 数组可以包含多个元素， 每个元素都包含一个指向其他节点的指针， 程序可以通过这些层来加快访问其他节点的速度， 一般来说， 层的数量越多， 访问其他节点的速度就越快。</li>
+</ul>
+<p>每次创建一个新跳跃表节点的时候， 程序都根据幂次定律 （power law，越大的数出现的概率越小） 随机生成一个介于 1 和 32 之间的值作为 level 数组的大小， 这个大小就是层的“高度”。</p>
+<ul>
+<li>前进指针</li>
+</ul>
+<p>每个层都有一个指向表尾方向的前进指针（level[i].forward 属性）， 用于从表头向表尾方向访问节点。<br>图 5-3 用虚线表示出了程序从表头向表尾方向， 遍历跳跃表中所有节点的路径：</p>
+<p>1.迭代程序首先访问跳跃表的第一个节点（表头）， 然后从第四层的前进指针移动到表中的第二个节点。<br>2.在第二个节点时， 程序沿着第二层的前进指针移动到表中的第三个节点。<br>3.在第三个节点时， 程序同样沿着第二层的前进指针移动到表中的第四个节点。<br>4.当程序再次沿着第四个节点的前进指针移动时， 它碰到一个 NULL ， 程序知道这时已经到达了跳跃表的表尾， 于是结束这次遍历。</p>
+<ul>
+<li>跨度<br>层的跨度（level[i].span 属性）用于记录两个节点之间的距离：<br>两个节点之间的跨度越大， 它们相距得就越远。<br>指向 NULL 的所有前进指针的跨度都为 0 ， 因为它们没有连向任何节点。<br>初看上去， 很容易以为跨度和遍历操作有关， 但实际上并不是这样 —— 遍历操作只使用前进指针就可以完成了， 跨度实际上是用来计算排位（rank）的： 在查找某个节点的过程中， 将沿途访问过的所有层的跨度累计起来， 得到的结果就是目标节点在跳跃表中的排位。</li>
+</ul>
+<p>举个例子， 图 5-4 用虚线标记了在跳跃表中查找分值为 3.0 、 成员对象为 o3 的节点时， 沿途经历的层： 查找的过程只经过了一个层， 并且层的跨度为 3 ， 所以目标节点在跳跃表中的排位为 3 。</p>
+<ul>
+<li>后退指针</li>
+</ul>
+<p>节点的后退指针（backward 属性）用于从表尾向表头方向访问节点： 跟可以一次跳过多个节点的前进指针不同， 因为每个节点只有一个后退指针， 所以每次只能后退至前一个节点。<br>图 5-6 用虚线展示了如果从表尾向表头遍历跳跃表中的所有节点： 程序首先通过跳跃表的 tail 指针访问表尾节点， 然后通过后退指针访问倒数第二个节点， 之后再沿着后退指针访问倒数第三个节点， 再之后遇到指向 NULL 的后退指针， 于是访问结束。</p>
+<ul>
+<li>分值和成员<br>节点的分值（score 属性）是一个 double 类型的浮点数， 跳跃表中的所有节点都按分值从小到大来排序。<br>节点的成员对象（obj 属性）是一个指针， 它指向一个字符串对象， 而字符串对象则保存着一个 SDS 值。<br>在同一个跳跃表中， 各个节点保存的成员对象必须是唯一的， 但是多个节点保存的分值却可以是相同的： 分值相同的节点将按照成员对象在字典序中的大小来进行排序， 成员对象较小的节点会排在前面（靠近表头的方向）， 而成员对象较大的节点则会排在后面（靠近表尾的方向）。</li>
+</ul>
+<p>举个例子， 在图 5-7 所示的跳跃表中， 三个跳跃表节点都保存了相同的分值 10086.0 ， 但保存成员对象 o1 的节点却排在保存成员对象 o2和 o3 的节点之前， 而保存成员对象 o2 的节点又排在保存成员对象 o3 的节点之前， 由此可见， o1 、 o2 、 o3 三个成员对象在字典中的排序为 o1 &lt;= o2 &lt;= o3 。</p>
+<ul>
+<li>跳跃表</li>
+</ul>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line">typedef struct zskiplist &#123;</span><br><span class="line"></span><br><span class="line">    // 表头节点和表尾节点</span><br><span class="line">    struct zskiplistNode *header, *tail;</span><br><span class="line"></span><br><span class="line">    // 表中节点的数量</span><br><span class="line">    unsigned long length;</span><br><span class="line"></span><br><span class="line">    // 表中层数最大的节点的层数</span><br><span class="line">    int level;</span><br><span class="line"></span><br><span class="line">&#125; zskiplist;</span><br></pre></td></tr></table></figure>
+
+<h1 id="整数集合"><a href="#整数集合" class="headerlink" title="整数集合"></a>整数集合</h1><p>整数集合（intset）是集合键的底层实现之一： 当一个集合只包含整数值元素， 并且这个集合的元素数量不多时， Redis 就会使用整数集合作为集合键的底层实现。</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">redis&gt; SADD numbers 1 3 5 7 9</span><br><span class="line">(integer) 5</span><br><span class="line"></span><br><span class="line">redis&gt; OBJECT ENCODING numbers</span><br><span class="line">&quot;intset&quot;</span><br></pre></td></tr></table></figure>
+
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line">typedef struct intset &#123;</span><br><span class="line"></span><br><span class="line">    // 编码方式</span><br><span class="line">    uint32_t encoding;</span><br><span class="line"></span><br><span class="line">    // 集合包含的元素数量</span><br><span class="line">    uint32_t length;</span><br><span class="line"></span><br><span class="line">    // 保存元素的数组</span><br><span class="line">    int8_t contents[];</span><br><span class="line"></span><br><span class="line">&#125; intset;</span><br></pre></td></tr></table></figure>
+
+<p>contents 数组是整数集合的底层实现： 整数集合的每个元素都是 contents 数组的一个数组项（item）， 各个项在数组中按值的大小从小到大有序地排列， 并且数组中不包含任何重复项。</p>
+<p>length 属性记录了整数集合包含的元素数量， 也即是 contents 数组的长度。</p>
+<p>虽然 intset 结构将 contents 属性声明为 int8_t 类型的数组， 但实际上 contents 数组并不保存任何 int8_t 类型的值 —— contents 数组的真正类型取决于 encoding 属性的值：</p>
+<ol>
+<li><p>如果 encoding 属性的值为 INTSET_ENC_INT16 ， 那么 contents 就是一个 int16_t 类型的数组， 数组里的每个项都是一个 int16_t 类型的整数值 （最小值为 -32,768 ，最大值为 32,767 ）。</p>
+</li>
+<li><p>如果 encoding 属性的值为 INTSET_ENC_INT32 ， 那么 contents 就是一个 int32_t 类型的数组， 数组里的每个项都是一个 int32_t 类型的整数值 （最小值为 -2,147,483,648 ，最大值为 2,147,483,647 ）。</p>
+</li>
+<li><p>如果 encoding 属性的值为 INTSET_ENC_INT64 ， 那么 contents 就是一个 int64_t 类型的数组， 数组里的每个项都是一个 int64_t 类型的整数值 （最小值为 -9,223,372,036,854,775,808 ，最大值为 9,223,372,036,854,775,807 ）。</p>
+</li>
+<li><p>encoding 属性的值为 INTSET_ENC_INT16 ， 表示整数集合的底层实现为 int16_t 类型的数组， 而集合保存的都是 int16_t 类型的整数值。</p>
+</li>
+<li><p>length 属性的值为 5 ， 表示整数集合包含五个元素。</p>
+</li>
+<li><p>contents 数组按从小到大的顺序保存着集合中的五个元素。</p>
+</li>
+<li><p>因为每个集合元素都是 int16_t 类型的整数值， 所以 contents 数组的大小等于 sizeof(int16_t) * 5 = 16 * 5 = 80 位。</p>
+</li>
+</ol>
+<p><img src="https://user-images.githubusercontent.com/7789698/30954135-a2993f9a-a461-11e7-9eae-d5c8ea98f996.png" alt="2015-09-13_55f51a1132a4b"></p>
+<ol>
+<li>encoding 属性的值为 INTSET_ENC_INT64 ， 表示整数集合的底层实现为 int64_t 类型的数组， 而数组中保存的都是 int64_t 类型的整数值。</li>
+<li>length 属性的值为 4 ， 表示整数集合包含四个元素。</li>
+<li>contents 数组按从小到大的顺序保存着集合中的四个元素。</li>
+<li>因为每个集合元素都是 int64_t 类型的整数值， 所以 contents 数组的大小为 sizeof(int64_t) * 4 = 64 * 4 = 256 位。</li>
+</ol>
+<p><img src="https://user-images.githubusercontent.com/7789698/30954158-baaaab46-a461-11e7-9cb2-8886e331b927.png" alt="2015-09-13_55f51a139a148"></p>
+<p>虽然 contents 数组保存的四个整数值中， 只有 -2675256175807981027 是真正需要用 int64_t 类型来保存的， 而其他的 1 、 3 、 5 三个值都可以用 int16_t 类型来保存， 不过根据整数集合的升级规则， 当向一个底层为 int16_t 数组的整数集合添加一个 int64_t 类型的整数值时， 整数集合已有的所有元素都会被转换成 int64_t 类型， 所以 contents 数组保存的四个整数值都是 int64_t 类型的， 不仅仅是-2675256175807981027 。</p>
+<ul>
+<li>升级<br>每当我们要将一个新元素添加到整数集合里面， 并且新元素的类型比整数集合现有所有元素的类型都要长时， 整数集合需要先进行升级（upgrade）， 然后才能将新元素添加到整数集合里面。</li>
+</ul>
+<p>升级整数集合并添加新元素共分为三步进行：</p>
+<ol>
+<li>根据新元素的类型， 扩展整数集合底层数组的空间大小， 并为新元素分配空间。</li>
+<li>将底层数组现有的所有元素都转换成与新元素相同的类型， 并将类型转换后的元素放置到正确的位上， 而且在放置元素的过程中， 需要继续维持底层数组的有序性质不变。</li>
+<li>将新元素添加到底层数组里面。</li>
+</ol>
+<p>举个例子， 假设现在有一个 INTSET_ENC_INT16 编码的整数集合， 集合中包含三个 int16_t 类型的元素， 如图 6-3 所示。</p>
+<p>因为每个元素都占用 16 位空间， 所以整数集合底层数组的大小为 3 * 16 = 48 位， 图 6-4 展示了整数集合的三个元素在这 48 位里的位置。</p>
+<p><img src="https://user-images.githubusercontent.com/7789698/30954310-404deb50-a462-11e7-8bb7-560f7a946b1e.png" alt="2015-09-13_55f51ab6dbe72"></p>
+<p>现在， 假设我们要将类型为 int32_t 的整数值 65535 添加到整数集合里面， 因为 65535 的类型 int32_t 比整数集合当前所有元素的类型都要长， 所以在将 65535 添加到整数集合之前， 程序需要先对整数集合进行升级。<br>升级首先要做的是， 根据新类型的长度， 以及集合元素的数量（包括要添加的新元素在内）， 对底层数组进行空间重分配。</p>
+<p>整数集合目前有三个元素， 再加上新元素 65535 ， 整数集合需要分配四个元素的空间， 因为每个 int32_t 整数值需要占用 32 位空间， 所以在空间重分配之后， 底层数组的大小将是 32 * 4 = 128 位， 如图 6-5 所示</p>
+<p><img src="https://user-images.githubusercontent.com/7789698/30954327-545efdfa-a462-11e7-901f-ef8ea9b90d37.png" alt="2015-09-13_55f51abfde71b"></p>
+<p>虽然程序对底层数组进行了空间重分配， 但数组原有的三个元素 1 、 2 、 3 仍然是 int16_t 类型， 这些元素还保存在数组的前 48 位里面， 所以程序接下来要做的就是将这三个元素转换成 int32_t 类型， 并将转换后的元素放置到正确的位上面， 而且在放置元素的过程中， 需要维持底层数组的有序性质不变。<br>首先， 因为元素 3 在 1 、 2 、 3 、 65535 四个元素中排名第三， 所以它将被移动到 contents 数组的索引 2 位置上， 也即是数组 64 位至 95 位的空间内， 如图 6-6 所示。</p>
+<p><img src="https://user-images.githubusercontent.com/7789698/30954364-7456234a-a462-11e7-9d9c-b775c31ebbf5.png" alt="2015-09-13_55f51ac25b6a0"></p>
+<p>接着， 因为元素 2 在 1 、 2 、 3 、 65535 四个元素中排名第二， 所以它将被移动到 contents 数组的索引 1 位置上， 也即是数组的 32位至 63 位的空间内， 如图 6-7 所示。</p>
+<p><img src="https://user-images.githubusercontent.com/7789698/30954458-d2490634-a462-11e7-8dbb-9f61d8058d17.png" alt="2015-09-13_55f51ac353bfa"></p>
+<p>之后， 因为元素 1 在 1 、 2 、 3 、 65535 四个元素中排名第一， 所以它将被移动到 contents 数组的索引 0 位置上， 也即是数组的 0 位至 31 位的空间内， 如图 6-8 所示。<br><img src="https://user-images.githubusercontent.com/7789698/30954472-e529b758-a462-11e7-92d3-eb843fa11494.png" alt="2015-09-13_55f51ac466154"></p>
+<p>然后， 因为元素 65535 在 1 、 2 、 3 、 65535 四个元素中排名第四， 所以它将被添加到 contents 数组的索引 3 位置上， 也即是数组的96 位至 127 位的空间内， 如图 6-9 所示。<br><img src="https://user-images.githubusercontent.com/7789698/30954508-feab27f2-a462-11e7-9310-a8f06db5899c.png" alt="2015-09-13_55f51acae92db"></p>
+<p>最后， 程序将整数集合 encoding 属性的值从 INTSET_ENC_INT16 改为 INTSET_ENC_INT32 ， 并将 length 属性的值从 3 改为 4 ， 设置完成之后的整数集合如图 6-10 所示。<br><img src="https://user-images.githubusercontent.com/7789698/30954520-07d5e196-a463-11e7-833c-a950e122e357.png" alt="2015-09-13_55f51ae117896"></p>
+<p>因为每次向整数集合添加新元素都可能会引起升级， 而每次升级都需要对底层数组中已有的所有元素进行类型转换， 所以向整数集合添加新元素的时间复杂度为 O(N) </p>
+<p>其他类型的升级操作， 比如从 INTSET_ENC_INT16 编码升级为 INTSET_ENC_INT64 编码， 或者从 INTSET_ENC_INT32 编码升级为 INTSET_ENC_INT64 编码， 升级的过程都和上面展示的升级过程类似。</p>
+<p>升级之后新元素的摆放位置</p>
+<p>因为引发升级的新元素的长度总是比整数集合现有所有元素的长度都大， 所以这个新元素的值要么就大于所有现有元素， 要么就小于所有现有元素：</p>
+<p>在新元素小于所有现有元素的情况下， 新元素会被放置在底层数组的最开头（索引 0 ）；<br>在新元素大于所有现有元素的情况下， 新元素会被放置在底层数组的最末尾（索引 length-1 ）。</p>
+<ul>
+<li>降级<br>整数集合不支持降级操作， 一旦对数组进行了升级， 编码就会一直保持升级后的状态。</li>
+</ul>
+<img width="957" alt="wx20170928-153940 2x" src="https://user-images.githubusercontent.com/7789698/30954573-44344f1a-a463-11e7-9937-f202bd13f84b.png">
+
+
+<h1 id="压缩列表"><a href="#压缩列表" class="headerlink" title="压缩列表"></a>压缩列表</h1><p>当一个列表键只包含少量列表项， 并且每个列表项要么就是小整数值， 要么就是长度比较短的字符串， 那么 Redis 就会使用压缩列表来做列表键的底层实现。</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">redis&gt; RPUSH lst 1 3 5 10086 &quot;hello&quot; &quot;world&quot;</span><br><span class="line">(integer) 6</span><br><span class="line"></span><br><span class="line">redis&gt; OBJECT ENCODING lst</span><br><span class="line">&quot;ziplist&quot;</span><br></pre></td></tr></table></figure>
+
+<p>另外， 当一个哈希键只包含少量键值对， 并且每个键值对的键和值要么就是小整数值， 要么就是长度比较短的字符串， 那么 Redis 就会使用压缩列表来做哈希键的底层实现。</p>
+<p>举个例子， 执行以下命令将创建一个压缩列表实现的哈希键：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">redis&gt; HMSET profile &quot;name&quot; &quot;Jack&quot; &quot;age&quot; 28 &quot;job&quot; &quot;Programmer&quot;</span><br><span class="line">OK</span><br><span class="line"></span><br><span class="line">redis&gt; OBJECT ENCODING profile</span><br><span class="line">&quot;ziplist&quot;</span><br></pre></td></tr></table></figure>
+
+<p><img src="https://user-images.githubusercontent.com/7789698/30954687-abdd05a8-a463-11e7-81d7-23810c2e3c94.png" alt="2015-09-13_55f51bfccbd83"></p>
+<img width="955" alt="wx20170928-154257 2x" src="https://user-images.githubusercontent.com/7789698/30954715-c2a1bb30-a463-11e7-8ef3-a356a3953cc9.png">
+
+<ol>
+<li>列表 zlbytes 属性的值为 0x50 （十进制 80）， 表示压缩列表的总长为 80 字节。</li>
+<li>列表 zltail 属性的值为 0x3c （十进制 60）， 这表示如果我们有一个指向压缩列表起始地址的指针 p ， 那么只要用指针 p 加上偏移量 60 ， 就可以计算出表尾节点 entry3 的地址。</li>
+<li>列表 zllen 属性的值为 0x3 （十进制 3）， 表示压缩列表包含三个节点。</li>
+</ol>
+<ul>
+<li>压缩列表节点的构成</li>
+</ul>
+<p>每个压缩列表节点可以保存一个字节数组或者一个整数值， 其中， 字节数组可以是以下三种长度的其中一种：</p>
+<ol>
+<li>长度小于等于 63 （2^{6}-1）字节的字节数组；</li>
+<li>长度小于等于 16383 （2^{14}-1） 字节的字节数组；</li>
+<li>长度小于等于 4294967295 （2^{32}-1）字节的字节数组；</li>
+</ol>
+<p>而整数值则可以是以下六种长度的其中一种：</p>
+<ol>
+<li>4 位长，介于 0 至 12 之间的无符号整数；</li>
+<li>1 字节长的有符号整数；</li>
+<li>3 字节长的有符号整数；</li>
+<li>int16_t 类型整数；</li>
+<li>int32_t 类型整数；</li>
+<li>int64_t 类型整数。</li>
+</ol>
+<p>每个压缩列表节点都由 previous_entry_length 、 encoding 、 content 三个部分组成</p>
+<ul>
+<li>previous_entry_length</li>
+</ul>
+<p>节点的 previous_entry_length 属性以字节为单位， 记录了压缩列表中前一个节点的长度。<br>previous_entry_length 属性的长度可以是 1 字节或者 5 字节：</p>
+<ol>
+<li>如果前一节点的长度小于 254 字节， 那么 previous_entry_length 属性的长度为 1 字节： 前一节点的长度就保存在这一个字节里面。</li>
+<li>如果前一节点的长度大于等于 254 字节， 那么 previous_entry_length 属性的长度为 5 字节： 其中属性的第一字节会被设置为 0xFE（十进制值 254）， 而之后的四个字节则用于保存前一节点的长度。</li>
+</ol>
+<p>因为节点的 previous_entry_length 属性记录了前一个节点的长度， 所以程序可以通过指针运算， 根据当前节点的起始地址来计算出前一个节点的起始地址。</p>
+<p>压缩列表的从表尾向表头遍历操作就是使用这一原理实现的： 只要我们拥有了一个指向某个节点起始地址的指针， 那么通过这个指针以及这个节点的 previous_entry_length 属性， 程序就可以一直向前一个节点回溯， 最终到达压缩列表的表头节点。<br>图 7-8 展示了一个从表尾节点向表头节点进行遍历的完整过程：</p>
+<ol>
+<li>首先，我们拥有指向压缩列表表尾节点 entry4 起始地址的指针 p1 （指向表尾节点的指针可以通过指向压缩列表起始地址的指针加上zltail 属性的值得出）；</li>
+<li>通过用 p1 减去 entry4 节点 previous_entry_length 属性的值， 我们得到一个指向 entry4 前一节点 entry3 起始地址的指针 p2 ；</li>
+<li>通过用 p2 减去 entry3 节点 previous_entry_length 属性的值， 我们得到一个指向 entry3 前一节点 entry2 起始地址的指针 p3 ；</li>
+<li>通过用 p3 减去 entry2 节点 previous_entry_length 属性的值， 我们得到一个指向 entry2 前一节点 entry1 起始地址的指针 p4 ， entry1为压缩列表的表头节点；</li>
+<li>最终， 我们从表尾节点向表头节点遍历了整个列表。</li>
+</ol>
+<ul>
+<li>encoding</li>
+</ul>
+<p>节点的 encoding 属性记录了节点的 content 属性所保存数据的类型以及长度：</p>
+<ol>
+<li>一字节、两字节或者五字节长， 值的最高位为 00 、 01 或者 10 的是字节数组编码： 这种编码表示节点的 content 属性保存着字节数组， 数组的长度由编码除去最高两位之后的其他位记录；</li>
+<li>一字节长， 值的最高位以 11 开头的是整数编码： 这种编码表示节点的 content 属性保存着整数值， 整数值的类型和长度由编码除去最高两位之后的其他位记录；</li>
+</ol>
+<img width="963" alt="wx20170928-155056 2x" src="https://user-images.githubusercontent.com/7789698/30955209-67be740e-a465-11e7-81d5-727da5f34484.png">
+
+
+<ul>
+<li>content</li>
+</ul>
+<p>编码的最高两位 00 表示节点保存的是一个字节数组；<br>编码的后六位 001011 记录了字节数组的长度 11 ；<br>content 属性保存着节点的值 “hello world” 。</p>
+<p>编码 11000000 表示节点保存的是一个 int16_t 类型的整数值；<br>content 属性保存着节点的值 10086 。</p>
+<ul>
+<li>连锁更新<br><a target="_blank" rel="noopener" href="https://www.kancloud.cn/kancloud/redisbook/63859">https://www.kancloud.cn/kancloud/redisbook/63859</a></li>
+</ul>
+<h1 id="对象"><a href="#对象" class="headerlink" title="对象"></a>对象</h1><figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br></pre></td><td class="code"><pre><span class="line">typedef struct redisObject &#123;</span><br><span class="line"></span><br><span class="line">    // 类型</span><br><span class="line">    unsigned type:4;</span><br><span class="line"></span><br><span class="line">    // 编码</span><br><span class="line">    unsigned encoding:4;</span><br><span class="line"></span><br><span class="line">    // 指向底层实现数据结构的指针</span><br><span class="line">    void *ptr;</span><br><span class="line"></span><br><span class="line">    // ...</span><br><span class="line"></span><br><span class="line">&#125; robj;</span><br></pre></td></tr></table></figure>
+
+<ul>
+<li>类型</li>
+</ul>
+<table>
+<thead>
+<tr>
+<th>类型常量</th>
+<th>对象的名称</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>REDIS_STRING</td>
+<td>字符串对象</td>
+</tr>
+<tr>
+<td>REDIS_LIST</td>
+<td>列表对象</td>
+</tr>
+<tr>
+<td>REDIS_HASH</td>
+<td>哈希对象</td>
+</tr>
+<tr>
+<td>REDIS_SET</td>
+<td>集合对象</td>
+</tr>
+<tr>
+<td>REDIS_ZSET</td>
+<td>有序集合对象</td>
+</tr>
+</tbody></table>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br></pre></td><td class="code"><pre><span class="line"># 键为字符串对象，值为字符串对象</span><br><span class="line"></span><br><span class="line">redis&gt; SET msg &quot;hello world&quot;</span><br><span class="line">OK</span><br><span class="line"></span><br><span class="line">redis&gt; TYPE msg</span><br><span class="line">string</span><br><span class="line"></span><br><span class="line"># 键为字符串对象，值为列表对象</span><br><span class="line"></span><br><span class="line">redis&gt; RPUSH numbers 1 3 5</span><br><span class="line">(integer) 6</span><br><span class="line"></span><br><span class="line">redis&gt; TYPE numbers</span><br><span class="line">list</span><br><span class="line"></span><br><span class="line"># 键为字符串对象，值为哈希对象</span><br><span class="line"></span><br><span class="line">redis&gt; HMSET profile name Tome age 25 career Programmer</span><br><span class="line">OK</span><br><span class="line"></span><br><span class="line">redis&gt; TYPE profile</span><br><span class="line">hash</span><br><span class="line"></span><br><span class="line"># 键为字符串对象，值为集合对象</span><br><span class="line"></span><br><span class="line">redis&gt; SADD fruits apple banana cherry</span><br><span class="line">(integer) 3</span><br><span class="line"></span><br><span class="line">redis&gt; TYPE fruits</span><br><span class="line">set</span><br><span class="line"></span><br><span class="line"># 键为字符串对象，值为有序集合对象</span><br><span class="line"></span><br><span class="line">redis&gt; ZADD price 8.5 apple 5.0 banana 6.0 cherry</span><br><span class="line">(integer) 3</span><br><span class="line"></span><br><span class="line">redis&gt; TYPE price</span><br><span class="line">zset</span><br></pre></td></tr></table></figure>
+
+
+<table>
+<thead>
+<tr>
+<th>对象</th>
+<th>对象 type 属性的值</th>
+<th>TYPE 命令的输出</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>字符串对象</td>
+<td>REDIS_STRING</td>
+<td>“string”</td>
+</tr>
+<tr>
+<td>列表对象</td>
+<td>REDIS_LIST</td>
+<td>“list”</td>
+</tr>
+<tr>
+<td>哈希对象</td>
+<td>REDIS_HASH</td>
+<td>“hash”</td>
+</tr>
+<tr>
+<td>集合对象</td>
+<td>REDIS_SET</td>
+<td>“set”</td>
+</tr>
+<tr>
+<td>有序集合对象</td>
+<td>REDIS_ZSET</td>
+<td>“zset”</td>
+</tr>
+</tbody></table>
+<ul>
+<li>编码和底层实现</li>
+</ul>
+<table>
+<thead>
+<tr>
+<th>编码常量</th>
+<th>编码所对应的底层数据结构</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>REDIS_ENCODING_INT</td>
+<td>long 类型的整数</td>
+</tr>
+<tr>
+<td>REDIS_ENCODING_EMBSTR</td>
+<td>embstr 编码的简单动态字符串</td>
+</tr>
+<tr>
+<td>REDIS_ENCODING_RAW</td>
+<td>简单动态字符串</td>
+</tr>
+<tr>
+<td>REDIS_ENCODING_HT</td>
+<td>字典</td>
+</tr>
+<tr>
+<td>REDIS_ENCODING_LINKEDLIST</td>
+<td>双端链表</td>
+</tr>
+<tr>
+<td>REDIS_ENCODING_ZIPLIST</td>
+<td>压缩列表</td>
+</tr>
+<tr>
+<td>REDIS_ENCODING_INTSET</td>
+<td>整数集合</td>
+</tr>
+<tr>
+<td>REDIS_ENCODING_SKIPLIST</td>
+<td>跳跃表和字典</td>
+</tr>
+</tbody></table>
+<table>
+<thead>
+<tr>
+<th>类型</th>
+<th>编码</th>
+<th>对象</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>REDIS_STRING</td>
+<td>REDIS_ENCODING_INT</td>
+<td>使用整数值实现的字符串对象。</td>
+</tr>
+<tr>
+<td>REDIS_STRING</td>
+<td>REDIS_ENCODING_EMBSTR</td>
+<td>使用 embstr 编码的简单动态字符串实现的字符串对象。</td>
+</tr>
+<tr>
+<td>REDIS_STRING</td>
+<td>REDIS_ENCODING_RAW</td>
+<td>使用简单动态字符串实现的字符串对象。</td>
+</tr>
+<tr>
+<td>REDIS_LIST</td>
+<td>REDIS_ENCODING_ZIPLIST</td>
+<td>使用压缩列表实现的列表对象。</td>
+</tr>
+<tr>
+<td>REDIS_LIST</td>
+<td>REDIS_ENCODING_LINKEDLIST</td>
+<td>使用双端链表实现的列表对象。</td>
+</tr>
+<tr>
+<td>REDIS_HASH</td>
+<td>REDIS_ENCODING_ZIPLIST</td>
+<td>使用压缩列表实现的哈希对象。</td>
+</tr>
+<tr>
+<td>REDIS_HASH</td>
+<td>REDIS_ENCODING_HT</td>
+<td>使用字典实现的哈希对象。</td>
+</tr>
+<tr>
+<td>REDIS_SET</td>
+<td>REDIS_ENCODING_INTSET</td>
+<td>使用整数集合实现的集合对象。</td>
+</tr>
+<tr>
+<td>REDIS_SET</td>
+<td>REDIS_ENCODING_HT</td>
+<td>使用字典实现的集合对象。</td>
+</tr>
+<tr>
+<td>REDIS_ZSET</td>
+<td>REDIS_ENCODING_ZIPLIST</td>
+<td>使用压缩列表实现的有序集合对象。</td>
+</tr>
+<tr>
+<td>REDIS_ZSET</td>
+<td>REDIS_ENCODING_SKIPLIST</td>
+<td>使用跳跃表和字典实现的有序集合对象。</td>
+</tr>
+</tbody></table>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br></pre></td><td class="code"><pre><span class="line">redis&gt; SET msg &quot;hello wrold&quot;</span><br><span class="line">OK</span><br><span class="line"></span><br><span class="line">redis&gt; OBJECT ENCODING msg</span><br><span class="line">&quot;embstr&quot;</span><br><span class="line"></span><br><span class="line">redis&gt; SET story &quot;long long long long long long ago ...&quot;</span><br><span class="line">OK</span><br><span class="line"></span><br><span class="line">redis&gt; OBJECT ENCODING story</span><br><span class="line">&quot;raw&quot;</span><br><span class="line"></span><br><span class="line">redis&gt; SADD numbers 1 3 5</span><br><span class="line">(integer) 3</span><br><span class="line"></span><br><span class="line">redis&gt; OBJECT ENCODING numbers</span><br><span class="line">&quot;intset&quot;</span><br><span class="line"></span><br><span class="line">redis&gt; SADD numbers &quot;seven&quot;</span><br><span class="line">(integer) 1</span><br><span class="line"></span><br><span class="line">redis&gt; OBJECT ENCODING numbers</span><br><span class="line">&quot;hashtable&quot;</span><br></pre></td></tr></table></figure>
+
+
+<table>
+<thead>
+<tr>
+<th>对象所使用的底层数据结构</th>
+<th>编码常量</th>
+<th>OBJECT ENCODING 命令输出</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>整数</td>
+<td>REDIS_ENCODING_INT</td>
+<td>“int”</td>
+</tr>
+<tr>
+<td>embstr 编码的简单动态字符串（SDS）</td>
+<td>REDIS_ENCODING_EMBSTR</td>
+<td>“embstr”</td>
+</tr>
+<tr>
+<td>简单动态字符串</td>
+<td>REDIS_ENCODING_RAW</td>
+<td>“raw”</td>
+</tr>
+<tr>
+<td>字典</td>
+<td>REDIS_ENCODING_HT</td>
+<td>“hashtable”</td>
+</tr>
+<tr>
+<td>双端链表</td>
+<td>REDIS_ENCODING_LINKEDLIST</td>
+<td>“linkedlist”</td>
+</tr>
+<tr>
+<td>压缩列表</td>
+<td>REDIS_ENCODING_ZIPLIST</td>
+<td>“ziplist”</td>
+</tr>
+<tr>
+<td>整数集合</td>
+<td>REDIS_ENCODING_INTSET</td>
+<td>“intset”</td>
+</tr>
+<tr>
+<td>跳跃表和字典</td>
+<td>REDIS_ENCODING_SKIPLIST</td>
+<td>“skiplist”</td>
+</tr>
+</tbody></table>
+<p><a target="_blank" rel="noopener" href="https://www.kancloud.cn/kancloud/redisbook/63862">https://www.kancloud.cn/kancloud/redisbook/63862</a></p>
+<ul>
+<li>内存回收<br>Redis 在自己的对象系统中构建了一个引用计数（reference counting）技术实现的内存回收机制</li>
+</ul>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line">typedef struct redisObject &#123;</span><br><span class="line"></span><br><span class="line">    // ...</span><br><span class="line"></span><br><span class="line">    // 引用计数</span><br><span class="line">    int refcount;</span><br><span class="line"></span><br><span class="line">    // ...</span><br><span class="line"></span><br><span class="line">&#125; robj;</span><br></pre></td></tr></table></figure>
+
+<ol>
+<li>在创建一个新对象时， 引用计数的值会被初始化为 1 ；</li>
+<li>当对象被一个新程序使用时， 它的引用计数值会被增一；</li>
+<li>当对象不再被一个程序使用时， 它的引用计数值会被减一；</li>
+<li>当对象的引用计数值变为 0 时， 对象所占用的内存会被释放。</li>
+</ol>
+<table>
+<thead>
+<tr>
+<th>函数</th>
+<th>作用</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>incrRefCount</td>
+<td>将对象的引用计数值增一。</td>
+</tr>
+<tr>
+<td>decrRefCount</td>
+<td>将对象的引用计数值减一， 当对象的引用计数值等于 0 时， 释放对象。</td>
+</tr>
+<tr>
+<td>resetRefCount</td>
+<td>将对象的引用计数值设置为 0 ， 但并不释放对象， 这个函数通常在需要重新设置对象的引用计数值时使用。</td>
+</tr>
+</tbody></table>
+<ul>
+<li>对象共享<br> 对象的引用计数属性还带有对象共享的作用</li>
+</ul>
+<p>Redis 只对包含整数值的字符串对象进行共享。</p>
+<ul>
+<li>对象的空转时长</li>
+</ul>
+<p>除了前面介绍过的 type 、 encoding 、 ptr 和 refcount 四个属性之外， redisObject 结构包含的最后一个属性为 lru 属性， 该属性记录了对象最后一次被命令程序访问的时间：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line">typedef struct redisObject &#123;</span><br><span class="line"></span><br><span class="line">    // ...</span><br><span class="line"></span><br><span class="line">    unsigned lru:22;</span><br><span class="line"></span><br><span class="line">    // ...</span><br><span class="line"></span><br><span class="line">&#125; robj;</span><br></pre></td></tr></table></figure>
+
+<h1 id="单机数据库的实现"><a href="#单机数据库的实现" class="headerlink" title="单机数据库的实现"></a>单机数据库的实现</h1><h2 id="数据库"><a href="#数据库" class="headerlink" title="数据库"></a>数据库</h2><ul>
+<li>数据库键空间<br>Redis 是一个键值对（key-value pair）数据库服务器， 服务器中的每个数据库都由一个 redis.h/redisDb 结构表示， 其中， redisDb 结构的dict 字典保存了数据库中的所有键值对， 我们将这个字典称为键空间（key space）：</li>
+</ul>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line">typedef struct redisDb &#123;</span><br><span class="line"></span><br><span class="line">    // ...</span><br><span class="line"></span><br><span class="line">    // 数据库键空间，保存着数据库中的所有键值对</span><br><span class="line">    dict *dict;</span><br><span class="line"></span><br><span class="line">    // ...</span><br><span class="line"></span><br><span class="line">&#125; redisDb;</span><br></pre></td></tr></table></figure>
+
+<ul>
+<li>添加新键<br>添加一个新键值对到数据库， 实际上就是将一个新键值对添加到键空间字典里面， 其中键为字符串对象， 而值则为任意一种类型的 Redis 对象。</li>
+</ul>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br></pre></td><td class="code"><pre><span class="line">redis&gt; SET message &quot;hello world&quot;</span><br><span class="line">OK</span><br><span class="line"></span><br><span class="line">redis&gt; RPUSH alphabet &quot;a&quot; &quot;b&quot; &quot;c&quot;</span><br><span class="line">(integer) 3</span><br><span class="line"></span><br><span class="line">redis&gt; HSET book name &quot;Redis in Action&quot;</span><br><span class="line">(integer) 1</span><br><span class="line"></span><br><span class="line">redis&gt; HSET book author &quot;Josiah L. Carlson&quot;</span><br><span class="line">(integer) 1</span><br><span class="line"></span><br><span class="line">redis&gt; HSET book publisher &quot;Manning&quot;</span><br><span class="line">(integer) 1</span><br></pre></td></tr></table></figure>
+
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">redis&gt; SET date &quot;2013.12.1&quot;</span><br><span class="line">OK</span><br></pre></td></tr></table></figure>
+
+<p><img src="https://user-images.githubusercontent.com/7789698/30955855-c032d600-a467-11e7-8699-9c88744eba2a.png" alt="2015-09-13_55f5227cb91e3"></p>
+<ul>
+<li><p>删除键<br>删除数据库中的一个键， 实际上就是在键空间里面删除键所对应的键值对对象。</p>
+</li>
+<li><p>更新键<br>对一个数据库键进行更新， 实际上就是对键空间里面键所对应的值对象进行更新， 根据值对象的类型不同， 更新的具体方法也会有所不同。</p>
+</li>
+<li><p>对键取值</p>
+</li>
+</ul>
+<ul>
+<li><p>读写键空间时的维护操作<br>当使用 Redis 命令对数据库进行读写时， 服务器不仅会对键空间执行指定的读写操作， 还会执行一些额外的维护操作， 其中包括：</p>
+</li>
+<li><p>在读取一个键之后（读操作和写操作都要对键进行读取）， 服务器会根据键是否存在， 以此来更新服务器的键空间命中（hit）次数或键空间不命中（miss）次数， 这两个值可以在 INFO stats 命令的 keyspace_hits 属性和 keyspace_misses 属性中查看。</p>
+</li>
+<li><p>在读取一个键之后， 服务器会更新键的 LRU （最后一次使用）时间， 这个值可以用于计算键的闲置时间， 使用命令 OBJECT idletime  命令可以查看键 key 的闲置时间。</p>
+</li>
+<li><p>如果服务器在读取一个键时， 发现该键已经过期， 那么服务器会先删除这个过期键， 然后才执行余下的其他操作， 本章稍后对过期键的讨论会详细说明这一点。</p>
+</li>
+<li><p>如果有客户端使用 WATCH 命令监视了某个键， 那么服务器在对被监视的键进行修改之后， 会将这个键标记为脏（dirty）， 从而让事务程序注意到这个键已经被修改过， 《事务》一章会详细说明这一点。</p>
+</li>
+<li><p>服务器每次修改一个键之后， 都会对脏（dirty）键计数器的值增一， 这个计数器会触发服务器的持久化以及复制操作执行， 《RDB 持久化》、《AOF 持久化》和《复制》这三章都会说到这一点。</p>
+</li>
+<li><p>如果服务器开启了数据库通知功能， 那么在对键进行修改之后， 服务器将按配置发送相应的数据库通知， 本章稍后讨论数据库通知功能的实现时会详细说明这一点。</p>
+</li>
+</ul>
+<ul>
+<li>Redis 服务器的所有数据库都保存在 redisServer.db 数组中， 而数据库的数量则由 redisServer.dbnum 属性保存。</li>
+<li>客户端通过修改目标数据库指针， 让它指向 redisServer.db 数组中的不同元素来切换不同的数据库。</li>
+<li>数据库主要由 dict 和 expires 两个字典构成， 其中 dict 字典负责保存键值对， 而 expires 字典则负责保存键的过期时间。</li>
+<li>因为数据库由字典构成， 所以对数据库的操作都是建立在字典操作之上的。</li>
+<li>数据库的键总是一个字符串对象， 而值则可以是任意一种 Redis 对象类型， 包括字符串对象、哈希表对象、集合对象、列表对象和有序集合对象， 分别对应字符串键、哈希表键、集合键、列表键和有序集合键。</li>
+<li>expires 字典的键指向数据库中的某个键， 而值则记录了数据库键的过期时间， 过期时间是一个以毫秒为单位的 UNIX 时间戳。</li>
+<li>Redis 使用惰性删除和定期删除两种策略来删除过期的键： 惰性删除策略只在碰到过期键时才进行删除操作， 定期删除策略则每隔一段时间， 主动查找并删除过期键。</li>
+<li>执行 SAVE 命令或者 BGSAVE 命令所产生的新 RDB 文件不会包含已经过期的键。</li>
+<li>执行 BGREWRITEAOF 命令所产生的重写 AOF 文件不会包含已经过期的键。</li>
+<li>当一个过期键被删除之后， 服务器会追加一条 DEL 命令到现有 AOF 文件的末尾， 显式地删除过期键。</li>
+<li>当主服务器删除一个过期键之后， 它会向所有从服务器发送一条 DEL 命令， 显式地删除过期键。</li>
+<li>从服务器即使发现过期键， 也不会自作主张地删除它， 而是等待主节点发来 DEL 命令， 这种统一、中心化的过期键删除策略可以保证主从服务器数据的一致性。</li>
+<li>当 Redis 命令对数据库进行修改之后， 服务器会根据配置， 向客户端发送数据库通知。</li>
+</ul>
+<h2 id="RDB-持久化"><a href="#RDB-持久化" class="headerlink" title="RDB 持久化"></a>RDB 持久化</h2><ul>
+<li>RDB 文件结构<br><img src="https://user-images.githubusercontent.com/7789698/30956342-98488282-a469-11e7-919d-d0b5af2a405d.png" alt="2015-09-13_55f523462fa07"></li>
+</ul>
+<p>RDB 文件的最开头是 REDIS 部分， 这个部分的长度为 5 字节， 保存着 “REDIS” 五个字符。 通过这五个字符， 程序可以在载入文件时， 快速检查所载入的文件是否 RDB 文件。</p>
+<p>db_version 长度为 4 字节， 它的值是一个字符串表示的整数， 这个整数记录了 RDB 文件的版本号， 比如 “0006” 就代表 RDB 文件的版本为第六版。</p>
+<p>databases 部分包含着零个或任意多个数据库， 以及各个数据库中的键值对数据：</p>
+<ul>
+<li>如果服务器的数据库状态为空（所有数据库都是空的）， 那么这个部分也为空， 长度为 0 字节。</li>
+<li>如果服务器的数据库状态为非空（有至少一个数据库非空）， 那么这个部分也为非空， 根据数据库所保存键值对的数量、类型和内容不同， 这个部分的长度也会有所不同。</li>
+</ul>
+<p>EOF 常量的长度为 1 字节， 这个常量标志着 RDB 文件正文内容的结束， 当读入程序遇到这个值的时候， 它知道所有数据库的所有键值对都已经载入完毕了</p>
+<p>check_sum 是一个 8 字节长的无符号整数， 保存着一个校验和， 这个校验和是程序通过对 REDIS 、 db_version 、 databases 、 EOF 四个部分的内容进行计算得出的。 服务器在载入 RDB 文件时， 会将载入数据所计算出的校验和与 check_sum 所记录的校验和进行对比， 以此来检查 RDB 文件是否有出错或者损坏的情况出现。</p>
+<ul>
+<li>databases 部分<br>一个 RDB 文件的 databases 部分可以保存任意多个非空数据库。</li>
+</ul>
+<p>每个非空数据库在 RDB 文件中都可以保存为 SELECTDB 、 db_number 、 key_value_pairs 三个部分</p>
+<p>SELECTDB 常量的长度为 1 字节， 当读入程序遇到这个值的时候， 它知道接下来要读入的将是一个数据库号码。</p>
+<p>db_number 保存着一个数据库号码， 根据号码的大小不同， 这个部分的长度可以是 1 字节、 2 字节或者 5 字节。 当程序读入 db_number 部分之后， 服务器会调用 SELECT 命令， 根据读入的数据库号码进行数据库切换， 使得之后读入的键值对可以载入到正确的数据库中。</p>
+<p>key_value_pairs 部分保存了数据库中的所有键值对数据， 如果键值对带有过期时间， 那么过期时间也会和键值对保存在一起。 根据键值对的数量、类型、内容、以及是否有过期时间等条件的不同， key_value_pairs 部分的长度也会有所不同。</p>
+<ul>
+<li>key_value_pairs 部分<br>RDB 文件中的每个 key_value_pairs 部分都保存了一个或以上数量的键值对， 如果键值对带有过期时间的话， 那么键值对的过期时间也会被保存在内。</li>
+</ul>
+<p>不带过期时间的键值对在 RDB 文件中对由 TYPE 、 key 、 value 三部分组成， 如图 IMAGE_KEY_WITHOUT_EXPIRE_TIME 所示</p>
+<ul>
+<li>REDIS_RDB_TYPE_STRING</li>
+<li>REDIS_RDB_TYPE_LIST</li>
+<li>REDIS_RDB_TYPE_SET</li>
+<li>REDIS_RDB_TYPE_ZSET</li>
+<li>REDIS_RDB_TYPE_HASH</li>
+<li>REDIS_RDB_TYPE_LIST_ZIPLIST</li>
+<li>REDIS_RDB_TYPE_SET_INTSET</li>
+<li>REDIS_RDB_TYPE_ZSET_ZIPLIST</li>
+<li>REDIS_RDB_TYPE_HASH_ZIPLIST</li>
+</ul>
+<p>以上列出的每个 TYPE 常量都代表了一种对象类型或者底层编码， 当服务器读入 RDB 文件中的键值对数据时， 程序会根据 TYPE 的值来决定如何读入和解释 value 的数据。<br>key 和 value 分别保存了键值对的键对象和值对象：</p>
+<ul>
+<li>其中 key 总是一个字符串对象， 它的编码方式和 REDIS_RDB_TYPE_STRING 类型的 value 一样。 根据内容长度的不同， key 的长度也会有所不同。</li>
+<li>根据 TYPE 类型的不同， 以及保存内容长度的不同， 保存 value 的结构和长度也会有所不同， 本节稍后会详细说明每种 TYPE 类型的value 结构保存方式。</li>
+</ul>
+<p><a target="_blank" rel="noopener" href="https://www.kancloud.cn/kancloud/redisbook/63879">https://www.kancloud.cn/kancloud/redisbook/63879</a></p>
+<h2 id="AOF-持久化"><a href="#AOF-持久化" class="headerlink" title="AOF 持久化"></a>AOF 持久化</h2><p>AOF 持久化功能的实现可以分为命令追加（append）、文件写入、文件同步（sync）三个步骤。</p>
+<p>当 AOF 持久化功能处于打开状态时， 服务器在执行完一个写命令之后， 会以协议格式将被执行的写命令追加到服务器状态的 aof_buf 缓冲区的末尾：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line">struct redisServer &#123;</span><br><span class="line"></span><br><span class="line">    // ...</span><br><span class="line"></span><br><span class="line">    // AOF 缓冲区</span><br><span class="line">    sds aof_buf;</span><br><span class="line"></span><br><span class="line">    // ...</span><br><span class="line">&#125;;</span><br></pre></td></tr></table></figure>
+
+<ul>
+<li>AOF 文件的写入与同步<br>Redis 的服务器进程就是一个事件循环（loop）， 这个循环中的文件事件负责接收客户端的命令请求， 以及向客户端发送命令回复， 而时间事件则负责执行像 serverCron 函数这样需要定时运行的函数。</li>
+</ul>
+<p>因为服务器在处理文件事件时可能会执行写命令， 使得一些内容被追加到 aof_buf 缓冲区里面， 所以在服务器每次结束一个事件循环之前， 它都会调用 flushAppendOnlyFile 函数， 考虑是否需要将 aof_buf 缓冲区中的内容写入和保存到 AOF 文件里面， 这个过程可以用以下伪代码表示：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br></pre></td><td class="code"><pre><span class="line">def eventLoop():</span><br><span class="line"></span><br><span class="line">    while True:</span><br><span class="line"></span><br><span class="line">        # 处理文件事件，接收命令请求以及发送命令回复</span><br><span class="line">        # 处理命令请求时可能会有新内容被追加到 aof_buf 缓冲区中</span><br><span class="line">        processFileEvents()</span><br><span class="line"></span><br><span class="line">        # 处理时间事件</span><br><span class="line">        processTimeEvents()</span><br><span class="line"></span><br><span class="line">        # 考虑是否要将 aof_buf 中的内容写入和保存到 AOF 文件里面</span><br><span class="line">        flushAppendOnlyFile()</span><br></pre></td></tr></table></figure>
+
+<table>
+<thead>
+<tr>
+<th>appendfsync 选项的值</th>
+<th>flushAppendOnlyFile 函数的行为</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>always</td>
+<td>将 aof_buf 缓冲区中的所有内容写入并同步到 AOF 文件。</td>
+</tr>
+<tr>
+<td>everysec</td>
+<td>将 aof_buf 缓冲区中的所有内容写入到 AOF 文件， 如果上次同步 AOF 文件的时间距离现在超过一秒钟， 那么再次对 AOF 文件进行同步， 并且这个同步操作是由一个线程专门负责执行的。</td>
+</tr>
+<tr>
+<td>no</td>
+<td>将 aof_buf 缓冲区中的所有内容写入到 AOF 文件， 但并不对 AOF 文件进行同步， 何时同步由操作系统来决定。</td>
+</tr>
+</tbody></table>
+<p>如果用户没有主动为 appendfsync 选项设置值， 那么 appendfsync 选项的默认值为 everysec ， 关于 appendfsync 选项的更多信息， 请参考 Redis 项目附带的示例配置文件 redis.conf 。</p>
+<p>为了提高文件的写入效率， 在现代操作系统中， 当用户调用 write 函数， 将一些数据写入到文件的时候， 操作系统通常会将写入数据暂时保存在一个内存缓冲区里面， 等到缓冲区的空间被填满、或者超过了指定的时限之后， 才真正地将缓冲区中的数据写入到磁盘里面。</p>
+<p>这种做法虽然提高了效率， 但也为写入数据带来了安全问题， 因为如果计算机发生停机， 那么保存在内存缓冲区里面的写入数据将会丢失。为此， 系统提供了 fsync 和 fdatasync 两个同步函数， 它们可以强制让操作系统立即将缓冲区中的数据写入到硬盘里面， 从而确保写入数据的安全性。</p>
+<p>如果这时 flushAppendOnlyFile 函数被调用， 假设服务器当前 appendfsync 选项的值为 everysec ， 并且根据 server.aof_last_fsync 属性显示， 距离上次同步 AOF 文件已经超过一秒钟， 那么服务器会先将 aof_buf 中的内容写入到 AOF 文件中， 然后再对 AOF 文件进行同步。</p>
+<p>当 appendfsync 的值为 always 时， 服务器在每个事件循环都要将 aof_buf 缓冲区中的所有内容写入到 AOF 文件， 并且同步 AOF 文件， 所以 always 的效率是 appendfsync 选项三个值当中最慢的一个， 但从安全性来说， always 也是最安全的， 因为即使出现故障停机， AOF 持久化也只会丢失一个事件循环中所产生的命令数据。</p>
+<p>当 appendfsync 的值为 everysec 时， 服务器在每个事件循环都要将 aof_buf 缓冲区中的所有内容写入到 AOF 文件， 并且每隔超过一秒就要在子线程中对 AOF 文件进行一次同步： 从效率上来讲， everysec 模式足够快， 并且就算出现故障停机， 数据库也只丢失一秒钟的命令数据。</p>
+<h2 id="事件"><a href="#事件" class="headerlink" title="事件"></a>事件</h2><p>Redis 基于 Reactor 模式开发了自己的网络事件处理器： 这个处理器被称为文件事件处理器（file event handler）：</p>
+<ul>
+<li>文件事件处理器使用 I/O 多路复用（multiplexing）程序来同时监听多个套接字， 并根据套接字目前执行的任务来为套接字关联不同的事件处理器。</li>
+<li>当被监听的套接字准备好执行连接应答（accept）、读取（read）、写入（write）、关闭（close）等操作时， 与操作相对应的文件事件就会产生， 这时文件事件处理器就会调用套接字之前关联好的事件处理器来处理这些事件。</li>
+</ul>
+<p>虽然文件事件处理器以单线程方式运行， 但通过使用 I/O 多路复用程序来监听多个套接字， 文件事件处理器既实现了高性能的网络通信模型， 又可以很好地与 Redis 服务器中其他同样以单线程方式运行的模块进行对接， 这保持了 Redis 内部单线程设计的简单性。</p>
+<ul>
+<li>文件事件处理器的构成<br>图 IMAGE_CONSTRUCT_OF_FILE_EVENT_HANDLER 展示了文件事件处理器的四个组成部分， 它们分别是套接字、 I/O 多路复用程序、 文件事件分派器（dispatcher）、 以及事件处理器。</li>
+</ul>
+<p><img src="https://user-images.githubusercontent.com/7789698/30958265-2cdfc2a2-a46f-11e7-9bed-b456ce0760c9.png" alt="2015-09-13_55f524b50e6e6"></p>
+<p>文件事件是对套接字操作的抽象， 每当一个套接字准备好执行连接应答（accept）、写入、读取、关闭等操作时， 就会产生一个文件事件。 因为一个服务器通常会连接多个套接字， 所以多个文件事件有可能会并发地出现。</p>
+<p>I/O 多路复用程序负责监听多个套接字， 并向文件事件分派器传送那些产生了事件的套接字。</p>
+<p>尽管多个文件事件可能会并发地出现， 但 I/O 多路复用程序总是会将所有产生事件的套接字都入队到一个队列里面， 然后通过这个队列， 以有序（sequentially）、同步（synchronously）、每次一个套接字的方式向文件事件分派器传送套接字： 当上一个套接字产生的事件被处理完毕之后（该套接字为事件所关联的事件处理器执行完毕）， I/O 多路复用程序才会继续向文件事件分派器传送下一个套接字， 如图 IMAGE_DISPATCH_EVENT_VIA_QUEUE 。</p>
+<p><img src="https://user-images.githubusercontent.com/7789698/30958923-315077b2-a471-11e7-867f-15a4ee350dda.png" alt="2015-09-13_55f524bd8058c"></p>
+<p>文件事件分派器接收 I/O 多路复用程序传来的套接字， 并根据套接字产生的事件的类型， 调用相应的事件处理器。</p>
+<p>服务器会为执行不同任务的套接字关联不同的事件处理器， 这些处理器是一个个函数， 它们定义了某个事件发生时， 服务器应该执行的动作。</p>
+<ul>
+<li>I/O 多路复用程序的实现<br>Redis 的 I/O 多路复用程序的所有功能都是通过包装常见的 select 、 epoll 、 evport 和 kqueue 这些 I/O 多路复用函数库来实现的， 每个 I/O 多路复用函数库在 Redis 源码中都对应一个单独的文件， 比如 ae_select.c 、 ae_epoll.c 、 ae_kqueue.c ， 诸如此类。</li>
+</ul>
+<p><img src="https://user-images.githubusercontent.com/7789698/30959044-950343a2-a471-11e7-925c-f94ce82a3995.png" alt="2015-09-13_55f524bea64ce"></p>
+<p>Redis 在 I/O 多路复用程序的实现源码中用 #include 宏定义了相应的规则， 程序会在编译时自动选择系统中性能最高的 I/O 多路复用函数库来作为 Redis 的 I/O 多路复用程序的底层实现：</p>
+<p><a target="_blank" rel="noopener" href="https://www.kancloud.cn/kancloud/redisbook/63885">https://www.kancloud.cn/kancloud/redisbook/63885</a></p>
+<ul>
+<li>一次完整的客户端与服务器连接事件示例<br>让我们来追踪一次 Redis 客户端与服务器进行连接并发送命令的整个过程， 看看在过程中会产生什么事件， 而这些事件又是如何被处理的。</li>
+</ul>
+<p>假设一个 Redis 服务器正在运作， 那么这个服务器的监听套接字的 AE_READABLE 事件应该正处于监听状态之下， 而该事件所对应的处理器为连接应答处理器。</p>
+<p>如果这时有一个 Redis 客户端向服务器发起连接， 那么监听套接字将产生 AE_READABLE 事件， 触发连接应答处理器执行： 处理器会对客户端的连接请求进行应答， 然后创建客户端套接字， 以及客户端状态， 并将客户端套接字的 AE_READABLE 事件与命令请求处理器进行关联， 使得客户端可以向主服务器发送命令请求。</p>
+<p>之后， 假设客户端向主服务器发送一个命令请求， 那么客户端套接字将产生 AE_READABLE 事件， 引发命令请求处理器执行， 处理器读取客户端的命令内容， 然后传给相关程序去执行。</p>
+<p>执行命令将产生相应的命令回复， 为了将这些命令回复传送回客户端， 服务器会将客户端套接字的 AE_WRITABLE 事件与命令回复处理器进行关联： 当客户端尝试读取命令回复的时候， 客户端套接字将产生 AE_WRITABLE 事件， 触发命令回复处理器执行， 当命令回复处理器将命令回复全部写入到套接字之后， 服务器就会解除客户端套接字的 AE_WRITABLE 事件与命令回复处理器之间的关联。</p>
+<p>图 IMAGE_COMMAND_PROGRESS 总结了上面描述的整个通讯过程， 以及通讯时用到的事件处理器。<br><img src="https://user-images.githubusercontent.com/7789698/30960298-33b7c72c-a475-11e7-8a1b-f2ffe510df96.png" alt="2015-09-13_55f524c5218e4"></p>
+<ul>
+<li>客户端属性<br>客户端状态包含的属性可以分为两类：</li>
+</ul>
+<ol>
+<li>一类是比较通用的属性， 这些属性很少与特定功能相关， 无论客户端执行的是什么工作， 它们都要用到这些属性。</li>
+<li>另外一类是和特定功能相关的属性， 比如操作数据库时需要用到的 db 属性和 dictid 属性， 执行事务时需要用到的 mstate 属性， 以及执行 WATCH 命令时需要用到的 watched_keys 属性， 等等。</li>
+</ol>
+<ul>
+<li>套接字描述符</li>
+</ul>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line">typedef struct redisClient &#123;</span><br><span class="line"></span><br><span class="line">    // ...</span><br><span class="line"></span><br><span class="line">    int fd;</span><br><span class="line"></span><br><span class="line">    // ...</span><br><span class="line"></span><br><span class="line">&#125; redisClient;</span><br></pre></td></tr></table></figure>
+
+<p>根据客户端类型的不同， fd 属性的值可以是 -1 或者是大于 -1 的整数：<br>伪客户端（fake client）的 fd 属性的值为 -1 ： 伪客户端处理的命令请求来源于 AOF 文件或者 Lua 脚本， 而不是网络， 所以这种客户端不需要套接字连接， 自然也不需要记录套接字描述符。 目前 Redis 服务器会在两个地方用到伪客户端， 一个用于载入 AOF 文件并还原数据库状态， 而另一个则用于执行 Lua 脚本中包含的 Redis 命令。</p>
+<p>普通客户端的 fd 属性的值为大于 -1 的整数： 普通客户端使用套接字来与服务器进行通讯， 所以服务器会用 fd 属性来记录客户端套接字的描述符。 因为合法的套接字描述符不能是 -1 ， 所以普通客户端的套接字描述符的值必然是大于 -1 的整数。</p>
+<p>执行 CLIENT_LIST 命令可以列出目前所有连接到服务器的普通客户端， 命令输出中的 fd 域显示了服务器连接客户端所使用的套接字描述符：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">redis&gt; CLIENT list</span><br><span class="line"></span><br><span class="line">addr=127.0.0.1:53428 fd=6 name= age=1242 idle=0 ...</span><br><span class="line">addr=127.0.0.1:53469 fd=7 name= age=4 idle=4 ...</span><br></pre></td></tr></table></figure>
+
+<p>使用 CLIENT_SETNAME 命令可以为客户端设置一个名字， 让客户端的身份变得更清晰。</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line">typedef struct redisClient &#123;</span><br><span class="line"></span><br><span class="line">    // ...</span><br><span class="line"></span><br><span class="line">    robj *name;</span><br><span class="line"></span><br><span class="line">    // ...</span><br><span class="line"></span><br><span class="line">&#125; redisClient;</span><br></pre></td></tr></table></figure>
+
+<ul>
+<li>标志<br>客户端的标志属性 flags 记录了客户端的角色（role）， 以及客户端目前所处的状态：</li>
+</ul>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line">typedef struct redisClient &#123;</span><br><span class="line"></span><br><span class="line">    // ...</span><br><span class="line"></span><br><span class="line">    int flags;</span><br><span class="line"></span><br><span class="line">    // ...</span><br><span class="line"></span><br><span class="line">&#125; redisClient;</span><br><span class="line"></span><br></pre></td></tr></table></figure>
+
+<p>可以是多个标志的二进制或， 比如：</p>
+<p><code>flags = &lt;flag1&gt; | &lt;flag2&gt; | ...</code></p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br></pre></td><td class="code"><pre><span class="line"># 客户端是一个主服务器</span><br><span class="line">REDIS_MASTER</span><br><span class="line"></span><br><span class="line"># 客户端正在被列表命令阻塞</span><br><span class="line">REDIS_BLOCKED</span><br><span class="line"></span><br><span class="line"># 客户端正在执行事务，但事务的安全性已被破坏</span><br><span class="line">REDIS_MULTI | REDIS_DIRTY_CAS</span><br><span class="line"></span><br><span class="line"># 客户端是一个从服务器，并且版本低于 Redis 2.8</span><br><span class="line">REDIS_SLAVE | REDIS_PRE_PSYNC</span><br><span class="line"></span><br><span class="line"># 这是专门用于执行 Lua 脚本包含的 Redis 命令的伪客户端</span><br><span class="line"># 它强制服务器将当前执行的命令写入 AOF 文件，并复制给从服务器</span><br><span class="line">REDIS_LUA_CLIENT | REDIS_FORCE_AOF | REDIS_FORCE_REPL</span><br></pre></td></tr></table></figure>
+
+
+<ul>
+<li>输入缓冲区</li>
+</ul>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line">typedef struct redisClient &#123;</span><br><span class="line"></span><br><span class="line">    // ...</span><br><span class="line"></span><br><span class="line">    sds querybuf;</span><br><span class="line"></span><br><span class="line">    // ...</span><br><span class="line"></span><br><span class="line">&#125; redisClient;</span><br></pre></td></tr></table></figure>
+
+<p>输入缓冲区的大小会根据输入内容动态地缩小或者扩大， 但它的最大大小不能超过 1 GB ， 否则服务器将关闭这个客户端。</p>
+<ul>
+<li>命令与命令参数</li>
+</ul>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line">typedef struct redisClient &#123;</span><br><span class="line"></span><br><span class="line">    // ...</span><br><span class="line"></span><br><span class="line">    robj **argv;</span><br><span class="line"></span><br><span class="line">    int argc;</span><br><span class="line"></span><br><span class="line">    // ...</span><br><span class="line"></span><br><span class="line">&#125; redisClient;</span><br></pre></td></tr></table></figure>
+
+<ul>
+<li>身份验证</li>
+</ul>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line">typedef struct redisClient &#123;</span><br><span class="line"></span><br><span class="line">    // ...</span><br><span class="line"></span><br><span class="line">    int authenticated;</span><br><span class="line"></span><br><span class="line">    // ...</span><br><span class="line"></span><br><span class="line">&#125; redisClient;</span><br></pre></td></tr></table></figure>
+<p>如果 authenticated 的值为 0 ， 那么表示客户端未通过身份验证； 如果 authenticated 的值为 1 ， 那么表示客户端已经通过了身份验证。</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line"># authenticated 属性的值从 0 变为 1</span><br><span class="line">redis&gt; AUTH 123321</span><br><span class="line">OK</span><br><span class="line"></span><br><span class="line">redis&gt; PING</span><br><span class="line">PONG</span><br><span class="line"></span><br><span class="line">redis&gt; SET msg &quot;hello world&quot;</span><br><span class="line">OK</span><br></pre></td></tr></table></figure>
+
+<ul>
+<li>时间</li>
+</ul>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br></pre></td><td class="code"><pre><span class="line">typedef struct redisClient &#123;</span><br><span class="line"></span><br><span class="line">    // ...</span><br><span class="line"></span><br><span class="line">    time_t ctime;</span><br><span class="line"></span><br><span class="line">    time_t lastinteraction;</span><br><span class="line"></span><br><span class="line">    time_t obuf_soft_limit_reached_time;</span><br><span class="line"></span><br><span class="line">    // ...</span><br><span class="line"></span><br><span class="line">&#125; redisClient;</span><br></pre></td></tr></table></figure>
+
+<ul>
+<li>服务端</li>
+<li>命令请求的执行过程</li>
+</ul>
+<p>那么从客户端发送 SET KEY VALUE 命令到获得回复 OK 期间， 客户端和服务器共需要执行以下操作：</p>
+<ol>
+<li>客户端向服务器发送命令请求 SET KEY VALUE 。</li>
+<li>服务器接收并处理客户端发来的命令请求 SET KEY VALUE ， 在数据库中进行设置操作， 并产生命令回复 OK 。</li>
+<li>服务器将命令回复 OK 发送给客户端。</li>
+<li>客户端接收服务器返回的命令回复 OK ， 并将这个回复打印给用户观看。</li>
+</ol>
+<ul>
+<li>发送命令请求<br>Redis 服务器的命令请求来自 Redis 客户端， 当用户在客户端中键入一个命令请求时， 客户端会将这个命令请求转换成协议格式， 然后通过连接到服务器的套接字， 将协议格式的命令请求发送给服务器<br><img src="https://user-images.githubusercontent.com/7789698/30960377-64b676c0-a475-11e7-9dee-d0edcbcd3a30.png" alt="2015-09-13_55f526cca2250"></li>
+</ul>
+<ul>
+<li>读取命令请求</li>
+</ul>
+<p>当客户端与服务器之间的连接套接字因为客户端的写入而变得可读时， 服务器将调用命令请求处理器来执行以下操作：</p>
+<ol>
+<li>读取套接字中协议格式的命令请求， 并将其保存到客户端状态的输入缓冲区里面。</li>
+<li>对输入缓冲区中的命令请求进行分析， 提取出命令请求中包含的命令参数， 以及命令参数的个数， 然后分别将参数和参数个数保存到客户端状态的 argv 属性和 argc 属性里面。</li>
+<li>调用命令执行器， 执行客户端指定的命令。</li>
+</ol>
+<p><a target="_blank" rel="noopener" href="https://www.kancloud.cn/kancloud/redisbook/63892">https://www.kancloud.cn/kancloud/redisbook/63892</a></p>
+<h1 id="多机数据库的实现"><a href="#多机数据库的实现" class="headerlink" title="多机数据库的实现"></a>多机数据库的实现</h1><h2 id="旧版复制功能的实现"><a href="#旧版复制功能的实现" class="headerlink" title="旧版复制功能的实现"></a>旧版复制功能的实现</h2><p>Redis 的复制功能分为同步（sync）和命令传播（command propagate）两个操作：</p>
+<ul>
+<li><p>同步操作用于将从服务器的数据库状态更新至主服务器当前所处的数据库状态。</p>
+</li>
+<li><p>而命令传播操作则用于在主服务器的数据库状态被修改， 导致主从服务器的数据库状态出现不一致时， 让主从服务器的数据库重新回到一致状态。</p>
+</li>
+<li><p>同步<br>当客户端向从服务器发送 SLAVEOF 命令， 要求从服务器复制主服务器时， 从服务器首先需要执行同步操作， 也即是， 将从服务器的数据库状态更新至主服务器当前所处的数据库状态。</p>
+</li>
+</ul>
+<p>从服务器对主服务器的同步操作需要通过向主服务器发送 SYNC 命令来完成， 以下是 SYNC 命令的执行步骤：</p>
+<ol>
+<li>从服务器向主服务器发送 SYNC 命令。</li>
+<li>收到 SYNC 命令的主服务器执行 BGSAVE 命令， 在后台生成一个 RDB 文件， 并使用一个缓冲区记录从现在开始执行的所有写命令。</li>
+<li>当主服务器的 BGSAVE 命令执行完毕时， 主服务器会将 BGSAVE 命令生成的 RDB 文件发送给从服务器， 从服务器接收并载入这个 RDB 文件， 将自己的数据库状态更新至主服务器执行 BGSAVE 命令时的数据库状态。</li>
+<li>主服务器将记录在缓冲区里面的所有写命令发送给从服务器， 从服务器执行这些写命令， 将自己的数据库状态更新至主服务器数据库当前所处的状态。</li>
+</ol>
+<p><img src="https://user-images.githubusercontent.com/7789698/30960614-1ed7a902-a476-11e7-817e-3fe42e095c2b.png" alt="2015-09-13_55f5274336096"></p>
+<table>
+<thead>
+<tr>
+<th>时间</th>
+<th>主服务器</th>
+<th>从服务器</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>T0</td>
+<td>服务器启动。</td>
+<td>服务器启动。</td>
+</tr>
+<tr>
+<td>T1</td>
+<td>执行 SET k1 v1 。</td>
+<td></td>
+</tr>
+<tr>
+<td>T2</td>
+<td>执行 SET k2 v2 。</td>
+<td></td>
+</tr>
+<tr>
+<td>T3</td>
+<td>执行 SET k3 v3 。</td>
+<td></td>
+</tr>
+<tr>
+<td>T4</td>
+<td></td>
+<td>向主服务器发送 SYNC 命令。</td>
+</tr>
+<tr>
+<td>T5</td>
+<td>接收到从服务器发来的 SYNC 命令， 执行 BGSAVE 命令， 创建包含键 k1 、 k2 、 k3 的 RDB 文件， 并使用缓冲区记录接下来执行的所有写命令。</td>
+<td></td>
+</tr>
+<tr>
+<td>T6</td>
+<td>执行 SET k4 v4 ， 并将这个命令记录到缓冲区里面。</td>
+<td></td>
+</tr>
+<tr>
+<td>T7</td>
+<td>执行 SET k5 v5 ， 并将这个命令记录到缓冲区里面。</td>
+<td></td>
+</tr>
+<tr>
+<td>T8</td>
+<td>BGSAVE 命令执行完毕， 向从服务器发送 RDB 文件。</td>
+<td></td>
+</tr>
+<tr>
+<td>T9</td>
+<td></td>
+<td>接收并载入主服务器发来的 RDB 文件 ， 获得 k1 、 k2 、 k3 三个键。</td>
+</tr>
+<tr>
+<td>T10</td>
+<td>向从服务器发送缓冲区中保存的写命令 SET k4 v4 和 SET k5v5 。</td>
+<td></td>
+</tr>
+<tr>
+<td>T11</td>
+<td></td>
+<td>接收并执行主服务器发来的两个 SET 命令， 得到 k4 和 k5 两个键。</td>
+</tr>
+<tr>
+<td>T12</td>
+<td>同步完成， 现在主从服务器两者的数据库都包含了键 k1 、k2 、 k3 、 k4 和 k5 。</td>
+<td>同步完成， 现在主从服务器两者的数据库都包含了键 k1 、 k2 、k3 、 k4 和 k5 。</td>
+</tr>
+</tbody></table>
+<ul>
+<li>命令传播<br>在同步操作执行完毕之后， 主从服务器两者的数据库将达到一致状态， 但这种一致并不是一成不变的 —— 每当主服务器执行客户端发送的写命令时， 主服务器的数据库就有可能会被修改， 并导致主从服务器状态不再一致。</li>
+</ul>
+<p>举个例子， 假设一个主服务器和一个从服务器刚刚完成同步操作， 它们的数据库都保存了相同的五个键 k1 至 k5 ， 如图 IMAGE_CONSISTENT 所示。</p>
+<p><img src="https://user-images.githubusercontent.com/7789698/30960653-3dd78516-a476-11e7-80a9-b96951fb733c.png" alt="2015-09-13_55f52746e0111"></p>
+<p>如果这时， 客户端向主服务器发送命令 DEL k3 ， 那么主服务器在执行完这个 DEL 命令之后， 主从服务器的数据库将出现不一致： 主服务器的数据库已经不再包含键 k3 ， 但这个键却仍然包含在从服务器的数据库里面， 如图 IMAGE_INCONSISTENT 所示。</p>
+<p><img src="https://user-images.githubusercontent.com/7789698/30960690-59c4313e-a476-11e7-8652-1eabd5e35054.png" alt="2015-09-13_55f527488c8ad"></p>
+<p>为了让主从服务器再次回到一致状态， 主服务器需要对从服务器执行命令传播操作： 主服务器会将自己执行的写命令 —— 也即是造成主从服务器不一致的那条写命令 —— 发送给从服务器执行， 当从服务器执行了相同的写命令之后， 主从服务器将再次回到一致状态。</p>
+<p>在上面的例子中， 主服务器因为执行了命令 DEL k3 而导致主从服务器不一致， 所以主服务器将向从服务器发送相同的命令 DEL k3 ： 当从服务器执行完这个命令之后， 主从服务器将再次回到一致状态 —— 现在主从服务器两者的数据库都不再包含键 k3 了， 如图 IMAGE_PROPAGATE_DEL_k3 所示。</p>
+<p><img src="https://user-images.githubusercontent.com/7789698/30960728-7680800c-a476-11e7-9321-7c17ff15f041.png" alt="2015-09-13_55f5274a0ca0f"></p>
+<h2 id="Sentinel"><a href="#Sentinel" class="headerlink" title="Sentinel"></a>Sentinel</h2><ul>
+<li>启动并初始化 Sentinel<br>启动一个 Sentinel 可以使用命令：<br><code>$ redis-sentinel /path/to/your/sentinel.conf</code><br>或者命令：<br><code>$ redis-server /path/to/your/sentinel.conf --sentinel</code><br>这两个命令的效果完全相同。</li>
+</ul>
+<p>当一个 Sentinel 启动时， 它需要执行以下步骤：</p>
+<ol>
+<li>初始化服务器。</li>
+<li>将普通 Redis 服务器使用的代码替换成 Sentinel 专用代码。</li>
+<li>初始化 Sentinel 状态。</li>
+<li>根据给定的配置文件， 初始化 Sentinel 的监视主服务器列表。</li>
+<li>创建连向主服务器的网络连接。</li>
+</ol>
+<ul>
+<li>初始化服务器<br>因为 Sentinel 本质上只是一个运行在特殊模式下的 Redis 服务器， 所以启动 Sentinel 的第一步， 就是初始化一个普通的 Redis 服务器</li>
+</ul>
+<table>
+<thead>
+<tr>
+<th>功能</th>
+<th>使用情况</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>数据库和键值对方面的命令， 比如 SET 、 DEL 、FLUSHDB 。</td>
+<td>不使用。</td>
+</tr>
+<tr>
+<td>事务命令， 比如 MULTI 和 WATCH 。</td>
+<td>不使用。</td>
+</tr>
+<tr>
+<td>脚本命令，比如 EVAL 。</td>
+<td>不使用。</td>
+</tr>
+<tr>
+<td>RDB 持久化命令， 比如 SAVE 和 BGSAVE 。</td>
+<td>不使用。</td>
+</tr>
+<tr>
+<td>AOF 持久化命令， 比如 BGREWRITEAOF 。</td>
+<td>不使用。</td>
+</tr>
+<tr>
+<td>复制命令，比如 SLAVEOF 。</td>
+<td>Sentinel 内部可以使用，但客户端不可以使用。</td>
+</tr>
+<tr>
+<td>发布与订阅命令， 比如 PUBLISH 和 SUBSCRIBE 。</td>
+<td>SUBSCRIBE 、 PSUBSCRIBE 、 UNSUBSCRIBE PUNSUBSCRIBE 四个命令在 Sentinel 内部和客户端都可以使用， 但 PUBLISH 命令只能在 Sentinel 内部使用。</td>
+</tr>
+<tr>
+<td>文件事件处理器（负责发送命令请求、处理命令回复）。</td>
+<td>Sentinel 内部使用， 但关联的文件事件处理器和普通 Redis 服务器不同。</td>
+</tr>
+<tr>
+<td>时间事件处理器（负责执行 serverCron 函数）。</td>
+<td>Sentinel 内部使用， 时间事件的处理器仍然是 serverCron 函数， serverCron函数会调用 sentinel.c/sentinelTimer 函数， 后者包含了 Sentinel 要执行的所有操作。</td>
+</tr>
+</tbody></table>
+<ul>
+<li>使用 Sentinel 专用代码<br>启动 Sentinel 的第二个步骤就是将一部分普通 Redis 服务器使用的代码替换成 Sentinel 专用代码。</li>
+</ul>
+<p>比如说， 普通 Redis 服务器使用 redis.h/REDIS_SERVERPORT 常量的值作为服务器端口：<br><code>#define REDIS_SERVERPORT 6379</code><br>而 Sentinel 则使用 sentinel.c/REDIS_SENTINEL_PORT 常量的值作为服务器端口：<br><code>#define REDIS_SENTINEL_PORT 26379</code></p>
+<p>除此之外， 普通 Redis 服务器使用 redis.c/redisCommandTable 作为服务器的命令表：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line">struct redisCommand redisCommandTable[] = &#123;</span><br><span class="line">    &#123;&quot;get&quot;,getCommand,2,&quot;r&quot;,0,NULL,1,1,1,0,0&#125;,</span><br><span class="line">    &#123;&quot;set&quot;,setCommand,-3,&quot;wm&quot;,0,noPreloadGetKeys,1,1,1,0,0&#125;,</span><br><span class="line">    &#123;&quot;setnx&quot;,setnxCommand,3,&quot;wm&quot;,0,noPreloadGetKeys,1,1,1,0,0&#125;,</span><br><span class="line">    // ...</span><br><span class="line">    &#123;&quot;script&quot;,scriptCommand,-2,&quot;ras&quot;,0,NULL,0,0,0,0,0&#125;,</span><br><span class="line">    &#123;&quot;time&quot;,timeCommand,1,&quot;rR&quot;,0,NULL,0,0,0,0,0&#125;,</span><br><span class="line">    &#123;&quot;bitop&quot;,bitopCommand,-4,&quot;wm&quot;,0,NULL,2,-1,1,0,0&#125;,</span><br><span class="line">    &#123;&quot;bitcount&quot;,bitcountCommand,-2,&quot;r&quot;,0,NULL,1,1,1,0,0&#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<ul>
+<li>初始化 Sentinel 状态<br>在应用了 Sentinel 的专用代码之后， 接下来， 服务器会初始化一个 sentinel.c/sentinelState 结构（后面简称“Sentinel 状态”）， 这个结构保存了服务器中所有和 Sentinel 功能有关的状态 （服务器的一般状态仍然由 redis.h/redisServer 结构保存）：</li>
+</ul>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br></pre></td><td class="code"><pre><span class="line">struct sentinelState &#123;</span><br><span class="line"></span><br><span class="line">    // 当前纪元，用于实现故障转移</span><br><span class="line">    uint64_t current_epoch;</span><br><span class="line"></span><br><span class="line">    // 保存了所有被这个 sentinel 监视的主服务器</span><br><span class="line">    // 字典的键是主服务器的名字</span><br><span class="line">    // 字典的值则是一个指向 sentinelRedisInstance 结构的指针</span><br><span class="line">    dict *masters;</span><br><span class="line"></span><br><span class="line">    // 是否进入了 TILT 模式？</span><br><span class="line">    int tilt;</span><br><span class="line"></span><br><span class="line">    // 目前正在执行的脚本的数量</span><br><span class="line">    int running_scripts;</span><br><span class="line"></span><br><span class="line">    // 进入 TILT 模式的时间</span><br><span class="line">    mstime_t tilt_start_time;</span><br><span class="line"></span><br><span class="line">    // 最后一次执行时间处理器的时间</span><br><span class="line">    mstime_t previous_time;</span><br><span class="line"></span><br><span class="line">    // 一个 FIFO 队列，包含了所有需要执行的用户脚本</span><br><span class="line">    list *scripts_queue;</span><br><span class="line"></span><br><span class="line">&#125; sentinel;</span><br></pre></td></tr></table></figure>
+
+<ul>
+<li>初始化 Sentinel 状态的 masters 属性<br>Sentinel 状态中的 masters 字典记录了所有被 Sentinel 监视的主服务器的相关信息， 其中：</li>
+<li>字典的键是被监视主服务器的名字。</li>
+<li>而字典的值则是被监视主服务器对应的 sentinel.c/sentinelRedisInstance 结构。<br>每个 sentinelRedisInstance 结构（后面简称“实例结构”）代表一个被 Sentinel 监视的 Redis 服务器实例（instance）， 这个实例可以是主服务器、从服务器、或者另外一个 Sentinel 。<br>实例结构包含的属性非常多， 以下代码展示了实例结构在表示主服务器时使用的其中一部分属性， 本章接下来将逐步对实例结构中的各个属性进行介绍：</li>
+</ul>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br></pre></td><td class="code"><pre><span class="line">typedef struct sentinelRedisInstance &#123;</span><br><span class="line"></span><br><span class="line">    // 标识值，记录了实例的类型，以及该实例的当前状态</span><br><span class="line">    int flags;</span><br><span class="line"></span><br><span class="line">    // 实例的名字</span><br><span class="line">    // 主服务器的名字由用户在配置文件中设置</span><br><span class="line">    // 从服务器以及 Sentinel 的名字由 Sentinel 自动设置</span><br><span class="line">    // 格式为 ip:port ，例如 &quot;127.0.0.1:26379&quot;</span><br><span class="line">    char *name;</span><br><span class="line"></span><br><span class="line">    // 实例的运行 ID</span><br><span class="line">    char *runid;</span><br><span class="line"></span><br><span class="line">    // 配置纪元，用于实现故障转移</span><br><span class="line">    uint64_t config_epoch;</span><br><span class="line"></span><br><span class="line">    // 实例的地址</span><br><span class="line">    sentinelAddr *addr;</span><br><span class="line"></span><br><span class="line">    // SENTINEL down-after-milliseconds 选项设定的值</span><br><span class="line">    // 实例无响应多少毫秒之后才会被判断为主观下线（subjectively down）</span><br><span class="line">    mstime_t down_after_period;</span><br><span class="line"></span><br><span class="line">    // SENTINEL monitor &lt;master-name&gt; &lt;IP&gt; &lt;port&gt; &lt;quorum&gt; 选项中的 quorum 参数</span><br><span class="line">    // 判断这个实例为客观下线（objectively down）所需的支持投票数量</span><br><span class="line">    int quorum;</span><br><span class="line"></span><br><span class="line">    // SENTINEL parallel-syncs &lt;master-name&gt; &lt;number&gt; 选项的值</span><br><span class="line">    // 在执行故障转移操作时，可以同时对新的主服务器进行同步的从服务器数量</span><br><span class="line">    int parallel_syncs;</span><br><span class="line"></span><br><span class="line">    // SENTINEL failover-timeout &lt;master-name&gt; &lt;ms&gt; 选项的值</span><br><span class="line">    // 刷新故障迁移状态的最大时限</span><br><span class="line">    mstime_t failover_timeout;</span><br><span class="line"></span><br><span class="line">    // ...</span><br><span class="line"></span><br><span class="line">&#125; sentinelRedisInstance;</span><br></pre></td></tr></table></figure>
+
+<p>sentinelRedisInstance.addr 属性是一个指向 sentinel.c/sentinelAddr 结构的指针， 这个结构保存着实例的 IP 地址和端口号：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line">typedef struct sentinelAddr &#123;</span><br><span class="line"></span><br><span class="line">    char *ip;</span><br><span class="line"></span><br><span class="line">    int port;</span><br><span class="line"></span><br><span class="line">&#125; sentinelAddr;</span><br></pre></td></tr></table></figure>
+
+<p>对 Sentinel 状态的初始化将引发对 masters 字典的初始化， 而 masters 字典的初始化是根据被载入的 Sentinel 配置文件来进行的。</p>
+<ul>
+<li>创建连向主服务器的网络连接<br>初始化 Sentinel 的最后一步是创建连向被监视主服务器的网络连接： Sentinel 将成为主服务器的客户端， 它可以向主服务器发送命令， 并从命令回复中获取相关的信息。</li>
+</ul>
+<p>对于每个被 Sentinel 监视的主服务器来说， Sentinel 会创建两个连向主服务器的异步网络连接：</p>
+<p>一个是命令连接， 这个连接专门用于向主服务器发送命令， 并接收命令回复。<br>另一个是订阅连接， 这个连接专门用于订阅主服务器的 <strong>sentinel</strong>:hello 频道。<br>为什么有两个连接？</p>
+<p>在 Redis 目前的发布与订阅功能中， 被发送的信息都不会保存在 Redis 服务器里面， 如果在信息发送时， 想要接收信息的客户端不在线或者断线， 那么这个客户端就会丢失这条信息。</p>
+<p>因此， 为了不丢失 <strong>sentinel</strong>:hello 频道的任何信息， Sentinel 必须专门用一个订阅连接来接收该频道的信息。<br>而另一方面， 除了订阅频道之外， Sentinel 还又必须向主服务器发送命令， 以此来与主服务器进行通讯， 所以 Sentinel 还必须向主服务器创建命令连接。</p>
+<p>并且因为 Sentinel 需要与多个实例创建多个网络连接， 所以 Sentinel 使用的是异步连接。</p>
+<p>图 IMAGE_SENTINEL_CONNECT_SERVER 展示了一个 Sentinel 向被它监视的两个主服务器 master1 和 master2 创建命令连接和订阅连接的例子。</p>
+<p><img src="https://user-images.githubusercontent.com/7789698/30962201-75404d30-a47b-11e7-8f0c-29ba45be8932.png" alt="2015-09-13_55f5282219b43"></p>
+<ul>
+<li>Sentinel 只是一个运行在特殊模式下的 Redis 服务器， 它使用了和普通模式不同的命令表， 所以 Sentinel 模式能够使用的命令和普通 Redis 服务器能够使用的命令不同。</li>
+<li>Sentinel 会读入用户指定的配置文件， 为每个要被监视的主服务器创建相应的实例结构， 并创建连向主服务器的命令连接和订阅连接， 其中命令连接用于向主服务器发送命令请求， 而订阅连接则用于接收指定频道的消息。</li>
+<li>Sentinel 通过向主服务器发送 INFO 命令来获得主服务器属下所有从服务器的地址信息， 并为这些从服务器创建相应的实例结构， 以及连向这些从服务器的命令连接和订阅连接。</li>
+<li>在一般情况下， Sentinel 以每十秒一次的频率向被监视的主服务器和从服务器发送 INFO 命令， 当主服务器处于下线状态， 或者 Sentinel 正在对主服务器进行故障转移操作时， Sentinel 向从服务器发送 INFO 命令的频率会改为每秒一次。</li>
+<li>对于监视同一个主服务器和从服务器的多个 Sentinel 来说， 它们会以每两秒一次的频率， 通过向被监视服务器的 <strong>sentinel</strong>:hello频道发送消息来向其他 Sentinel 宣告自己的存在。</li>
+<li>每个 Sentinel 也会从 <strong>sentinel</strong>:hello 频道中接收其他 Sentinel 发来的信息， 并根据这些信息为其他 Sentinel 创建相应的实例结构， 以及命令连接。</li>
+<li>Sentinel 只会与主服务器和从服务器创建命令连接和订阅连接， Sentinel 与 Sentinel 之间则只创建命令连接。</li>
+<li>Sentinel 以每秒一次的频率向实例（包括主服务器、从服务器、其他 Sentinel）发送 PING 命令， 并根据实例对 PING 命令的回复来判断实例是否在线： 当一个实例在指定的时长中连续向 Sentinel 发送无效回复时， Sentinel 会将这个实例判断为主观下线。</li>
+<li>当 Sentinel 将一个主服务器判断为主观下线时， 它会向同样监视这个主服务器的其他 Sentinel 进行询问， 看它们是否同意这个主服务器已经进入主观下线状态。</li>
+<li>当 Sentinel 收集到足够多的主观下线投票之后， 它会将主服务器判断为客观下线， 并发起一次针对主服务器的故障转移操作。</li>
+</ul>
+<p>Sentinel 系统选举领头 Sentinel 的方法是对 Raft 算法的领头选举方法的实现</p>
+<ul>
+<li>集群</li>
+</ul>
+<p>一个 Redis 集群通常由多个节点（node）组成， 在刚开始的时候， 每个节点都是相互独立的， 它们都处于一个只包含自己的集群当中， 要组建一个真正可工作的集群， 我们必须将各个独立的节点连接起来， 构成一个包含多个节点的集群。</p>
+<p>连接各个节点的工作可以使用 CLUSTER MEET 命令来完成， 该命令的格式如下：</p>
+<p><code>CLUSTER MEET &lt;ip&gt; &lt;port&gt;</code></p>
+<p>向一个节点 node 发送 CLUSTER MEET 命令， 可以让 node 节点与 ip 和 port 所指定的节点进行握手（handshake）， 当握手成功时， node节点就会将 ip 和 port 所指定的节点添加到 node 节点当前所在的集群中。<br>举个例子， 假设现在有三个独立的节点 127.0.0.1:7000 、 127.0.0.1:7001 、 127.0.0.1:7002 （下文省略 IP 地址，直接使用端口号来区分各个节点）， 我们首先使用客户端连上节点 7000 ， 通过发送 CLUSTER NODE 命令可以看到， 集群目前只包含 7000 自己一个节点：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">$ redis-cli -c -p 7000</span><br><span class="line">127.0.0.1:7000&gt; CLUSTER NODES</span><br><span class="line">51549e625cfda318ad27423a31e7476fe3cd2939 :0 myself,master - 0 0 0 connected</span><br></pre></td></tr></table></figure>
+
+<p>通过向节点 7000 发送以下命令， 我们可以将节点 7001 添加到节点 7000 所在的集群里面：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line">127.0.0.1:7000&gt; CLUSTER MEET 127.0.0.1 7001</span><br><span class="line">OK</span><br><span class="line"></span><br><span class="line">127.0.0.1:7000&gt; CLUSTER NODES</span><br><span class="line">68eef66df23420a5862208ef5b1a7005b806f2ff 127.0.0.1:7001 master - 0 1388204746210 0 connected</span><br><span class="line">51549e625cfda318ad27423a31e7476fe3cd2939 :0 myself,master - 0 0 0 connected</span><br></pre></td></tr></table></figure>
+
+<p>继续向节点 7000 发送以下命令， 我们可以将节点 7002 也添加到节点 7000 和节点 7001 所在的集群里面：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line">127.0.0.1:7000&gt; CLUSTER MEET 127.0.0.1 7002</span><br><span class="line">OK</span><br><span class="line"></span><br><span class="line">127.0.0.1:7000&gt; CLUSTER NODES</span><br><span class="line">68eef66df23420a5862208ef5b1a7005b806f2ff 127.0.0.1:7001 master - 0 1388204848376 0 connected</span><br><span class="line">9dfb4c4e016e627d9769e4c9bb0d4fa208e65c26 127.0.0.1:7002 master - 0 1388204847977 0 connected</span><br><span class="line">51549e625cfda318ad27423a31e7476fe3cd2939 :0 myself,master - 0 0 0 connected</span><br></pre></td></tr></table></figure>
+
+<p>现在， 这个集群里面包含了 7000 、 7001 和 7002 三个节点， 图 IMAGE_CONNECT_NODES_1 至 IMAGE_CONNECT_NODES_5 展示了这三个节点进行握手的整个过程。</p>
+<p><img src="https://user-images.githubusercontent.com/7789698/30962347-f7021b0a-a47b-11e7-9f53-7db8a3818ab6.png" alt="2015-09-13_55f52896e231a"></p>
+<p><img src="https://user-images.githubusercontent.com/7789698/30962355-fe5ce376-a47b-11e7-8373-a0750e4aac54.png" alt="2015-09-13_55f52898c2d57"></p>
+<p><img src="https://user-images.githubusercontent.com/7789698/30962363-045127f6-a47c-11e7-805e-2a7568d9e580.png" alt="2015-09-13_55f52899dbdb6"></p>
+<p><img src="https://user-images.githubusercontent.com/7789698/30962380-15c00106-a47c-11e7-944f-162fc1594086.png" alt="2015-09-13_55f5289b0e82b"></p>
+<ul>
+<li>启动节点<br>一个节点就是一个运行在集群模式下的 Redis 服务器， Redis 服务器在启动时会根据 cluster-enabled 配置选项的是否为 yes 来决定是否开启服务器的集群模式</li>
+</ul>
+<p>节点（运行在集群模式下的 Redis 服务器）会继续使用所有在单机模式中使用的服务器组件， 比如说：</p>
+<ul>
+<li><p>节点会继续使用文件事件处理器来处理命令请求和返回命令回复。</p>
+</li>
+<li><p>节点会继续使用时间事件处理器来执行 serverCron 函数， 而 serverCron 函数又会调用集群模式特有的 clusterCron 函数： clusterCron函数负责执行在集群模式下需要执行的常规操作， 比如向集群中的其他节点发送 Gossip 消息， 检查节点是否断线； 又或者检查是否需要对下线节点进行自动故障转移， 等等。</p>
+</li>
+<li><p>节点会继续使用数据库来保存键值对数据，键值对依然会是各种不同类型的对象。</p>
+</li>
+<li><p>节点会继续使用 RDB 持久化模块和 AOF 持久化模块来执行持久化工作。</p>
+</li>
+<li><p>节点会继续使用发布与订阅模块来执行 PUBLISH 、 SUBSCRIBE 等命令。</p>
+</li>
+<li><p>节点会继续使用复制模块来进行节点的复制工作。</p>
+</li>
+<li><p>节点会继续使用 Lua 脚本环境来执行客户端输入的 Lua 脚本。</p>
+</li>
+<li><p>集群数据结构<br>clusterNode 结构保存了一个节点的当前状态， 比如节点的创建时间， 节点的名字， 节点当前的配置纪元， 节点的 IP 和地址， 等等。</p>
+</li>
+</ul>
+<p>每个节点都会使用一个 clusterNode 结构来记录自己的状态， 并为集群中的所有其他节点（包括主节点和从节点）都创建一个相应的clusterNode 结构， 以此来记录其他节点的状态：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br></pre></td><td class="code"><pre><span class="line">struct clusterNode &#123;</span><br><span class="line"></span><br><span class="line">    // 创建节点的时间</span><br><span class="line">    mstime_t ctime;</span><br><span class="line"></span><br><span class="line">    // 节点的名字，由 40 个十六进制字符组成</span><br><span class="line">    // 例如 68eef66df23420a5862208ef5b1a7005b806f2ff</span><br><span class="line">    char name[REDIS_CLUSTER_NAMELEN];</span><br><span class="line"></span><br><span class="line">    // 节点标识</span><br><span class="line">    // 使用各种不同的标识值记录节点的角色（比如主节点或者从节点），</span><br><span class="line">    // 以及节点目前所处的状态（比如在线或者下线）。</span><br><span class="line">    int flags;</span><br><span class="line"></span><br><span class="line">    // 节点当前的配置纪元，用于实现故障转移</span><br><span class="line">    uint64_t configEpoch;</span><br><span class="line"></span><br><span class="line">    // 节点的 IP 地址</span><br><span class="line">    char ip[REDIS_IP_STR_LEN];</span><br><span class="line"></span><br><span class="line">    // 节点的端口号</span><br><span class="line">    int port;</span><br><span class="line"></span><br><span class="line">    // 保存连接节点所需的有关信息</span><br><span class="line">    clusterLink *link;</span><br><span class="line"></span><br><span class="line">    // ...</span><br><span class="line"></span><br><span class="line">&#125;;</span><br></pre></td></tr></table></figure>
+
+<p>clusterNode 结构的 link 属性是一个 clusterLink 结构， 该结构保存了连接节点所需的有关信息， 比如套接字描述符， 输入缓冲区和输出缓冲区：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br></pre></td><td class="code"><pre><span class="line">typedef struct clusterLink &#123;</span><br><span class="line"></span><br><span class="line">    // 连接的创建时间</span><br><span class="line">    mstime_t ctime;</span><br><span class="line"></span><br><span class="line">    // TCP 套接字描述符</span><br><span class="line">    int fd;</span><br><span class="line"></span><br><span class="line">    // 输出缓冲区，保存着等待发送给其他节点的消息（message）。</span><br><span class="line">    sds sndbuf;</span><br><span class="line"></span><br><span class="line">    // 输入缓冲区，保存着从其他节点接收到的消息。</span><br><span class="line">    sds rcvbuf;</span><br><span class="line"></span><br><span class="line">    // 与这个连接相关联的节点，如果没有的话就为 NULL</span><br><span class="line">    struct clusterNode *node;</span><br><span class="line"></span><br><span class="line">&#125; clusterLink;</span><br></pre></td></tr></table></figure>
+
+<p>redisClient 结构和 clusterLink 结构的相同和不同之处</p>
+<p>redisClient 结构和 clusterLink 结构都有自己的套接字描述符和输入、输出缓冲区， 这两个结构的区别在于， redisClient 结构中的套接字和缓冲区是用于连接客户端的， 而 clusterLink 结构中的套接字和缓冲区则是用于连接节点的。</p>
+<p>最后， 每个节点都保存着一个 clusterState 结构， 这个结构记录了在当前节点的视角下， 集群目前所处的状态 —— 比如集群是在线还是下线， 集群包含多少个节点， 集群当前的配置纪元， 诸如此类：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br></pre></td><td class="code"><pre><span class="line">typedef struct clusterState &#123;</span><br><span class="line"></span><br><span class="line">    // 指向当前节点的指针</span><br><span class="line">    clusterNode *myself;</span><br><span class="line"></span><br><span class="line">    // 集群当前的配置纪元，用于实现故障转移</span><br><span class="line">    uint64_t currentEpoch;</span><br><span class="line"></span><br><span class="line">    // 集群当前的状态：是在线还是下线</span><br><span class="line">    int state;</span><br><span class="line"></span><br><span class="line">    // 集群中至少处理着一个槽的节点的数量</span><br><span class="line">    int size;</span><br><span class="line"></span><br><span class="line">    // 集群节点名单（包括 myself 节点）</span><br><span class="line">    // 字典的键为节点的名字，字典的值为节点对应的 clusterNode 结构</span><br><span class="line">    dict *nodes;</span><br><span class="line"></span><br><span class="line">    // ...</span><br><span class="line"></span><br><span class="line">&#125; clusterState;</span><br></pre></td></tr></table></figure>
+
+<p>以前面介绍的 7000 、 7001 、 7002 三个节点为例， 图 IMAGE_CLUSTER_STATE_OF_7000 展示了节点 7000 创建的 clusterState 结构， 这个结构从节点 7000 的角度记录了集群、以及集群包含的三个节点的当前状态 （为了空间考虑，图中省略了 clusterNode 结构的一部分属性）：</p>
+<ul>
+<li>结构的 currentEpoch 属性的值为 0 ， 表示集群当前的配置纪元为 0 。</li>
+<li>结构的 size 属性的值为 0 ， 表示集群目前没有任何节点在处理槽： 因此结构的 state 属性的值为 REDIS_CLUSTER_FAIL —— 这表示集群目前处于下线状态。</li>
+<li>结构的 nodes 字典记录了集群目前包含的三个节点， 这三个节点分别由三个 clusterNode 结构表示： 其中 myself 指针指向代表节点 7000 的 clusterNode 结构， 而字典中的另外两个指针则分别指向代表节点 7001 和代表节点 7002 的 clusterNode 结构， 这两个节点是节点 7000 已知的在集群中的其他节点。</li>
+<li>三个节点的 clusterNode 结构的 flags 属性都是 REDIS_NODE_MASTER ，说明三个节点都是主节点。</li>
+</ul>
+<p>节点 7001 和节点 7002 也会创建类似的 clusterState 结构：</p>
+<ul>
+<li><p>不过在节点 7001 创建的 clusterState 结构中， myself 指针将指向代表节点 7001 的 clusterNode 结构， 而节点 7000 和节点 7002 则是集群中的其他节点。</p>
+</li>
+<li><p>而在节点 7002 创建的 clusterState 结构中， myself 指针将指向代表节点 7002 的 clusterNode 结构， 而节点 7000 和节点 7001 则是集群中的其他节点。</p>
+</li>
+<li><p>CLUSTER MEET 命令的实现<br>通过向节点 A 发送 CLUSTER MEET 命令， 客户端可以让接收命令的节点 A 将另一个节点 B 添加到节点 A 当前所在的集群里面：</p>
+</li>
+</ul>
+<p><code>CLUSTER MEET &lt;ip&gt; &lt;port&gt;</code></p>
+<p>收到命令的节点 A 将与节点 B 进行握手（handshake）， 以此来确认彼此的存在， 并为将来的进一步通信打好基础：</p>
+<ol>
+<li>节点 A 会为节点 B 创建一个 clusterNode 结构， 并将该结构添加到自己的 clusterState.nodes 字典里面。</li>
+<li>之后， 节点 A 将根据 CLUSTER MEET 命令给定的 IP 地址和端口号， 向节点 B 发送一条 MEET 消息（message）。</li>
+<li>如果一切顺利， 节点 B 将接收到节点 A 发送的 MEET 消息， 节点 B 会为节点 A 创建一个 clusterNode 结构， 并将该结构添加到自己的 clusterState.nodes 字典里面。</li>
+<li>之后， 节点 B 将向节点 A 返回一条 PONG 消息。</li>
+<li>如果一切顺利， 节点 A 将接收到节点 B 返回的 PONG 消息， 通过这条 PONG 消息节点 A 可以知道节点 B 已经成功地接收到了自己发送的 MEET 消息。</li>
+<li>之后， 节点 A 将向节点 B 返回一条 PING 消息。</li>
+<li>如果一切顺利， 节点 B 将接收到节点 A 返回的 PING 消息， 通过这条 PING 消息节点 B 可以知道节点 A 已经成功地接收到了自己返回的 PONG 消息， 握手完成。</li>
+</ol>
+<p><img src="https://user-images.githubusercontent.com/7789698/30962518-aaeae3e0-a47c-11e7-9e7e-49d70d108122.png" alt="2015-09-13_55f528a75c69b"></p>
+<p>之后， 节点 A 会将节点 B 的信息通过 Gossip 协议传播给集群中的其他节点， 让其他节点也与节点 B 进行握手， 最终， 经过一段时间之后， 节点 B 会被集群中的所有节点认识。</p>
+<h1 id="独立功能的实现"><a href="#独立功能的实现" class="headerlink" title="独立功能的实现"></a>独立功能的实现</h1><p><a target="_blank" rel="noopener" href="https://www.kancloud.cn/kancloud/redisbook/63905">https://www.kancloud.cn/kancloud/redisbook/63905</a></p>
+
+    </div>
+
+    
+    
+    
+
+    <footer class="post-footer">
+          <div class="reward-container">
+  <div>Buy me a coffee</div>
+  <button>
+    Donate
+  </button>
+  <div class="post-reward">
+      <div>
+        <img src="/hexo/images/wechatpay.png" alt="Absurd WeChat Pay">
+        <span>WeChat Pay</span>
+      </div>
+
+  </div>
+</div>
+
+          <div class="post-tags">
+              <a href="/hexo/tags/%E7%AC%94%E8%AE%B0/" rel="tag"># 笔记</a>
+              <a href="/hexo/tags/redis/" rel="tag"># redis</a>
+          </div>
+
+        
+
+          <div class="post-nav">
+            <div class="post-nav-item">
+                <a href="/hexo/post/429dd195.html" rel="prev" title="NIO">
+                  <i class="fa fa-chevron-left"></i> NIO
+                </a>
+            </div>
+            <div class="post-nav-item">
+                <a href="/hexo/post/da0ac317.html" rel="next" title="从源码了解spring MVC">
+                  从源码了解spring MVC <i class="fa fa-chevron-right"></i>
+                </a>
+            </div>
+          </div>
+    </footer>
+  </article>
+</div>
+
+
+
+
+
+
+</div>
+  </main>
+
+  <footer class="footer">
+    <div class="footer-inner">
+
+
+<div class="copyright">
+  &copy; 
+  <span itemprop="copyrightYear">2022</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">Absurd</span>
+</div>
+  <div class="powered-by">Powered by <a href="https://hexo.io/" rel="noopener" target="_blank">Hexo</a> & <a href="https://theme-next.js.org/mist/" rel="noopener" target="_blank">NexT.Mist</a>
+  </div>
+
+    </div>
+  </footer>
+
+  
+  <script src="https://cdn.jsdelivr.net/npm/animejs@3.2.1/lib/anime.min.js" integrity="sha256-XL2inqUJaslATFnHdJOi9GfQ60on8Wx1C2H8DYiN1xY=" crossorigin="anonymous"></script>
+<script src="/hexo/js/comments.js"></script><script src="/hexo/js/utils.js"></script><script src="/hexo/js/motion.js"></script><script src="/hexo/js/schemes/muse.js"></script><script src="/hexo/js/next-boot.js"></script>
+
+  
+<script src="https://cdn.jsdelivr.net/npm/hexo-generator-searchdb@1.4.0/dist/search.js" integrity="sha256-vXZMYLEqsROAXkEw93GGIvaB2ab+QW6w3+1ahD9nXXA=" crossorigin="anonymous"></script>
+<script src="/hexo/js/third-party/search/local-search.js"></script>
+
+
+
+
+
+  
+
+
+
+
+
+</body>
+</html>

@@ -1,0 +1,747 @@
+<!DOCTYPE html>
+<html lang="zh-Hans">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width">
+<meta name="theme-color" content="#222" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#222" media="(prefers-color-scheme: dark)">
+<meta name="generator" content="Hexo 6.0.0">
+
+
+  <link rel="apple-touch-icon" sizes="180x180" href="/hexo/images/apple-touch-icon-next.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/hexo/images/favicon-32x32-next.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/hexo/images/favicon-16x16-next.png">
+  <link rel="mask-icon" href="/hexo/images/logo.svg" color="#222">
+
+<link rel="stylesheet" href="/hexo/css/main.css">
+
+
+
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@5.15.4/css/all.min.css" integrity="sha256-mUZM63G8m73Mcidfrv5E+Y61y7a12O5mW4ezU3bxqW4=" crossorigin="anonymous">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/animate.css@3.1.1/animate.min.css" integrity="sha256-PR7ttpcvz8qrF57fur/yAx1qXMFJeJFiA6pSzWi0OIE=" crossorigin="anonymous">
+
+<script class="next-config" data-name="main" type="application/json">{"hostname":"www1350.github.io","root":"/hexo/","images":"/hexo/images","scheme":"Mist","darkmode":true,"version":"8.9.0","exturl":false,"sidebar":{"position":"left","display":"post","padding":18,"offset":12},"copycode":false,"bookmark":{"enable":false,"color":"#222","save":"auto"},"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"stickytabs":false,"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"fadeInDown","post_body":"fadeInDown","coll_header":"fadeInLeft","sidebar":"fadeInUp"}},"prism":false,"i18n":{"placeholder":"Searching...","empty":"We didn't find any results for the search: ${query}","hits_time":"${hits} results found in ${time} ms","hits":"${hits} results found"},"path":"/hexo/search.xml","localsearch":{"enable":true,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":true}}</script><script src="/hexo/js/config.js"></script>
+<meta name="description" content="netty3.x入门 123456789101112131415161718192021public void run() &amp;#123;    &#x2F;&#x2F; Configure the server.    ServerBootstrap bootstrap &#x3D; new ServerBootstrap(            new NioServerSocketChannelFactory(">
+<meta property="og:type" content="article">
+<meta property="og:title" content="netty入门到精通">
+<meta property="og:url" content="https://www1350.github.io/hexo/post/d38fb5d0.html">
+<meta property="og:site_name" content="Absurd博客">
+<meta property="og:description" content="netty3.x入门 123456789101112131415161718192021public void run() &amp;#123;    &#x2F;&#x2F; Configure the server.    ServerBootstrap bootstrap &#x3D; new ServerBootstrap(            new NioServerSocketChannelFactory(">
+<meta property="og:locale">
+<meta property="og:image" content="https://user-images.githubusercontent.com/7789698/33238160-3fe36bf2-d2c2-11e7-8ecb-cd339369a28e.png">
+<meta property="og:image" content="https://user-images.githubusercontent.com/7789698/33238166-663b09d6-d2c2-11e7-83a9-ad54630d7866.png">
+<meta property="og:image" content="https://user-images.githubusercontent.com/7789698/33238280-80455306-d2c5-11e7-9b35-5970d907283b.png">
+<meta property="og:image" content="https://user-images.githubusercontent.com/7789698/33238425-90b989a2-d2c8-11e7-8b81-ae8eb80ed1ae.png">
+<meta property="og:image" content="https://user-images.githubusercontent.com/7789698/33237900-9d46f7ac-d2bb-11e7-9c72-0cbb05445aa6.png">
+<meta property="og:image" content="https://user-images.githubusercontent.com/7789698/33237903-c687db40-d2bb-11e7-99b5-6e232728da4d.png">
+<meta property="og:image" content="https://user-images.githubusercontent.com/7789698/33237904-ca2bdbc0-d2bb-11e7-922a-04325053362e.png">
+<meta property="article:published_time" content="2018-04-03T14:39:09.000Z">
+<meta property="article:modified_time" content="2022-01-28T07:09:17.735Z">
+<meta property="article:author" content="Absurd">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="https://user-images.githubusercontent.com/7789698/33238160-3fe36bf2-d2c2-11e7-8ecb-cd339369a28e.png">
+
+
+<link rel="canonical" href="https://www1350.github.io/hexo/post/d38fb5d0.html">
+
+
+
+<script class="next-config" data-name="page" type="application/json">{"sidebar":"","isHome":false,"isPost":true,"lang":"zh-Hans","comments":true,"permalink":"https://www1350.github.io/hexo/post/d38fb5d0.html","path":"post/d38fb5d0.html","title":"netty入门到精通"}</script>
+
+<script class="next-config" data-name="calendar" type="application/json">""</script>
+<title>netty入门到精通 | Absurd博客</title>
+  
+
+
+
+
+  <noscript>
+    <link rel="stylesheet" href="/hexo/css/noscript.css">
+  </noscript>
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage" class="use-motion">
+  <div class="headband"></div>
+
+  <main class="main">
+    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="Toggle navigation bar" role="button">
+        <span class="toggle-line"></span>
+        <span class="toggle-line"></span>
+        <span class="toggle-line"></span>
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/hexo/" class="brand" rel="start">
+      <i class="logo-line"></i>
+      <p class="site-title">Absurd博客</p>
+      <i class="logo-line"></i>
+    </a>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger">
+        <i class="fa fa-search fa-fw fa-lg"></i>
+    </div>
+  </div>
+</div>
+
+
+
+<nav class="site-nav">
+  <ul class="main-menu menu">
+        <li class="menu-item menu-item-home"><a href="/hexo/" rel="section"><i class="fa fa-home fa-fw"></i>Home</a></li>
+        <li class="menu-item menu-item-about"><a href="/hexo/about/" rel="section"><i class="fa fa-user fa-fw"></i>About</a></li>
+        <li class="menu-item menu-item-tags"><a href="/hexo/tags/" rel="section"><i class="fa fa-tags fa-fw"></i>Tags</a></li>
+        <li class="menu-item menu-item-categories"><a href="/hexo/categories/" rel="section"><i class="fa fa-th fa-fw"></i>Categories</a></li>
+        <li class="menu-item menu-item-archives"><a href="/hexo/archives/" rel="section"><i class="fa fa-archive fa-fw"></i>Archives</a></li>
+        <li class="menu-item menu-item-bookmarks"><a href="/hexo/bookmarks/" rel="section"><i class="fa fa-archive fa-fw"></i>bookmarks</a></li>
+      <li class="menu-item menu-item-search">
+        <a role="button" class="popup-trigger"><i class="fa fa-search fa-fw"></i>Search
+        </a>
+      </li>
+  </ul>
+</nav>
+
+
+
+  <div class="search-pop-overlay">
+    <div class="popup search-popup"><div class="search-header">
+  <span class="search-icon">
+    <i class="fa fa-search"></i>
+  </span>
+  <div class="search-input-container">
+    <input autocomplete="off" autocapitalize="off" maxlength="80"
+           placeholder="Searching..." spellcheck="false"
+           type="search" class="search-input">
+  </div>
+  <span class="popup-btn-close" role="button">
+    <i class="fa fa-times-circle"></i>
+  </span>
+</div>
+<div class="search-result-container no-result">
+  <div class="search-result-icon">
+    <i class="fa fa-spinner fa-pulse fa-5x"></i>
+  </div>
+</div>
+
+    </div>
+  </div>
+
+</div>
+        
+  
+  <div class="toggle sidebar-toggle" role="button">
+    <span class="toggle-line"></span>
+    <span class="toggle-line"></span>
+    <span class="toggle-line"></span>
+  </div>
+
+  <aside class="sidebar">
+
+    <div class="sidebar-inner sidebar-nav-active sidebar-toc-active">
+      <ul class="sidebar-nav">
+        <li class="sidebar-nav-toc">
+          Table of Contents
+        </li>
+        <li class="sidebar-nav-overview">
+          Overview
+        </li>
+      </ul>
+
+      <div class="sidebar-panel-container">
+        <!--noindex-->
+        <div class="post-toc-wrap sidebar-panel">
+            <div class="post-toc animated"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#netty3-x"><span class="nav-number">1.</span> <span class="nav-text">netty3.x</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#netty4-x"><span class="nav-number">2.</span> <span class="nav-text">netty4.x</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#Channel"><span class="nav-number">3.</span> <span class="nav-text">Channel</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#Channel%E7%94%9F%E5%91%BD%E5%91%A8%E6%9C%9F"><span class="nav-number">3.1.</span> <span class="nav-text">Channel生命周期</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#ChannelHandler%E7%94%9F%E5%91%BD%E5%91%A8%E6%9C%9F"><span class="nav-number">3.2.</span> <span class="nav-text">ChannelHandler生命周期</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#ChannelInboundHandler%E2%80%94%E2%80%94%E5%A4%84%E7%90%86%E8%BE%93%E5%85%A5%E6%95%B0%E6%8D%AE%E5%92%8C%E6%89%80%E6%9C%89%E7%B1%BB%E5%9E%8B%E7%9A%84%E7%8A%B6%E6%80%81%E5%8F%98%E5%8C%96"><span class="nav-number">3.2.1.</span> <span class="nav-text">ChannelInboundHandler——处理输入数据和所有类型的状态变化</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#ChannelOutboundHandler%E2%80%94%E2%80%94%E5%A4%84%E7%90%86%E8%BE%93%E5%87%BA%E6%95%B0%E6%8D%AE%EF%BC%8C%E5%8F%AF%E4%BB%A5%E6%8B%A6%E6%88%AA%E6%89%80%E6%9C%89%E6%93%8D%E4%BD%9C"><span class="nav-number">3.2.2.</span> <span class="nav-text">ChannelOutboundHandler——处理输出数据，可以拦截所有操作</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#ChannelHandler%E9%80%82%E9%85%8D%E5%99%A8%E7%B1%BB"><span class="nav-number">3.2.3.</span> <span class="nav-text">ChannelHandler适配器类</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E8%B5%84%E6%BA%90%E7%AE%A1%E7%90%86"><span class="nav-number">3.3.</span> <span class="nav-text">资源管理</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#ChannelPipeline%E6%8E%A5%E5%8F%A3"><span class="nav-number">3.4.</span> <span class="nav-text">ChannelPipeline接口</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#ChannelHandlerContext%E6%8E%A5%E5%8F%A3"><span class="nav-number">3.5.</span> <span class="nav-text">ChannelHandlerContext接口</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%BC%82%E5%B8%B8%E5%87%BA%E7%AB%99"><span class="nav-number">3.6.</span> <span class="nav-text">异常出站</span></a></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#ByteBuf"><span class="nav-number">4.</span> <span class="nav-text">ByteBuf</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#ByteBufAllocator"><span class="nav-number">5.</span> <span class="nav-text">ByteBufAllocator</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#Unpooled"><span class="nav-number">6.</span> <span class="nav-text">Unpooled</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#ByteBufUtil%E7%B1%BB"><span class="nav-number">7.</span> <span class="nav-text">ByteBufUtil类</span></a></li></ol></div>
+        </div>
+        <!--/noindex-->
+
+        <div class="site-overview-wrap sidebar-panel">
+          <div class="site-author site-overview-item animated" itemprop="author" itemscope itemtype="http://schema.org/Person">
+    <img class="site-author-image" itemprop="image" alt="Absurd"
+      src="/hexo/images/avatar.gif">
+  <p class="site-author-name" itemprop="name">Absurd</p>
+  <div class="site-description" itemprop="description"></div>
+</div>
+<div class="site-state-wrap site-overview-item animated">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+        <a href="/hexo/archives/">
+          <span class="site-state-item-count">75</span>
+          <span class="site-state-item-name">posts</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+          <a href="/hexo/categories/">
+        <span class="site-state-item-count">17</span>
+        <span class="site-state-item-name">categories</span></a>
+      </div>
+      <div class="site-state-item site-state-tags">
+          <a href="/hexo/tags/">
+        <span class="site-state-item-count">46</span>
+        <span class="site-state-item-name">tags</span></a>
+      </div>
+  </nav>
+</div>
+  <div class="links-of-author site-overview-item animated">
+      <span class="links-of-author-item">
+        <a href="https://github.com/www1350" title="GitHub → https:&#x2F;&#x2F;github.com&#x2F;www1350" rel="noopener" target="_blank"><i class="fab fa-github fa-fw"></i>GitHub</a>
+      </span>
+      <span class="links-of-author-item">
+        <a href="mailto:www_1350@163.com" title="E-Mail → mailto:www_1350@163.com" rel="noopener" target="_blank"><i class="fa fa-envelope fa-fw"></i>E-Mail</a>
+      </span>
+  </div>
+
+
+
+        </div>
+      </div>
+    </div>
+  </aside>
+  <div class="sidebar-dimmer"></div>
+
+
+    </header>
+
+    
+  <div class="back-to-top" role="button" aria-label="Back to top">
+    <i class="fa fa-arrow-up"></i>
+    <span>0%</span>
+  </div>
+
+<noscript>
+  <div class="noscript-warning">Theme NexT works best with JavaScript enabled</div>
+</noscript>
+
+
+    <div class="main-inner post posts-expand">
+
+
+  
+
+
+<div class="post-block">
+  
+  
+
+  <article itemscope itemtype="http://schema.org/Article" class="post-content" lang="zh-Hans">
+    <link itemprop="mainEntityOfPage" href="https://www1350.github.io/hexo/post/d38fb5d0.html">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/hexo/images/avatar.gif">
+      <meta itemprop="name" content="Absurd">
+      <meta itemprop="description" content="">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Absurd博客">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          netty入门到精通
+        </h1>
+
+        <div class="post-meta-container">
+          <div class="post-meta">
+    <span class="post-meta-item">
+      <span class="post-meta-item-icon">
+        <i class="far fa-calendar"></i>
+      </span>
+      <span class="post-meta-item-text">Posted on</span>
+
+      <time title="Created: 2018-04-03 22:39:09" itemprop="dateCreated datePublished" datetime="2018-04-03T22:39:09+08:00">2018-04-03</time>
+    </span>
+    <span class="post-meta-item">
+      <span class="post-meta-item-icon">
+        <i class="far fa-calendar-check"></i>
+      </span>
+      <span class="post-meta-item-text">Edited on</span>
+      <time title="Modified: 2022-01-28 15:09:17" itemprop="dateModified" datetime="2022-01-28T15:09:17+08:00">2022-01-28</time>
+    </span>
+
+  
+</div>
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+        <h1 id="netty3-x"><a href="#netty3-x" class="headerlink" title="netty3.x"></a>netty3.x</h1><p><strong>入门</strong></p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">run</span><span class="params">()</span> </span>&#123;</span><br><span class="line">    <span class="comment">// Configure the server.</span></span><br><span class="line">    ServerBootstrap bootstrap = <span class="keyword">new</span> ServerBootstrap(</span><br><span class="line">            <span class="keyword">new</span> NioServerSocketChannelFactory(</span><br><span class="line">                    Executors.newCachedThreadPool(),</span><br><span class="line">                    Executors.newCachedThreadPool()));</span><br><span class="line"></span><br><span class="line">    <span class="comment">// Set up the pipeline factory.</span></span><br><span class="line">    bootstrap.setPipelineFactory(<span class="keyword">new</span> ChannelPipelineFactory() &#123;</span><br><span class="line">        <span class="function"><span class="keyword">public</span> ChannelPipeline <span class="title">getPipeline</span><span class="params">()</span> <span class="keyword">throws</span> Exception </span>&#123;</span><br><span class="line">            <span class="keyword">return</span> Channels.pipeline(<span class="keyword">new</span> EchoServerHandler());</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;);</span><br><span class="line">         bootstrap.setOption(<span class="string">&quot;child.tcpNoDelay&quot;</span>, <span class="keyword">true</span>);</span><br><span class="line">        bootstrap.setOption(<span class="string">&quot;child.keepAlive&quot;</span>, <span class="keyword">true</span>);</span><br><span class="line">....</span><br><span class="line">    <span class="comment">// Bind and start to accept incoming connections.</span></span><br><span class="line">    bootstrap.bind(<span class="keyword">new</span> InetSocketAddress(port));</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"></span><br></pre></td></tr></table></figure>
+
+<p>业务代码</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">EchoServerHandler</span> <span class="keyword">extends</span> <span class="title">SimpleChannelUpstreamHandler</span> </span>&#123;</span><br><span class="line"></span><br><span class="line">    <span class="meta">@Override</span></span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">messageReceived</span><span class="params">(</span></span></span><br><span class="line"><span class="params"><span class="function">            ChannelHandlerContext ctx, MessageEvent e)</span> </span>&#123;</span><br><span class="line">        <span class="comment">// Send back the received message to the remote peer.</span></span><br><span class="line">        e.getChannel().write(e.getMessage());</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p><strong>精通</strong><br>手册：<a target="_blank" rel="noopener" href="http://netty.io/3.7/guide/">http://netty.io/3.7/guide/</a></p>
+<h1 id="netty4-x"><a href="#netty4-x" class="headerlink" title="netty4.x"></a>netty4.x</h1><p><strong>入门</strong><br>服务端</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br></pre></td><td class="code"><pre><span class="line">   <span class="comment">/**</span></span><br><span class="line"><span class="comment">   * 服务端监听的端口地址</span></span><br><span class="line"><span class="comment">   */</span></span><br><span class="line">  <span class="keyword">private</span> <span class="keyword">static</span> <span class="keyword">final</span> <span class="keyword">int</span> portNumber = <span class="number">7878</span>;</span><br><span class="line"></span><br><span class="line">EventLoopGroup bossGroup = <span class="keyword">new</span> NioEventLoopGroup();</span><br><span class="line">  EventLoopGroup workerGroup = <span class="keyword">new</span> NioEventLoopGroup();</span><br><span class="line">  <span class="keyword">try</span> &#123;</span><br><span class="line">      ServerBootstrap b = <span class="keyword">new</span> ServerBootstrap();</span><br><span class="line">      b.group(bossGroup, workerGroup);</span><br><span class="line">      b.channel(NioServerSocketChannel.class);</span><br><span class="line">      b.childHandler(<span class="keyword">new</span> HelloServerInitializer());</span><br><span class="line"></span><br><span class="line">      <span class="comment">// 服务器绑定端口监听</span></span><br><span class="line">      ChannelFuture f = b.bind(portNumber).sync();</span><br><span class="line"></span><br><span class="line">      System.out.println(<span class="string">&quot;init server&quot;</span>);</span><br><span class="line"></span><br><span class="line">      <span class="comment">// 监听服务器关闭监听</span></span><br><span class="line">      f.channel().closeFuture().sync();</span><br><span class="line"></span><br><span class="line">      <span class="comment">// 可以简写为</span></span><br><span class="line">      <span class="comment">/* b.bind(portNumber).sync().channel().closeFuture().sync(); */</span></span><br><span class="line">  &#125; <span class="keyword">finally</span> &#123;</span><br><span class="line">      bossGroup.shutdownGracefully();</span><br><span class="line">      workerGroup.shutdownGracefully();</span><br><span class="line">  &#125;</span><br></pre></td></tr></table></figure>
+
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">HelloServerInitializer</span> <span class="keyword">extends</span> <span class="title">ChannelInitializer</span>&lt;<span class="title">SocketChannel</span>&gt; </span>&#123;</span><br><span class="line"></span><br><span class="line">    <span class="meta">@Override</span></span><br><span class="line">    <span class="function"><span class="keyword">protected</span> <span class="keyword">void</span> <span class="title">initChannel</span><span class="params">(SocketChannel ch)</span> <span class="keyword">throws</span> Exception </span>&#123;</span><br><span class="line">        ChannelPipeline pipeline = ch.pipeline();</span><br><span class="line"></span><br><span class="line">        <span class="comment">// 以(&quot;\n&quot;)为结尾分割的 解码器</span></span><br><span class="line">        pipeline.addLast(<span class="string">&quot;framer&quot;</span>, <span class="keyword">new</span> DelimiterBasedFrameDecoder(<span class="number">8192</span>, Delimiters.lineDelimiter()));</span><br><span class="line"></span><br><span class="line">        <span class="comment">// 字符串解码 和 编码</span></span><br><span class="line">        pipeline.addLast(<span class="string">&quot;decoder&quot;</span>, <span class="keyword">new</span> StringDecoder());</span><br><span class="line">        pipeline.addLast(<span class="string">&quot;encoder&quot;</span>, <span class="keyword">new</span> StringEncoder());</span><br><span class="line"></span><br><span class="line">        <span class="comment">// 自己的逻辑Handler</span></span><br><span class="line">        pipeline.addLast(<span class="string">&quot;handler&quot;</span>, <span class="keyword">new</span> HelloServerHandler());</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">HelloServerHandler</span> <span class="keyword">extends</span> <span class="title">SimpleChannelInboundHandler</span>&lt;<span class="title">String</span>&gt; </span>&#123;</span><br><span class="line"></span><br><span class="line">    <span class="meta">@Override</span></span><br><span class="line">    <span class="function"><span class="keyword">protected</span> <span class="keyword">void</span> <span class="title">channelRead0</span><span class="params">(ChannelHandlerContext ctx, String msg)</span> <span class="keyword">throws</span> Exception </span>&#123;</span><br><span class="line">        <span class="comment">// 收到消息直接打印输出</span></span><br><span class="line">        System.out.println(ctx.channel().remoteAddress() + <span class="string">&quot; Say : &quot;</span> + msg);</span><br><span class="line"></span><br><span class="line">        <span class="comment">// 返回客户端消息 - 我已经接收到了你的消息</span></span><br><span class="line">        ctx.writeAndFlush(<span class="string">&quot;我Received your message &quot;</span>+msg+<span class="string">&quot;!\n&quot;</span>);</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="comment">/*</span></span><br><span class="line"><span class="comment">     * </span></span><br><span class="line"><span class="comment">     * 覆盖 channelActive 方法 在channel被启用的时候触发 (在建立连接的时候)</span></span><br><span class="line"><span class="comment">     * </span></span><br><span class="line"><span class="comment">     * channelActive 和 channelInActive 在后面的内容中讲述，这里先不做详细的描述</span></span><br><span class="line"><span class="comment">     * */</span></span><br><span class="line"><span class="comment">/*    @Override</span></span><br><span class="line"><span class="comment">    public void channelActive(ChannelHandlerContext ctx) throws Exception &#123;</span></span><br><span class="line"><span class="comment"></span></span><br><span class="line"><span class="comment">        System.out.println(&quot;RamoteAddress : &quot; + ctx.channel().remoteAddress() + &quot; active !&quot;);</span></span><br><span class="line"><span class="comment"></span></span><br><span class="line"><span class="comment">        ctx.writeAndFlush( &quot;Welcome to &quot; + InetAddress.getLocalHost().getHostName() + &quot; service!\n&quot;);</span></span><br><span class="line"><span class="comment"></span></span><br><span class="line"><span class="comment">        super.channelActive(ctx);</span></span><br><span class="line"><span class="comment">    &#125;*/</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>客户端</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="keyword">static</span> String host = <span class="string">&quot;127.0.0.1&quot;</span>;</span><br><span class="line"><span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">int</span> port = <span class="number">7878</span>;</span><br><span class="line"></span><br><span class="line">    EventLoopGroup group = <span class="keyword">new</span> NioEventLoopGroup();</span><br><span class="line">    <span class="keyword">try</span> &#123;</span><br><span class="line">        Bootstrap b = <span class="keyword">new</span> Bootstrap();</span><br><span class="line">        b.group(group)</span><br><span class="line">        .channel(NioSocketChannel.class)</span><br><span class="line">        .handler(<span class="keyword">new</span> HelloClientInitializer());</span><br><span class="line"></span><br><span class="line">        <span class="comment">// 连接服务端</span></span><br><span class="line">        Channel ch = b.connect(host, port).sync().channel();</span><br><span class="line">        System.out.println(<span class="string">&quot;init client&quot;</span>);</span><br><span class="line">        <span class="comment">// 控制台输入</span></span><br><span class="line">        BufferedReader in = <span class="keyword">new</span> BufferedReader(<span class="keyword">new</span> InputStreamReader(System.in));</span><br><span class="line">        <span class="keyword">for</span> (;;) &#123;</span><br><span class="line">            String line = in.readLine();</span><br><span class="line">            <span class="keyword">if</span> (line == <span class="keyword">null</span>) &#123;</span><br><span class="line">                <span class="keyword">continue</span>;</span><br><span class="line">            &#125;</span><br><span class="line">            <span class="comment">/*</span></span><br><span class="line"><span class="comment">             * 向服务端发送在控制台输入的文本 并用&quot;\r\n&quot;结尾</span></span><br><span class="line"><span class="comment">             * 之所以用\r\n结尾 是因为我们在handler中添加了 DelimiterBasedFrameDecoder 帧解码。</span></span><br><span class="line"><span class="comment">             * 这个解码器是一个根据\n符号位分隔符的解码器。所以每条消息的最后必须加上\n否则无法识别和解码</span></span><br><span class="line"><span class="comment">             * */</span></span><br><span class="line">            ch.writeAndFlush(line + <span class="string">&quot;\r\n&quot;</span>);</span><br><span class="line">        &#125;</span><br><span class="line">    &#125; <span class="keyword">finally</span> &#123;</span><br><span class="line">        <span class="comment">// The connection is closed automatically on shutdown.</span></span><br><span class="line">        group.shutdownGracefully();</span><br><span class="line">    &#125;</span><br><span class="line"></span><br></pre></td></tr></table></figure>
+
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">HelloClientHandler</span> <span class="keyword">extends</span> <span class="title">SimpleChannelInboundHandler</span>&lt;<span class="title">String</span>&gt;</span>&#123;</span><br><span class="line"></span><br><span class="line">    <span class="meta">@Override</span></span><br><span class="line">    <span class="function"><span class="keyword">protected</span> <span class="keyword">void</span> <span class="title">channelRead0</span><span class="params">(ChannelHandlerContext ctx, String msg)</span> <span class="keyword">throws</span> Exception </span>&#123;</span><br><span class="line">        <span class="comment">// 收到消息直接打印输出</span></span><br><span class="line">        System.out.println(ctx.channel().remoteAddress() + <span class="string">&quot; Say : &quot;</span> + msg);</span><br><span class="line"></span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">HelloClientInitializer</span> <span class="keyword">extends</span> <span class="title">ChannelInitializer</span>&lt;<span class="title">SocketChannel</span>&gt;</span>&#123;</span><br><span class="line"></span><br><span class="line">    <span class="meta">@Override</span></span><br><span class="line">    <span class="function"><span class="keyword">protected</span> <span class="keyword">void</span> <span class="title">initChannel</span><span class="params">(SocketChannel ch)</span> <span class="keyword">throws</span> Exception </span>&#123;</span><br><span class="line">          ChannelPipeline pipeline = ch.pipeline();</span><br><span class="line"></span><br><span class="line">            <span class="comment">// 以(&quot;\n&quot;)为结尾分割的 解码器</span></span><br><span class="line">            pipeline.addLast(<span class="string">&quot;framer&quot;</span>, <span class="keyword">new</span> DelimiterBasedFrameDecoder(<span class="number">8192</span>, Delimiters.lineDelimiter()));</span><br><span class="line"></span><br><span class="line">            <span class="comment">// 字符串解码 和 编码</span></span><br><span class="line">            pipeline.addLast(<span class="string">&quot;decoder&quot;</span>, <span class="keyword">new</span> StringDecoder());</span><br><span class="line">            pipeline.addLast(<span class="string">&quot;encoder&quot;</span>, <span class="keyword">new</span> StringEncoder());</span><br><span class="line"></span><br><span class="line">            <span class="comment">// 自己的逻辑Handler</span></span><br><span class="line">            pipeline.addLast(<span class="string">&quot;handler&quot;</span>, <span class="keyword">new</span> HelloClientHandler());</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<ul>
+<li>一个EventLoopGroup包含一个或多个EventLoop</li>
+<li>一个EventLoop在它生命周期只和一个Thread绑定</li>
+<li>所有EventLoop处理的I/O事件都将在专有的Thread上处理</li>
+<li>一个channel在生命周期只注册于一个EventLoop</li>
+<li>一个EventLoop可能会分配给一个或多个channel</li>
+</ul>
+<h1 id="Channel"><a href="#Channel" class="headerlink" title="Channel"></a>Channel</h1><ul>
+<li>线程安全</li>
+<li>write:数据写到远程结点。数据传给channelpipeline排队直到被冲刷</li>
+<li>flush：已写数据冲刷到传输底层socket</li>
+<li>内置的传输：</li>
+</ul>
+<ol>
+<li>NIO／io.netty.channel.socket.nio／基于选择器</li>
+<li>Epoll／io.netty.channel.epoll／JNI驱动的epoll和非阻塞IO</li>
+<li>OIO／io.netty.channel.socket.oio／java.net基础／阻塞流</li>
+<li>Local／io.netty.channel.local／VM内部通过管道进行通信／本地传输</li>
+<li>Embedded／io.netty.channel.embedded／Embedded，ChannelHandler不需经过网络</li>
+</ol>
+<h2 id="Channel生命周期"><a href="#Channel生命周期" class="headerlink" title="Channel生命周期"></a>Channel生命周期</h2><ul>
+<li>ChannelUnregistered  channel已创建，但还没注册到EventLoop</li>
+<li>ChannelRegistered 注册到EventLoop</li>
+<li>ChannelActive channel处于活动状态（已连接到远程结点），可以接收和发送数据</li>
+<li>ChannelInactive 没有连接到远程结点<br><img src="https://user-images.githubusercontent.com/7789698/33238160-3fe36bf2-d2c2-11e7-8ecb-cd339369a28e.png" alt="image"></li>
+</ul>
+<h2 id="ChannelHandler生命周期"><a href="#ChannelHandler生命周期" class="headerlink" title="ChannelHandler生命周期"></a>ChannelHandler生命周期</h2><ul>
+<li>handlerAdded   当ChannelHandler被添加到一个ChannelPipeline时被调用</li>
+<li>handlerRemoved   当ChannelHandler从一个ChannelPipeline中移除时被调用</li>
+<li>exceptionCaught  处理过程中ChannelPipeline中发生错误时被调用</li>
+</ul>
+<h3 id="ChannelInboundHandler——处理输入数据和所有类型的状态变化"><a href="#ChannelInboundHandler——处理输入数据和所有类型的状态变化" class="headerlink" title="ChannelInboundHandler——处理输入数据和所有类型的状态变化"></a>ChannelInboundHandler——处理输入数据和所有类型的状态变化</h3><p>方法：<br><img src="https://user-images.githubusercontent.com/7789698/33238166-663b09d6-d2c2-11e7-83a9-ad54630d7866.png" alt="image"></p>
+<table>
+<thead>
+<tr>
+<th>类型</th>
+<th>描述</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>channelRegistered</td>
+<td>当一个Channel注册到EventLoop上，可以处理I/O时被调用</td>
+</tr>
+<tr>
+<td>channelUnregistered</td>
+<td>当一个Channel从它的EventLoop上解除注册，不再处理I/O时被调用</td>
+</tr>
+<tr>
+<td>channelActive</td>
+<td>当Channel变成活跃状态时被调用；Channel是连接/绑定、就绪的</td>
+</tr>
+<tr>
+<td>channelInactive</td>
+<td>当Channel离开活跃状态，不再连接到某个远端时被调用</td>
+</tr>
+<tr>
+<td>channelReadComplete</td>
+<td>当Channel上的某个读操作完成时被调用</td>
+</tr>
+<tr>
+<td>channelRead</td>
+<td>当从Channel中读数据时被调用</td>
+</tr>
+<tr>
+<td>channelWritabilityChanged</td>
+<td>当Channel的可写状态改变时被调用。通过这个方法，用户可以确保写操作不会进行地太快（避免OutOfMemoryError）或者当Channel又变成可写时继续写操作。Channel类的isWritable()方法可以用来检查Channel的可写状态。可写性的阈值可以通过Channel.config().setWriteHighWaterMark()和Channel.config().setWriteLowWaterMark()来设定。</td>
+</tr>
+<tr>
+<td>userEventTriggered</td>
+<td>因某个POJO穿过ChannelPipeline引发ChannelnboundHandler.fireUserEventTriggered()时被调用</td>
+</tr>
+</tbody></table>
+<p>当一个ChannelInboundHandler实现类重写channelRead()方法时，它要负责释放ByteBuf相关的内存</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line">public class DiscardHandler extends ChannelInboundHandlerAdapter &#123;  </span><br><span class="line">    @Override  </span><br><span class="line">    public void channelRead(ChannelHandlerContext ctx, Object msg) throws Exception &#123;  </span><br><span class="line">        //手动释放消息  </span><br><span class="line">        ReferenceCountUtil.release(msg);  </span><br><span class="line">    &#125;  </span><br><span class="line">&#125;  </span><br></pre></td></tr></table></figure>
+<p>一个更简单的替代方法就是用SimpleChannelInboundHandler</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line">public class SimpleDiscardHandler extends SimpleChannelInboundHandler&lt;Object&gt; &#123;  </span><br><span class="line">    @Override  </span><br><span class="line">    protected void channelRead0(ChannelHandlerContext ctx, Object msg) throws Exception &#123;  </span><br><span class="line">        //不需要手动释放  </span><br><span class="line">    &#125;  </span><br><span class="line">&#125;  </span><br></pre></td></tr></table></figure>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br></pre></td><td class="code"><pre><span class="line">public abstract class SimpleChannelInboundHandler&lt;I&gt; extends ChannelInboundHandlerAdapter &#123;</span><br><span class="line">...</span><br><span class="line">    @Override</span><br><span class="line">    public void channelRead(ChannelHandlerContext ctx, Object msg) throws Exception &#123;</span><br><span class="line">        boolean release = true;</span><br><span class="line">        try &#123;</span><br><span class="line">            if (acceptInboundMessage(msg)) &#123;</span><br><span class="line">                @SuppressWarnings(&quot;unchecked&quot;)</span><br><span class="line">                I imsg = (I) msg;</span><br><span class="line">                channelRead0(ctx, imsg);</span><br><span class="line">            &#125; else &#123;</span><br><span class="line">                release = false;</span><br><span class="line">                ctx.fireChannelRead(msg);</span><br><span class="line">            &#125;</span><br><span class="line">        &#125; finally &#123;</span><br><span class="line">            if (autoRelease &amp;&amp; release) &#123;</span><br><span class="line">                ReferenceCountUtil.release(msg);</span><br><span class="line">            &#125;</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line"> protected abstract void channelRead0(ChannelHandlerContext ctx, I msg) throws Exception;</span><br><span class="line">&#125;</span><br><span class="line">...</span><br><span class="line"></span><br></pre></td></tr></table></figure>
+
+<h3 id="ChannelOutboundHandler——处理输出数据，可以拦截所有操作"><a href="#ChannelOutboundHandler——处理输出数据，可以拦截所有操作" class="headerlink" title="ChannelOutboundHandler——处理输出数据，可以拦截所有操作"></a>ChannelOutboundHandler——处理输出数据，可以拦截所有操作</h3><table>
+<thead>
+<tr>
+<th>类型</th>
+<th>描述</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>bind(ChannelHandlerContext,SocketAddress,ChannelPromise)</td>
+<td>请求绑定Channel到一个本地地址</td>
+</tr>
+<tr>
+<td>connect(ChannelHandlerContext, SocketAddress,SocketAddress,ChannelPromise)</td>
+<td>请求连接Channel到远端</td>
+</tr>
+<tr>
+<td>disconnect(ChannelHandlerContext, ChannelPromise)</td>
+<td>请求从远端断开Channel</td>
+</tr>
+<tr>
+<td>close(ChannelHandlerContext,ChannelPromise)</td>
+<td>请求关闭Channel</td>
+</tr>
+<tr>
+<td>deregister(ChannelHandlerContext, ChannelPromise)</td>
+<td>请求Channel从它的EventLoop上解除注册</td>
+</tr>
+<tr>
+<td>read(ChannelHandlerContext)</td>
+<td>请求从Channel中读更多的数据</td>
+</tr>
+<tr>
+<td>flush(ChannelHandlerContext)</td>
+<td>请求通过Channel刷队列数据到远端</td>
+</tr>
+<tr>
+<td>write(ChannelHandlerContext,Object, ChannelPromise)</td>
+<td>请求通过Channel写数据到远端</td>
+</tr>
+</tbody></table>
+<blockquote>
+<p> CHANNELPROMISE VS. CHANNELFUTURE<br> ChannelOutboundHandler的大部分方法都用了一个ChannelPromise输入参数，用于当操作完成时收到通知。ChannelPromise是ChannelFuture的子接口，定义了可写的方法，比如setSuccess()，或者setFailure()，而ChannelFuture则是不可变对象。</p>
+</blockquote>
+<h3 id="ChannelHandler适配器类"><a href="#ChannelHandler适配器类" class="headerlink" title="ChannelHandler适配器类"></a>ChannelHandler适配器类</h3><p><img src="https://user-images.githubusercontent.com/7789698/33238280-80455306-d2c5-11e7-9b35-5970d907283b.png" alt="image"></p>
+<h2 id="资源管理"><a href="#资源管理" class="headerlink" title="资源管理"></a>资源管理</h2><p>无论何时你对数据操作ChannelInboundHandler.channelRead()或者ChannelOutboundHandler.write()，你需要确保没有资源泄露。也许你还记得上一章我们提到过，Netty采用引用计数来处理ByteBuf池。所以，在你用完一个ByteBuf后，调整引用计数的值是很重要的。</p>
+<p>为了帮助你诊断潜在的问题， Netty提供了ResourceLeakDetector类，它通过采样应用程序1%的buffer分配来检查是否有内存泄露。这个过程的开销是很小的。</p>
+<p>如果泄露被检测到，会产生类似下面这样的日志消息：</p>
+<blockquote>
+<p>LEAK: ByteBuf.release() was not called before it’s garbage-collected. Enable<br>advanced leak reporting to find out where the leak occurred. To enable<br>advanced leak reporting, specify the JVM option<br>‘-Dio.netty.leakDetectionLevel=ADVANCED’ or call<br>ResourceLeakDetector.setLevel().</p>
+</blockquote>
+<table>
+<thead>
+<tr>
+<th>级别</th>
+<th>描述</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>DISABLED</td>
+<td>关闭内存泄露检测。 只有在大量测试后，才能用这个级别</td>
+</tr>
+<tr>
+<td>SIMPLE</td>
+<td>报告默认的1%采样率中发现的任何泄露。这是默认的级别，在大部分情况下适用</td>
+</tr>
+<tr>
+<td>ADVANCED</td>
+<td>报告发现的泄露和消息的位置。使用默认的采样率。</td>
+</tr>
+<tr>
+<td>PARANOID</td>
+<td>类似ADVANCED级别，但是每个消息的获取都被检测采样。这对性能有很大影响，只能在调试阶段使用。</td>
+</tr>
+</tbody></table>
+<p>用上表中的某个值来配置下面这个Java系统属性，就可以设定内存泄露检测级别：</p>
+<p><code>java -Dio.netty.leakDetectionLevel=ADVANCED</code></p>
+<p>如果你设定这个JVM选项然后重启你的应用，你会看到应用中泄露buffer的最新位置。下面是一个单元测试产生的典型的内存泄露报告：</p>
+<blockquote>
+<p>Running io.netty.handler.codec.xml.XmlFrameDecoderTest<br>15:03:36.886 [main] ERROR io.netty.util.ResourceLeakDetector - LEAK:<br>ByteBuf.release() was not called before it’s garbage-collected.<br>Recent access records: 1</p>
+<p>1:io.netty.buffer.AdvancedLeakAwareByteBuf.toString(AdvancedLeakAwareByteBuf.java:697)</p>
+<p>io.netty.handler.codec.xml.XmlFrameDecoderTest.testDecodeWithXml(XmlFrameDecoderTest.java:157)<br>io.netty.handler.codec.xml.XmlFrameDecoderTest.testDecodeWithTwoMessages(XmlFrameDecoderTest.java:133)</p>
+</blockquote>
+<p>在你实现ChannelInboundHandler.channelRead()或者ChannelOutboundHandler.write()时，你怎样用这个诊断工具来防止内存泄露呢？让我们来看下ChannelRead()操作“消费(consume)”输入数据这个情况：就是说，当前handler没有通过ChannelContext.fireChannelRead()把消息传递到下一个ChannelInboundHandler。下面的代码说明了如何释放这条消息占用的内存。</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line">public class DiscardInboundHandler extends ChannelInboundHandlerAdapter &#123;  </span><br><span class="line">    @Override  </span><br><span class="line">   public void channelRead(ChannelHandlerContext ctx, Object msg) throws Exception &#123;  </span><br><span class="line">        ReferenceCountUtil.release(msg);  </span><br><span class="line">    &#125;  </span><br><span class="line">&#125;  </span><br><span class="line"></span><br></pre></td></tr></table></figure>
+
+
+
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line">public class DiscardOutboundHandler extends ChannelOutboundHandlerAdapter &#123;  </span><br><span class="line">    @Override  </span><br><span class="line">    public void write(ChannelHandlerContext ctx, Object msg, ChannelPromise promise) throws Exception &#123;  </span><br><span class="line">        ReferenceCountUtil.release(msg);  </span><br><span class="line">        promise.setSuccess();  </span><br><span class="line">    &#125;  </span><br><span class="line">&#125;  </span><br></pre></td></tr></table></figure>
+<p>重要的是，不仅要释放资源，而且要通知ChannelPromise，否则会出现某个ChannelFutureListener没有被通知到消息已经被处理的情况。</p>
+<p>总之，如果一个消息被“消费”或者丢弃，没有送到ChannelPipeline中的下一个ChannelOutboundHandler，用户就要负责调用ReferenceCountUtil.release()。如果消息到达了真正的传输层，在它被写到socket中或者Channel关闭时，会被自动释放（这种情况下用户就不用管了）。</p>
+<h2 id="ChannelPipeline接口"><a href="#ChannelPipeline接口" class="headerlink" title="ChannelPipeline接口"></a>ChannelPipeline接口</h2><p><a target="_blank" rel="noopener" href="https://segmentfault.com/a/1190000007308934">https://segmentfault.com/a/1190000007308934</a><br>如果你把一个ChannelPipeline看成是一串ChannelHandler实例，拦截穿过Channel的输入输出event，那么就很容易明白这些ChannelHandler的交互是如何构成了一个应用程序数据和事件处理逻辑的核心。</p>
+<p>每个新创建的Channel都会分配一个新的ChannelPipeline。这个关系是恒定的；Channel不可以换别ChannelPipeline，也不可以解除掉当前分配的ChannelPipeline。在Netty组件的整个生命周期中这个关系是固定的，不需要开发者采取什么操作。</p>
+<p>根据来源，一个event可以被一个ChannelInboundHandler或者ChannelOutboundHandler处理。接下来，通过调用ChannelHandlerContext的方法，它会被转发到下一个同类型的handler。</p>
+<p><img src="https://user-images.githubusercontent.com/7789698/33238425-90b989a2-d2c8-11e7-8b81-ae8eb80ed1ae.png" alt="image"></p>
+<table>
+<thead>
+<tr>
+<th>方法名</th>
+<th>描述</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>fireChannelRegistered</td>
+<td>调用ChannelPipeline中下一个ChannelInboundHandler的channelRegistered(ChannelHandlerContext)</td>
+</tr>
+<tr>
+<td>fireChannelUnregistered</td>
+<td>调用ChannelPipeline中下一个ChannelInboundHandler的channelUnRegistered(ChannelHandlerContext)</td>
+</tr>
+<tr>
+<td>fireChannelActive</td>
+<td>调用ChannelPipeline中下一个ChannelInboundHandler的channelActive(ChannelHandlerContext)</td>
+</tr>
+<tr>
+<td>fireChannelInactive</td>
+<td>调用ChannelPipeline中下一个ChannelInboundHandler的channelInactive(ChannelHandlerContext)</td>
+</tr>
+<tr>
+<td>fireExceptionCaught</td>
+<td>调用ChannelPipeline中下一个ChanneHandler的exceptionCaught(ChannelHandlerContext,Throwable)</td>
+</tr>
+<tr>
+<td>fireUserEventTriggered</td>
+<td>调用ChannelPipeline中下一个ChannelInboundHandler的userEventTriggered(ChannelHandlerContext, Object)</td>
+</tr>
+<tr>
+<td>fireChannelRead</td>
+<td>调用ChannelPipeline中下一个ChannelInboundHandler的channelRead(ChannelHandlerContext, Object msg)</td>
+</tr>
+<tr>
+<td>fireChannelReadComplete</td>
+<td>调用ChannelPipeline中下一个ChannelStateHandler的channelReadComplete(ChannelHandlerContext)</td>
+</tr>
+</tbody></table>
+<table>
+<thead>
+<tr>
+<th>方法名</th>
+<th>描述</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>bind</td>
+<td>绑定Channel到一个本地地址。这会调用ChannelPipeline中下一个ChannelOutboundHandler的bind(ChannelHandlerContext, SocketAddress, ChannelPromise)</td>
+</tr>
+<tr>
+<td>connect</td>
+<td>连接Channel到一个远端地址。这会调用ChannelPipeline中下一个ChannelOutboundHandler的connect(ChannelHandlerContext, SocketAddress, ChannelPromise)</td>
+</tr>
+<tr>
+<td>disconnect</td>
+<td>断开Channel。这会调用ChannelPipeline中下一个ChannelOutboundHandler的disconnect(ChannelHandlerContext, ChannelPromise)</td>
+</tr>
+<tr>
+<td>close</td>
+<td>关闭Channel。这会调用ChannelPipeline中下一个ChannelOutboundHandler的close(ChannelHandlerContext,ChannelPromise)</td>
+</tr>
+<tr>
+<td>deregister</td>
+<td>Channel从它之前分配的EventLoop上解除注册。这会调用ChannelPipeline中下一个ChannelOutboundHandler的deregister(ChannelHandlerContext, ChannelPromise)</td>
+</tr>
+<tr>
+<td>flush</td>
+<td>刷所有Channel待写的数据。这会调用ChannelPipeline中下一个ChannelOutboundHandler的flush(ChannelHandlerContext)</td>
+</tr>
+<tr>
+<td>write</td>
+<td>往Channel写一条消息。这会调用ChannelPipeline中下一个ChannelOutboundHandler的write(ChannelHandlerContext, Object msg, ChannelPromise)   注意：不会写消息到底层的Socket，只是排队等候。如果要写到Socket中，调用flush()或者writeAndFlush()</td>
+</tr>
+<tr>
+<td>writeAndFlush</td>
+<td>这是先后调用write()和flush()的便捷方法。</td>
+</tr>
+<tr>
+<td>read</td>
+<td>请求从Channel中读更多的数据。这会调用ChannelPipeline中下一个ChannelOutboundHandler的read(ChannelHandlerContext)</td>
+</tr>
+</tbody></table>
+<h2 id="ChannelHandlerContext接口"><a href="#ChannelHandlerContext接口" class="headerlink" title="ChannelHandlerContext接口"></a>ChannelHandlerContext接口</h2><p>ChannelHandlerContext代表了一个ChannelHandler和一个ChannelPipeline之间的关系，它在ChannelHandler被添加到ChannelPipeline时被创建。ChannelHandlerContext的主要功能是管理它对应的ChannelHandler和属于同一个ChannelPipeline的其他ChannelHandler之间的交互。</p>
+<p>ChannelHandlerContext有很多方法，其中一些方法Channel和ChannelPipeline也有，但是有些区别。如果你在Channel或者ChannelPipeline实例上调用这些方法，它们的调用会穿过整个pipeline。而在ChannelHandlerContext上调用的同样的方法，仅仅从当前ChannelHandler开始，走到pipeline中下一个可以处理这个event的ChannelHandler。</p>
+<table>
+<thead>
+<tr>
+<th>方法名</th>
+<th>描述</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>bind</td>
+<td>绑定到给定的SocketAddress，返回一个ChannelFuture</td>
+</tr>
+<tr>
+<td>channel</td>
+<td>返回绑定的Channel</td>
+</tr>
+<tr>
+<td>close</td>
+<td>关闭Channel，返回一个ChannelFuture</td>
+</tr>
+<tr>
+<td>connect</td>
+<td>连接到给定的SocketAddress，返回一个ChannelFuture</td>
+</tr>
+<tr>
+<td>deregister</td>
+<td>从先前分配的EventExecutor上解除注册，返回一个ChannelFuture</td>
+</tr>
+<tr>
+<td>disconnect</td>
+<td>从远端断开，返回一个ChannelFuture</td>
+</tr>
+<tr>
+<td>executor</td>
+<td>返回分发event的EventExecutor</td>
+</tr>
+<tr>
+<td>fireChannelActive</td>
+<td>触发调用下一个ChannelInboundHandler的channelActive()（已连接）</td>
+</tr>
+<tr>
+<td>fireChannelInactive</td>
+<td>触发调用下一个ChannelInboundHandler的channelInactive()（断开连接）</td>
+</tr>
+<tr>
+<td>fireChannelRead</td>
+<td>触发调用下一个ChannelInboundHandler的channelRead()（收到消息）</td>
+</tr>
+<tr>
+<td>fireChannelReadComplete</td>
+<td>触发channelWritabilityChanged event到下一个ChannelInboundHandler</td>
+</tr>
+<tr>
+<td>handler</td>
+<td>返回绑定的ChannelHandler</td>
+</tr>
+<tr>
+<td>isRemoved</td>
+<td>如果绑定的ChannelHandler已从ChannelPipeline中删除，返回true</td>
+</tr>
+<tr>
+<td>name</td>
+<td>返回本ChannelHandlerContext 实例唯一的名字</td>
+</tr>
+<tr>
+<td>Pipeline</td>
+<td>返回绑定的ChannelPipeline</td>
+</tr>
+<tr>
+<td>read</td>
+<td>从Channel读数据到第一个输入buffer；如果成功，触发一条channelRead event，通知handler channelReadComplete</td>
+</tr>
+<tr>
+<td>write</td>
+<td>通过本ChannelHandlerContext写消息穿过pipeline</td>
+</tr>
+<tr>
+<td>在使用ChannelHandlerContext API时，请牢记下面几点：</td>
+<td></td>
+</tr>
+</tbody></table>
+<ul>
+<li>一个ChannelHandler绑定的ChannelHandlerContext 永远不会改变，所以把它的引用缓存起来是安全的。</li>
+<li>像我们在这节刚开始解释过的，ChannelHandlerContext的一些方法和其他类（Channel和ChannelPipeline）的方法名字相似，但是ChannelHandlerContext的方法采用了更短的event传递路程。我们应该尽可能利用这一点来实现最好的性能。</li>
+</ul>
+<h2 id="异常出站"><a href="#异常出站" class="headerlink" title="异常出站"></a>异常出站</h2><p>1.添加ChannelFutureListener就是为了在ChannelFuture实例上调用addListener(ChannelFutureListener)方法，有两种方法可以做到这个。最常用的方法是在输出操作（比如write()）返回的ChannelFuture上调用addListener()。</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line">ChannelFuture future = channel.write(...);</span><br><span class="line"> future.addListener(new ChannelFutureListener() &#123;</span><br><span class="line">                @Override</span><br><span class="line">                public void operationComplete(ChannelFuture f) throws Exception &#123;</span><br><span class="line">                    if (!f.isSuccess()) &#123;</span><br><span class="line">                        f.cause().printStackTrace();</span><br><span class="line">                        r.channel().close();</span><br><span class="line">                    &#125; </span><br><span class="line">                &#125;</span><br><span class="line">            &#125;);</span><br></pre></td></tr></table></figure>
+<p>2.添加一个ChannelFutureListener到ChannelPromise，然后将这个ChannelPromise作为参数传入ChannelOutboundHandler方法。下面的代码和前一段代码有相同的效果。</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br></pre></td><td class="code"><pre><span class="line">public class OutboundExceptionHandler extends ChannelOutboundHandlerAdapter &#123;</span><br><span class="line">    @Override</span><br><span class="line">    public void write(ChannelHandlerContext ctx, Object msg, ChannelPromise promise) &#123;</span><br><span class="line">        promise.addListener(new ChannelFutureListener() &#123;</span><br><span class="line">            @Override</span><br><span class="line">            public void operationComplete(ChannelFuture f) &#123;</span><br><span class="line">                if (!f.isSuccess()) &#123;</span><br><span class="line">                    f.cause().printStackTrace();</span><br><span class="line">                    f.channel().close();</span><br><span class="line">                &#125;</span><br><span class="line">            &#125;</span><br><span class="line">        &#125;);</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+
+<h1 id="ByteBuf"><a href="#ByteBuf" class="headerlink" title="ByteBuf"></a>ByteBuf</h1><p><img src="https://user-images.githubusercontent.com/7789698/33237900-9d46f7ac-d2bb-11e7-9c72-0cbb05445aa6.png" alt="image"></p>
+<ol>
+<li>reader index前面的数据是已经读过的数据，这些数据可以扔掉</li>
+<li>从reader index开始，到writer index之前的数据是可读数据</li>
+<li>从writer index开始，为可写区域<br>正是因为这样的设计，ByteBuf可以同时读写数据（只要可读区域和可写区域都还有空闲空间），而java.nio.ByteBuffer则必须调用flip()方法才能从写状态切换到读状态。</li>
+</ol>
+<h1 id="ByteBufAllocator"><a href="#ByteBufAllocator" class="headerlink" title="ByteBufAllocator"></a>ByteBufAllocator</h1><figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">ByteBufAllocator byteBufAllocator = channel.alloc();</span><br><span class="line">        //        byteBufAllocator.compositeBuffer();</span><br><span class="line">        //        byteBufAllocator.buffer();</span><br><span class="line">ByteBuf byteBuf = byteBufAllocator.directBuffer();</span><br></pre></td></tr></table></figure>
+<p><img src="https://user-images.githubusercontent.com/7789698/33237903-c687db40-d2bb-11e7-99b5-6e232728da4d.png" alt="image"><br><img src="https://user-images.githubusercontent.com/7789698/33237904-ca2bdbc0-d2bb-11e7-922a-04325053362e.png" alt="image"></p>
+<p>UnpooledByteBufAllocator:不池化，每次调用返回新实例<br>PooledByteBufAllocator:池化了ByteBuf并最大限度减少内存碎片。使用jemalloc(<a target="_blank" rel="noopener" href="https://www.cnblogs.com/gaoxing/p/4253833.html">https://www.cnblogs.com/gaoxing/p/4253833.html</a>)</p>
+<h1 id="Unpooled"><a href="#Unpooled" class="headerlink" title="Unpooled"></a>Unpooled</h1><p>创建未池化ByteBuf</p>
+<h1 id="ByteBufUtil类"><a href="#ByteBufUtil类" class="headerlink" title="ByteBufUtil类"></a>ByteBufUtil类</h1><ul>
+<li>hexdump 十六进制形式打印ByteBuf内容</li>
+<li>equals 判断两个ByteBuf相等</li>
+</ul>
+<p><a target="_blank" rel="noopener" href="http://www.infoq.com/cn/articles/netty-high-performance/">Netty系列之Netty高性能之道</a></p>
+<p><a target="_blank" rel="noopener" href="http://www.infoq.com/cn/articles/netty-threading-model#mainLogin">Netty系列之Netty线程模型</a></p>
+
+    </div>
+
+    
+    
+    
+
+    <footer class="post-footer">
+          <div class="reward-container">
+  <div>Buy me a coffee</div>
+  <button>
+    Donate
+  </button>
+  <div class="post-reward">
+      <div>
+        <img src="/hexo/images/wechatpay.png" alt="Absurd WeChat Pay">
+        <span>WeChat Pay</span>
+      </div>
+
+  </div>
+</div>
+
+
+        
+
+          <div class="post-nav">
+            <div class="post-nav-item">
+                <a href="/hexo/post/c2da5a2b.html" rel="prev" title="mysql查询优化技巧">
+                  <i class="fa fa-chevron-left"></i> mysql查询优化技巧
+                </a>
+            </div>
+            <div class="post-nav-item">
+                <a href="/hexo/post/6badd4fd.html" rel="next" title="maven 笔记">
+                  maven 笔记 <i class="fa fa-chevron-right"></i>
+                </a>
+            </div>
+          </div>
+    </footer>
+  </article>
+</div>
+
+
+
+
+
+
+</div>
+  </main>
+
+  <footer class="footer">
+    <div class="footer-inner">
+
+
+<div class="copyright">
+  &copy; 
+  <span itemprop="copyrightYear">2022</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">Absurd</span>
+</div>
+  <div class="powered-by">Powered by <a href="https://hexo.io/" rel="noopener" target="_blank">Hexo</a> & <a href="https://theme-next.js.org/mist/" rel="noopener" target="_blank">NexT.Mist</a>
+  </div>
+
+    </div>
+  </footer>
+
+  
+  <script src="https://cdn.jsdelivr.net/npm/animejs@3.2.1/lib/anime.min.js" integrity="sha256-XL2inqUJaslATFnHdJOi9GfQ60on8Wx1C2H8DYiN1xY=" crossorigin="anonymous"></script>
+<script src="/hexo/js/comments.js"></script><script src="/hexo/js/utils.js"></script><script src="/hexo/js/motion.js"></script><script src="/hexo/js/schemes/muse.js"></script><script src="/hexo/js/next-boot.js"></script>
+
+  
+<script src="https://cdn.jsdelivr.net/npm/hexo-generator-searchdb@1.4.0/dist/search.js" integrity="sha256-vXZMYLEqsROAXkEw93GGIvaB2ab+QW6w3+1ahD9nXXA=" crossorigin="anonymous"></script>
+<script src="/hexo/js/third-party/search/local-search.js"></script>
+
+
+
+
+
+  
+
+
+
+
+
+</body>
+</html>

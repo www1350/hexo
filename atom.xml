@@ -1,0 +1,563 @@
+<?xml version="1.0" encoding="utf-8"?>
+<feed xmlns="http://www.w3.org/2005/Atom">
+  <title>Absurd博客</title>
+  
+  
+  <link href="/hexo/atom.xml" rel="self"/>
+  
+  <link href="https://www1350.github.io/hexo/"/>
+  <updated>2022-01-28T07:26:04.545Z</updated>
+  <id>https://www1350.github.io/hexo/</id>
+  
+  <author>
+    <name>Absurd</name>
+    
+  </author>
+  
+  <generator uri="http://hexo.io/">Hexo</generator>
+  
+  <entry>
+    <title>dubbo3源码解析（十二）-Triple协议解析</title>
+    <link href="https://www1350.github.io/hexo/post/d6c1b591.html"/>
+    <id>https://www1350.github.io/hexo/post/d6c1b591.html</id>
+    <published>2022-01-28T07:26:04.000Z</published>
+    <updated>2022-01-28T07:26:04.545Z</updated>
+    
+    <summary type="html">
+    
+    </summary>
+    
+    
+  </entry>
+  
+  <entry>
+    <title>tomcat 启用gzip</title>
+    <link href="https://www1350.github.io/hexo/post/26f8b378.html"/>
+    <id>https://www1350.github.io/hexo/post/26f8b378.html</id>
+    <published>2022-01-28T07:09:17.739Z</published>
+    <updated>2022-01-28T07:09:17.739Z</updated>
+    
+    <summary type="html">
+    
+      
+      
+        &lt;p&gt;编辑conf/server.xml文件&lt;/p&gt;
+&lt;figure class=&quot;highlight xml&quot;&gt;&lt;table&gt;&lt;tr&gt;&lt;td class=&quot;gutter&quot;&gt;&lt;pre&gt;&lt;span class=&quot;line&quot;&gt;1&lt;/span&gt;&lt;br&gt;&lt;span class=&quot;line
+      
+    
+    </summary>
+    
+      <category term="容器" scheme="https://www1350.github.io/hexo/categories/%E5%AE%B9%E5%99%A8/"/>
+    
+    
+      <category term="tomcat" scheme="https://www1350.github.io/hexo/tags/tomcat/"/>
+    
+  </entry>
+  
+  <entry>
+    <title>uu加速器</title>
+    <link href="https://www1350.github.io/hexo/post/b34a8cb1.html"/>
+    <id>https://www1350.github.io/hexo/post/b34a8cb1.html</id>
+    <published>2021-04-02T14:02:02.000Z</published>
+    <updated>2022-01-28T07:09:17.739Z</updated>
+    
+    <summary type="html">
+    
+      
+      
+        &lt;p&gt;  uu加速器需要会员非常麻烦，根据下面步骤可以绕过。&lt;/p&gt;
+&lt;h2 id=&quot;下载uu加速器&quot;&gt;&lt;a href=&quot;#下载uu加速器&quot; class=&quot;headerlink&quot; title=&quot;下载uu加速器&quot;&gt;&lt;/a&gt;下载uu加速器&lt;/h2&gt;&lt;p&gt;这个步骤省略，登录 &lt;a hr
+      
+    
+    </summary>
+    
+    
+  </entry>
+  
+  <entry>
+    <title>从0开始学习opencv（二）-highGui初步</title>
+    <link href="https://www1350.github.io/hexo/post/82582a1f.html"/>
+    <id>https://www1350.github.io/hexo/post/82582a1f.html</id>
+    <published>2019-11-16T13:33:06.000Z</published>
+    <updated>2022-01-28T07:09:17.740Z</updated>
+    
+    <summary type="html">
+    
+      
+      
+        &lt;h1 id=&quot;HighGui界面初步&quot;&gt;&lt;a href=&quot;#HighGui界面初步&quot; class=&quot;headerlink&quot; title=&quot;HighGui界面初步&quot;&gt;&lt;/a&gt;HighGui界面初步&lt;/h1&gt;&lt;h2 id=&quot;图像的载入&quot;&gt;&lt;a href=&quot;#图像的载入&quot; class
+      
+    
+    </summary>
+    
+      <category term="游戏" scheme="https://www1350.github.io/hexo/categories/%E6%B8%B8%E6%88%8F/"/>
+    
+    
+      <category term="opencv" scheme="https://www1350.github.io/hexo/tags/opencv/"/>
+    
+  </entry>
+  
+  <entry>
+    <title>从0开始学习opencv（一）-配置环境</title>
+    <link href="https://www1350.github.io/hexo/post/a2eaa8a6.html"/>
+    <id>https://www1350.github.io/hexo/post/a2eaa8a6.html</id>
+    <published>2019-10-26T17:43:39.000Z</published>
+    <updated>2022-01-28T07:09:17.739Z</updated>
+    
+    <summary type="html">
+    
+      
+      
+        &lt;h1 id=&quot;Mac环境，安装OpenCV，VScode调试C-程序&quot;&gt;&lt;a href=&quot;#Mac环境，安装OpenCV，VScode调试C-程序&quot; class=&quot;headerlink&quot; title=&quot;Mac环境，安装OpenCV，VScode调试C++程序&quot;&gt;&lt;/a&gt;Mac环
+      
+    
+    </summary>
+    
+      <category term="游戏" scheme="https://www1350.github.io/hexo/categories/%E6%B8%B8%E6%88%8F/"/>
+    
+    
+      <category term="opencv" scheme="https://www1350.github.io/hexo/tags/opencv/"/>
+    
+  </entry>
+  
+  <entry>
+    <title>Mysql索引</title>
+    <link href="https://www1350.github.io/hexo/post/f79dc38d.html"/>
+    <id>https://www1350.github.io/hexo/post/f79dc38d.html</id>
+    <published>2018-11-23T14:41:14.000Z</published>
+    <updated>2022-01-28T07:09:17.722Z</updated>
+    
+    <summary type="html">
+    
+      
+      
+        &lt;h2 id=&quot;B-Tree-索引（B-Tree）&quot;&gt;&lt;a href=&quot;#B-Tree-索引（B-Tree）&quot; class=&quot;headerlink&quot; title=&quot;B-Tree 索引（B+Tree）&quot;&gt;&lt;/a&gt;B-Tree 索引（B+Tree）&lt;/h2&gt;&lt;p&gt;当你需要查找两个值之
+      
+    
+    </summary>
+    
+    
+  </entry>
+  
+  <entry>
+    <title>mysql事务隔离机制</title>
+    <link href="https://www1350.github.io/hexo/post/6275b0e6.html"/>
+    <id>https://www1350.github.io/hexo/post/6275b0e6.html</id>
+    <published>2018-11-23T14:32:45.000Z</published>
+    <updated>2022-01-28T07:09:17.735Z</updated>
+    
+    <summary type="html">
+    
+      
+      
+        &lt;blockquote&gt;
+&lt;p&gt;Isolation.DEFAULT(TransactionDefinition.ISOLATION_DEFAULT)使用数据库默认的事务隔离级别。&lt;/p&gt;
+&lt;/blockquote&gt;
+&lt;blockquote&gt;
+&lt;p&gt;Isolation.READ_U
+      
+    
+    </summary>
+    
+    
+  </entry>
+  
+  <entry>
+    <title>fastjson IdentityHashMap 内存泄漏排查</title>
+    <link href="https://www1350.github.io/hexo/post/bc931ae8.html"/>
+    <id>https://www1350.github.io/hexo/post/bc931ae8.html</id>
+    <published>2018-08-17T05:39:23.000Z</published>
+    <updated>2022-01-28T07:09:17.733Z</updated>
+    
+    <summary type="html">
+    
+      
+      
+        &lt;p&gt;一个安稳的周末，突然线上传来报警，保留现场过后紧急重启下，然后开始分析。让运维把oom 的dump数据和jstack数据传来&lt;/p&gt;
+&lt;p&gt;dump文件太大，传过来之前先分析下jstack日志。&lt;/p&gt;
+&lt;p&gt;jstack发现了一丝异样&lt;/p&gt;
+&lt;blockquote&gt;
+&lt;
+      
+    
+    </summary>
+    
+    
+  </entry>
+  
+  <entry>
+    <title>dubbo源码解析（十一）SPI内核</title>
+    <link href="https://www1350.github.io/hexo/post/7583e99e.html"/>
+    <id>https://www1350.github.io/hexo/post/7583e99e.html</id>
+    <published>2018-07-12T06:38:29.000Z</published>
+    <updated>2022-01-28T07:09:17.732Z</updated>
+    
+    <summary type="html">
+    
+      
+      
+        &lt;p&gt;关于java SPI和dubbo SPI的简单阐述&lt;a href=&quot;https://www1350.github.io/#post/114&quot;&gt;https://www1350.github.io/#post/114&lt;/a&gt;&lt;/p&gt;
+&lt;p&gt;拿解析一的ServiceConfig的
+      
+    
+    </summary>
+    
+      <category term="中间件" scheme="https://www1350.github.io/hexo/categories/%E4%B8%AD%E9%97%B4%E4%BB%B6/"/>
+    
+      <category term="源码" scheme="https://www1350.github.io/hexo/categories/%E4%B8%AD%E9%97%B4%E4%BB%B6/%E6%BA%90%E7%A0%81/"/>
+    
+    
+      <category term="rpc" scheme="https://www1350.github.io/hexo/tags/rpc/"/>
+    
+      <category term="dubbo" scheme="https://www1350.github.io/hexo/tags/dubbo/"/>
+    
+  </entry>
+  
+  <entry>
+    <title>sharding-jdbc源码解析-sql解析（五）</title>
+    <link href="https://www1350.github.io/hexo/post/8ce3a370.html"/>
+    <id>https://www1350.github.io/hexo/post/8ce3a370.html</id>
+    <published>2018-05-19T17:54:35.000Z</published>
+    <updated>2022-01-28T07:09:17.737Z</updated>
+    
+    <summary type="html">
+    
+      
+      
+        &lt;h2 id=&quot;SQL解析流程&quot;&gt;&lt;a href=&quot;#SQL解析流程&quot; class=&quot;headerlink&quot; title=&quot;SQL解析流程&quot;&gt;&lt;/a&gt;SQL解析流程&lt;/h2&gt;&lt;p&gt;&lt;img src=&quot;https://user-images.githubusercontent.co
+      
+    
+    </summary>
+    
+      <category term="中间件" scheme="https://www1350.github.io/hexo/categories/%E4%B8%AD%E9%97%B4%E4%BB%B6/"/>
+    
+      <category term="数据库" scheme="https://www1350.github.io/hexo/categories/%E4%B8%AD%E9%97%B4%E4%BB%B6/%E6%95%B0%E6%8D%AE%E5%BA%93/"/>
+    
+    
+      <category term="sharding-jdbc" scheme="https://www1350.github.io/hexo/tags/sharding-jdbc/"/>
+    
+  </entry>
+  
+  <entry>
+    <title>sharding-jdbc源码解析-分库分表（四）</title>
+    <link href="https://www1350.github.io/hexo/post/38641c2c.html"/>
+    <id>https://www1350.github.io/hexo/post/38641c2c.html</id>
+    <published>2018-05-17T06:43:01.000Z</published>
+    <updated>2022-01-28T07:09:17.737Z</updated>
+    
+    <summary type="html">
+    
+      
+      
+        &lt;h2 id=&quot;分库分表配置&quot;&gt;&lt;a href=&quot;#分库分表配置&quot; class=&quot;headerlink&quot; title=&quot;分库分表配置&quot;&gt;&lt;/a&gt;分库分表配置&lt;/h2&gt;&lt;p&gt;TableRuleConfiguration##build—&amp;gt;TableRule&lt;/p&gt;
+&lt;h3 id
+      
+    
+    </summary>
+    
+      <category term="中间件" scheme="https://www1350.github.io/hexo/categories/%E4%B8%AD%E9%97%B4%E4%BB%B6/"/>
+    
+      <category term="数据库" scheme="https://www1350.github.io/hexo/categories/%E4%B8%AD%E9%97%B4%E4%BB%B6/%E6%95%B0%E6%8D%AE%E5%BA%93/"/>
+    
+    
+      <category term="sharding-jdbc" scheme="https://www1350.github.io/hexo/tags/sharding-jdbc/"/>
+    
+  </entry>
+  
+  <entry>
+    <title>sharding-jdbc源码解析-词法分析（三）</title>
+    <link href="https://www1350.github.io/hexo/post/87f178fd.html"/>
+    <id>https://www1350.github.io/hexo/post/87f178fd.html</id>
+    <published>2018-05-09T16:16:35.000Z</published>
+    <updated>2022-01-28T07:09:17.738Z</updated>
+    
+    <summary type="html">
+    
+      
+      
+        &lt;h2 id=&quot;基本概念&quot;&gt;&lt;a href=&quot;#基本概念&quot; class=&quot;headerlink&quot; title=&quot;基本概念&quot;&gt;&lt;/a&gt;基本概念&lt;/h2&gt;&lt;p&gt;先普及几个词汇&lt;/p&gt;
+&lt;p&gt;Lexer： 词法分析器。Lexical analyzer，简称Lexer&lt;/p&gt;
+&lt;p&gt;Li
+      
+    
+    </summary>
+    
+      <category term="中间件" scheme="https://www1350.github.io/hexo/categories/%E4%B8%AD%E9%97%B4%E4%BB%B6/"/>
+    
+      <category term="数据库" scheme="https://www1350.github.io/hexo/categories/%E4%B8%AD%E9%97%B4%E4%BB%B6/%E6%95%B0%E6%8D%AE%E5%BA%93/"/>
+    
+    
+      <category term="sharding-jdbc" scheme="https://www1350.github.io/hexo/tags/sharding-jdbc/"/>
+    
+  </entry>
+  
+  <entry>
+    <title>sharding-jdbc源码解析-读写分离（二）</title>
+    <link href="https://www1350.github.io/hexo/post/5cbcca12.html"/>
+    <id>https://www1350.github.io/hexo/post/5cbcca12.html</id>
+    <published>2018-05-07T11:20:15.000Z</published>
+    <updated>2022-01-28T07:09:17.738Z</updated>
+    
+    <summary type="html">
+    
+      
+      
+        &lt;p&gt;调用流程&lt;/p&gt;
+&lt;p&gt;&lt;img src=&quot;https://user-images.githubusercontent.com/7789698/39745015-a9f08048-52d8-11e8-8a74-9d504e46f3a8.jpg&quot; alt=&quot;sequenced
+      
+    
+    </summary>
+    
+      <category term="中间件" scheme="https://www1350.github.io/hexo/categories/%E4%B8%AD%E9%97%B4%E4%BB%B6/"/>
+    
+      <category term="数据库" scheme="https://www1350.github.io/hexo/categories/%E4%B8%AD%E9%97%B4%E4%BB%B6/%E6%95%B0%E6%8D%AE%E5%BA%93/"/>
+    
+    
+      <category term="sharding-jdbc" scheme="https://www1350.github.io/hexo/tags/sharding-jdbc/"/>
+    
+  </entry>
+  
+  <entry>
+    <title>sharding-jdbc源码解析-JDBC实现（一）</title>
+    <link href="https://www1350.github.io/hexo/post/b792e0dc.html"/>
+    <id>https://www1350.github.io/hexo/post/b792e0dc.html</id>
+    <published>2018-05-06T14:37:12.000Z</published>
+    <updated>2022-01-28T07:09:17.737Z</updated>
+    
+    <summary type="html">
+    
+      
+      
+        &lt;h2 id=&quot;JDBC接口&quot;&gt;&lt;a href=&quot;#JDBC接口&quot; class=&quot;headerlink&quot; title=&quot;JDBC接口&quot;&gt;&lt;/a&gt;JDBC接口&lt;/h2&gt;&lt;figure class=&quot;highlight java&quot;&gt;&lt;table&gt;&lt;tr&gt;&lt;td class=&quot;gutt
+      
+    
+    </summary>
+    
+      <category term="中间件" scheme="https://www1350.github.io/hexo/categories/%E4%B8%AD%E9%97%B4%E4%BB%B6/"/>
+    
+      <category term="数据库" scheme="https://www1350.github.io/hexo/categories/%E4%B8%AD%E9%97%B4%E4%BB%B6/%E6%95%B0%E6%8D%AE%E5%BA%93/"/>
+    
+    
+      <category term="sharding-jdbc" scheme="https://www1350.github.io/hexo/tags/sharding-jdbc/"/>
+    
+  </entry>
+  
+  <entry>
+    <title>sharding-jdbc源码解析-入门使用（序言）</title>
+    <link href="https://www1350.github.io/hexo/post/1442ae52.html"/>
+    <id>https://www1350.github.io/hexo/post/1442ae52.html</id>
+    <published>2018-05-05T13:04:06.000Z</published>
+    <updated>2022-01-28T07:09:17.737Z</updated>
+    
+    <summary type="html">
+    
+      &lt;h2 id=&quot;简介&quot;&gt;&lt;a href=&quot;#简介&quot; class=&quot;headerlink&quot; title=&quot;简介&quot;&gt;&lt;/a&gt;简介&lt;/h2&gt;&lt;p&gt;Sharding-JDBC是一个开源的分布式数据库中间件解决方案。它在Java的JDBC层以对业务应用零侵入的方式额外提供数据分片，读写分离，柔性事务和分布式治理能力。并在其基础上提供封装了MySQL协议的服务端版本，用于完成对异构语言的支持。&lt;/p&gt;
+&lt;p&gt;(还没写完这个系列的时候就已经更名成sharding-sphere了)&lt;/p&gt;
+&lt;p&gt;官方文档：&lt;a href=&quot;http://shardingjdbc.io/docs_cn/00-overview/&quot;&gt;http://shardingjdbc.io/docs_cn/00-overview/&lt;/a&gt;&lt;/p&gt;
+&lt;p&gt;&lt;a href=&quot;http://shardingsphere.io/document/cn/overview/&quot;&gt;http://shardingsphere.io/document/cn/overview/&lt;/a&gt;&lt;/p&gt;
+&lt;p&gt;官方github地址：&lt;a href=&quot;https://github.com/shardingjdbc/sharding-jdbc&quot;&gt;https://github.com/shardingjdbc/sharding-jdbc&lt;/a&gt;&lt;/p&gt;
+&lt;p&gt;&lt;a href=&quot;https://github.com/sharding-sphere/sharding-sphere&quot;&gt;https://github.com/sharding-sphere/sharding-sphere&lt;/a&gt;&lt;/p&gt;
+&lt;h3 id=&quot;功能列表&quot;&gt;&lt;a href=&quot;#功能列表&quot; class=&quot;headerlink&quot; title=&quot;功能列表&quot;&gt;&lt;/a&gt;功能列表&lt;/h3&gt;&lt;h4 id=&quot;1-数据分片&quot;&gt;&lt;a href=&quot;#1-数据分片&quot; class=&quot;headerlink&quot; title=&quot;1. 数据分片&quot;&gt;&lt;/a&gt;1. 数据分片&lt;/h4&gt;&lt;ul&gt;
+&lt;li&gt;支持分库 + 分表&lt;/li&gt;
+&lt;li&gt;支持聚合，分组，排序，分页，关联查询等复杂查询语句&lt;/li&gt;
+&lt;li&gt;支持常见的DML，DDL，TCL以及数据库管理语句&lt;/li&gt;
+&lt;li&gt;支持=，BETWEEN，IN的分片操作符&lt;/li&gt;
+&lt;li&gt;自定义的灵活分片策略，支持多分片键共用，支持inline表达式&lt;/li&gt;
+&lt;li&gt;基于Hint的强制路由&lt;/li&gt;
+&lt;li&gt;支持分布式主键&lt;/li&gt;
+&lt;/ul&gt;
+&lt;h4 id=&quot;2-读写分离&quot;&gt;&lt;a href=&quot;#2-读写分离&quot; class=&quot;headerlink&quot; title=&quot;2. 读写分离&quot;&gt;&lt;/a&gt;2. 读写分离&lt;/h4&gt;&lt;ul&gt;
+&lt;li&gt;支持一主多从的读写分离&lt;/li&gt;
+&lt;li&gt;支持同一线程内的数据一致性&lt;/li&gt;
+&lt;li&gt;支持分库分表与读写分离共同使用&lt;/li&gt;
+&lt;li&gt;支持基于Hint的强制主库路由&lt;/li&gt;
+&lt;/ul&gt;
+&lt;h4 id=&quot;3-柔性事务&quot;&gt;&lt;a href=&quot;#3-柔性事务&quot; class=&quot;headerlink&quot; title=&quot;3. 柔性事务&quot;&gt;&lt;/a&gt;3. 柔性事务&lt;/h4&gt;&lt;ul&gt;
+&lt;li&gt;最大努力送达型事务&lt;/li&gt;
+&lt;li&gt;TCC型事务(TBD)&lt;/li&gt;
+&lt;/ul&gt;
+&lt;h4 id=&quot;4-分布式治理&quot;&gt;&lt;a href=&quot;#4-分布式治理&quot; class=&quot;headerlink&quot; title=&quot;4. 分布式治理&quot;&gt;&lt;/a&gt;4. 分布式治理&lt;/h4&gt;&lt;ul&gt;
+&lt;li&gt;支持配置中心，可动态修改配置&lt;/li&gt;
+&lt;li&gt;支持客户端熔断和失效转移&lt;/li&gt;
+&lt;li&gt;支持Open Tracing协议&lt;/li&gt;
+&lt;/ul&gt;
+    
+    </summary>
+    
+      <category term="中间件" scheme="https://www1350.github.io/hexo/categories/%E4%B8%AD%E9%97%B4%E4%BB%B6/"/>
+    
+      <category term="数据库" scheme="https://www1350.github.io/hexo/categories/%E4%B8%AD%E9%97%B4%E4%BB%B6/%E6%95%B0%E6%8D%AE%E5%BA%93/"/>
+    
+    
+      <category term="sharding-jdbc" scheme="https://www1350.github.io/hexo/tags/sharding-jdbc/"/>
+    
+      <category term="sharding-sphere" scheme="https://www1350.github.io/hexo/tags/sharding-sphere/"/>
+    
+  </entry>
+  
+  <entry>
+    <title>自定义spring xml配置</title>
+    <link href="https://www1350.github.io/hexo/post/a362c3af.html"/>
+    <id>https://www1350.github.io/hexo/post/a362c3af.html</id>
+    <published>2018-05-03T06:28:19.000Z</published>
+    <updated>2022-01-28T07:09:17.741Z</updated>
+    
+    <summary type="html">
+    
+      
+      
+        &lt;p&gt;spring万恶的xml配置虽然恶心，但是也不乏良好的设计。如何自定义xml呢？&lt;/p&gt;
+&lt;h2 id=&quot;创建XML-Schema文件&quot;&gt;&lt;a href=&quot;#创建XML-Schema文件&quot; class=&quot;headerlink&quot; title=&quot;创建XML Schema文件&quot;&gt;
+      
+    
+    </summary>
+    
+    
+      <category term="spring" scheme="https://www1350.github.io/hexo/tags/spring/"/>
+    
+  </entry>
+  
+  <entry>
+    <title>自定义拓展日志</title>
+    <link href="https://www1350.github.io/hexo/post/1ac0c692.html"/>
+    <id>https://www1350.github.io/hexo/post/1ac0c692.html</id>
+    <published>2018-04-25T16:50:59.000Z</published>
+    <updated>2022-01-28T07:09:17.742Z</updated>
+    
+    <summary type="html">
+    
+      
+      
+        &lt;p&gt;平常的使用过程中我们经常需要使用日志打印，有些信息比如线程信息、时间戳、日志级别等都可以用一些默认规则很容易的使用。但是如果是一些自定义的信息可能就需要拓展一下了。&lt;/p&gt;
+&lt;h2 id=&quot;Logback&quot;&gt;&lt;a href=&quot;#Logback&quot; class=&quot;headerl
+      
+    
+    </summary>
+    
+      <category term="基础" scheme="https://www1350.github.io/hexo/categories/%E5%9F%BA%E7%A1%80/"/>
+    
+    
+      <category term="log4j" scheme="https://www1350.github.io/hexo/tags/log4j/"/>
+    
+      <category term="logback" scheme="https://www1350.github.io/hexo/tags/logback/"/>
+    
+  </entry>
+  
+  <entry>
+    <title>dubbo源码解析（十） Dispatcher</title>
+    <link href="https://www1350.github.io/hexo/post/f64ed43e.html"/>
+    <id>https://www1350.github.io/hexo/post/f64ed43e.html</id>
+    <published>2018-04-23T11:32:39.000Z</published>
+    <updated>2022-01-28T07:09:17.732Z</updated>
+    
+    <summary type="html">
+    
+      &lt;h1 id=&quot;线程模型&quot;&gt;&lt;a href=&quot;#线程模型&quot; class=&quot;headerlink&quot; title=&quot;线程模型&quot;&gt;&lt;/a&gt;线程模型&lt;/h1&gt;&lt;p&gt;如果事件处理的逻辑能迅速完成，并且不会发起新的 IO 请求，比如只是在内存中记个标识，则直接在 IO 线程上处理更快，因为减少了线程池调度。&lt;/p&gt;
+&lt;p&gt;但如果事件处理逻辑较慢，或者需要发起新的 IO 请求，比如需要查询数据库，则必须派发到线程池，否则 IO 线程阻塞，将导致不能接收其它请求。&lt;/p&gt;
+&lt;p&gt;如果用 IO 线程处理事件，又在事件处理过程中发起新的 IO 请求，比如在连接事件中发起登录请求，会报“可能引发死锁”异常，但不会真死锁。&lt;/p&gt;
+&lt;p&gt;&lt;img src=&quot;https://user-images.githubusercontent.com/7789698/39110477-d4f17800-4703-11e8-909b-5a5983a1dc48.png&quot; alt=&quot;image&quot;&gt;&lt;/p&gt;
+&lt;p&gt;因此，需要通过不同的派发策略和不同的线程池配置的组合来应对不同的场景:&lt;/p&gt;
+&lt;figure class=&quot;highlight xml&quot;&gt;&lt;table&gt;&lt;tr&gt;&lt;td class=&quot;gutter&quot;&gt;&lt;pre&gt;&lt;span class=&quot;line&quot;&gt;1&lt;/span&gt;&lt;br&gt;&lt;/pre&gt;&lt;/td&gt;&lt;td class=&quot;code&quot;&gt;&lt;pre&gt;&lt;span class=&quot;line&quot;&gt;&lt;span class=&quot;tag&quot;&gt;&amp;lt;&lt;span class=&quot;name&quot;&gt;dubbo:protocol&lt;/span&gt; &lt;span class=&quot;attr&quot;&gt;name&lt;/span&gt;=&lt;span class=&quot;string&quot;&gt;&amp;quot;dubbo&amp;quot;&lt;/span&gt; &lt;span class=&quot;attr&quot;&gt;dispatcher&lt;/span&gt;=&lt;span class=&quot;string&quot;&gt;&amp;quot;all&amp;quot;&lt;/span&gt; &lt;span class=&quot;attr&quot;&gt;threadpool&lt;/span&gt;=&lt;span class=&quot;string&quot;&gt;&amp;quot;fixed&amp;quot;&lt;/span&gt; &lt;span class=&quot;attr&quot;&gt;threads&lt;/span&gt;=&lt;span class=&quot;string&quot;&gt;&amp;quot;100&amp;quot;&lt;/span&gt; /&amp;gt;&lt;/span&gt;&lt;/span&gt;&lt;br&gt;&lt;/pre&gt;&lt;/td&gt;&lt;/tr&gt;&lt;/table&gt;&lt;/figure&gt;
+
+&lt;p&gt;Dispatcher&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;&lt;code&gt;all&lt;/code&gt; 所有消息都派发到线程池，包括请求，响应，连接事件，断开事件，心跳等（如果线程池不可用了，就使用共享线程池）。&lt;/li&gt;
+&lt;li&gt;&lt;code&gt;direct&lt;/code&gt; 所有消息都不派发到线程池，全部在 IO 线程上直接执行。&lt;/li&gt;
+&lt;li&gt;&lt;code&gt;message&lt;/code&gt; 只有请求响应消息派发到线程池，其它连接断开事件，心跳等消息，直接在 IO 线程上执行。&lt;/li&gt;
+&lt;li&gt;&lt;code&gt;execution&lt;/code&gt; 连接断开事件请求响应消息派发到线程池，其它心跳等消息，直接在 IO 线程上执行。&lt;/li&gt;
+&lt;li&gt;&lt;code&gt;connection&lt;/code&gt; 在 IO 线程上，将连接断开事件放入队列，有序逐个执行，其它消息派发到线程池(如果请求响应消息的线程池不可用了，就使用共享线程池)。&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p&gt;ThreadPool&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;&lt;code&gt;fixed&lt;/code&gt; 固定大小线程池，启动时建立线程，不关闭，一直持有。(缺省)&lt;/li&gt;
+&lt;li&gt;&lt;code&gt;cached&lt;/code&gt; 缓存线程池，空闲一分钟自动删除，需要时重建。&lt;/li&gt;
+&lt;li&gt;&lt;code&gt;limited&lt;/code&gt; 可伸缩线程池，但池中的线程数只会增长不会收缩。只增长不收缩的目的是为了避免收缩时突然来了大流量引起的性能问题。&lt;/li&gt;
+&lt;li&gt;&lt;code&gt;eager&lt;/code&gt; 优先创建&lt;code&gt;Worker&lt;/code&gt;线程池。在任务数量大于&lt;code&gt;corePoolSize&lt;/code&gt;但是小于&lt;code&gt;maximumPoolSize&lt;/code&gt;时，优先创建&lt;code&gt;Worker&lt;/code&gt;来处理任务。当任务数量大于&lt;code&gt;maximumPoolSize&lt;/code&gt;时，将任务放入阻塞队列中。阻塞队列充满时抛出&lt;code&gt;RejectedExecutionException&lt;/code&gt;。(相比于&lt;code&gt;cached&lt;/code&gt;:&lt;code&gt;cached&lt;/code&gt;在任务数量超过&lt;code&gt;maximumPoolSize&lt;/code&gt;时直接抛出异常而不是将任务放入阻塞队列)&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p&gt;上面这个eager是小伙伴时无两最近提交的，可以忽略。&lt;/p&gt;
+    
+    </summary>
+    
+      <category term="中间件" scheme="https://www1350.github.io/hexo/categories/%E4%B8%AD%E9%97%B4%E4%BB%B6/"/>
+    
+      <category term="源码" scheme="https://www1350.github.io/hexo/categories/%E4%B8%AD%E9%97%B4%E4%BB%B6/%E6%BA%90%E7%A0%81/"/>
+    
+    
+      <category term="rpc" scheme="https://www1350.github.io/hexo/tags/rpc/"/>
+    
+      <category term="dubbo" scheme="https://www1350.github.io/hexo/tags/dubbo/"/>
+    
+  </entry>
+  
+  <entry>
+    <title>Paxos 协议</title>
+    <link href="https://www1350.github.io/hexo/post/410c3782.html"/>
+    <id>https://www1350.github.io/hexo/post/410c3782.html</id>
+    <published>2018-04-12T02:13:02.000Z</published>
+    <updated>2022-01-28T07:09:17.724Z</updated>
+    
+    <summary type="html">
+    
+      &lt;h2 id=&quot;CAP&quot;&gt;&lt;a href=&quot;#CAP&quot; class=&quot;headerlink&quot; title=&quot;CAP&quot;&gt;&lt;/a&gt;CAP&lt;/h2&gt;&lt;h3 id=&quot;数据一致性-consistency&quot;&gt;&lt;a href=&quot;#数据一致性-consistency&quot; class=&quot;headerlink&quot; title=&quot;数据一致性(consistency)&quot;&gt;&lt;/a&gt;数据一致性(consistency)&lt;/h3&gt;&lt;p&gt;如果系统对一个写操作返回成功，那么之后的读请求都必须读到这个新数据；如果返回失败，那么所有读操作都不能读到这个数据，对调用者而言数据具有强一致性(strong consistency) (又叫原子性 atomic、线性一致性 linearizable consistency)&lt;/p&gt;
+&lt;h3 id=&quot;服务可用性-availability&quot;&gt;&lt;a href=&quot;#服务可用性-availability&quot; class=&quot;headerlink&quot; title=&quot;服务可用性(availability)&quot;&gt;&lt;/a&gt;服务可用性(availability)&lt;/h3&gt;&lt;p&gt;所有读写请求在一定时间内得到响应，可终止、不会一直等待&lt;/p&gt;
+&lt;h3 id=&quot;分区容错性-partition-tolerance&quot;&gt;&lt;a href=&quot;#分区容错性-partition-tolerance&quot; class=&quot;headerlink&quot; title=&quot;分区容错性(partition-tolerance)&quot;&gt;&lt;/a&gt;分区容错性(partition-tolerance)&lt;/h3&gt;&lt;p&gt;在网络分区的情况下，被分隔的节点仍能正常对外服务&lt;/p&gt;
+&lt;p&gt;根据定理，分布式系统只能满足三项中的两项而不可能满足全部三项[&lt;a href=&quot;https://zh.wikipedia.org/wiki/CAP%E5%AE%9A%E7%90%86#cite_note-4&quot;&gt;4]&lt;/a&gt;。理解CAP理论的最简单方式是想象两个节点分处分区两侧。允许至少一个节点更新状态会导致数据不一致，即丧失了C性质。如果为了保证数据一致性，将分区一侧的节点设置为不可用，那么又丧失了A性质。除非两个节点可以互相通信，才能既保证C又保证A，这又会导致丧失P性质。&lt;/p&gt;
+    
+    </summary>
+    
+      <category term="一致性" scheme="https://www1350.github.io/hexo/categories/%E4%B8%80%E8%87%B4%E6%80%A7/"/>
+    
+    
+      <category term="笔记" scheme="https://www1350.github.io/hexo/tags/%E7%AC%94%E8%AE%B0/"/>
+    
+      <category term="Paxos" scheme="https://www1350.github.io/hexo/tags/Paxos/"/>
+    
+      <category term="分布式" scheme="https://www1350.github.io/hexo/tags/%E5%88%86%E5%B8%83%E5%BC%8F/"/>
+    
+      <category term="Raft" scheme="https://www1350.github.io/hexo/tags/Raft/"/>
+    
+      <category term="zookeeper" scheme="https://www1350.github.io/hexo/tags/zookeeper/"/>
+    
+      <category term="ZAB" scheme="https://www1350.github.io/hexo/tags/ZAB/"/>
+    
+      <category term="CAP" scheme="https://www1350.github.io/hexo/tags/CAP/"/>
+    
+      <category term="2PC" scheme="https://www1350.github.io/hexo/tags/2PC/"/>
+    
+      <category term="3PC" scheme="https://www1350.github.io/hexo/tags/3PC/"/>
+    
+  </entry>
+  
+  <entry>
+    <title>java基础概念</title>
+    <link href="https://www1350.github.io/hexo/post/a7ba99a3.html"/>
+    <id>https://www1350.github.io/hexo/post/a7ba99a3.html</id>
+    <published>2018-04-09T09:24:07.000Z</published>
+    <updated>2022-01-28T07:09:17.734Z</updated>
+    
+    <summary type="html">
+    
+      &lt;h2 id=&quot;基本概念&quot;&gt;&lt;a href=&quot;#基本概念&quot; class=&quot;headerlink&quot; title=&quot;基本概念&quot;&gt;&lt;/a&gt;基本概念&lt;/h2&gt;&lt;p&gt;JDK：包括编译器（javac.exe）、开发工具（javadoc.exe、jar.exe、keytool.exe、jconsole.exe）和更多的类库（如tools.jar）等。总结就是Java语言、Java虚拟机、Java API类库&lt;br&gt;JRE： 支持java运行的基本环境&lt;/p&gt;
+&lt;p&gt;&lt;img src=&quot;https://user-images.githubusercontent.com/7789698/29321251-65a89fd0-820c-11e7-93e7-b15d5c2db752.png&quot; alt=&quot;image&quot;&gt;&lt;/p&gt;
+&lt;p&gt;JIT：just in time&lt;/p&gt;
+&lt;p&gt;运行时数据区：&lt;br&gt;&lt;img src=&quot;https://user-images.githubusercontent.com/7789698/29417094-9fc9b106-839a-11e7-9be9-310174cd0d60.png&quot; alt=&quot;image&quot;&gt;&lt;/p&gt;
+&lt;h2 id=&quot;JVM的内存结构&quot;&gt;&lt;a href=&quot;#JVM的内存结构&quot; class=&quot;headerlink&quot; title=&quot;JVM的内存结构&quot;&gt;&lt;/a&gt;JVM的内存结构&lt;/h2&gt;&lt;h3 id=&quot;程序计数器：&quot;&gt;&lt;a href=&quot;#程序计数器：&quot; class=&quot;headerlink&quot; title=&quot;程序计数器：&quot;&gt;&lt;/a&gt;程序计数器：&lt;/h3&gt;&lt;p&gt;  当前代码行号指示器。各个线程计数器互不影响，独立存储。如果是执行Java方法，是虚拟机字节码地址。&lt;em&gt;如果是native方法，计数器为空。&lt;/em&gt;唯一一个没有OOM的区域。是当前线程所执行的字节码的行号指示器，每条线程都要有一个独立的程序计数器，这类内存也称为“&lt;strong&gt;线程私有&lt;/strong&gt;”的内存。&lt;/p&gt;
+&lt;p&gt;程序计数器是指CPU中的寄存器，它保存的是程序当前执行的指令的地址（也可以说保存下一条指令的所在存储单元的地址），当CPU需要执行指令时，需要从程序计数器中得到当前需要执行的指令所在存储单元的地址，然后根据得到的地址获取到指令，在得到指令之后，程序计数器便自动加1或者根据转移指针得到下一条指令的地址，如此循环，直至执行完所有的指令。　&lt;/p&gt;
+&lt;p&gt;在JVM规范中规定，如果线程执行的是非native方法，则程序计数器中保存的是当前需要执行的指令的地址；如果线程执行的是native方法，则程序计数器中的值是undefined。由于程序计数器中存储的数据所占空间的大小不会随程序的执行而发生改变，因此，对于程序计数器是不会发生内存溢出现象(OutOfMemory)的。&lt;/p&gt;
+&lt;h3 id=&quot;Java虚拟机栈：&quot;&gt;&lt;a href=&quot;#Java虚拟机栈：&quot; class=&quot;headerlink&quot; title=&quot;Java虚拟机栈：&quot;&gt;&lt;/a&gt;Java虚拟机栈：&lt;/h3&gt;&lt;p&gt;  描述Java方法执行的内存模型：每个执行时会创建一个栈帧，用于存储局部变量表、操作数栈、动态链接、方法出口等。每个方法调用到执行完成过程，对应一个栈帧在虚拟机栈中入栈到出栈的过程。&lt;strong&gt;线程私有&lt;/strong&gt;。&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;&lt;p&gt;局部变量表：&lt;/p&gt;
+&lt;p&gt;存放编译期可知的各种基本数据类型、对象引用类型（一个指向对象起始地址的引用指针）、returnAddress类型（一个字节码指令地址）。其中64位长度long和double会占用2个局部变量空间，其余占一个。局部变量表所需内存大小是在编译期间完成分配的，方法运行期间不会改变。如果栈深度大于虚拟机允许的深度，将抛出StackOverflowError异常；如果虚拟机栈动态扩张时无法申请到足够的内存，就会抛出OutOfMemoryError异常。&lt;/p&gt;
+&lt;/li&gt;
+&lt;/ul&gt;
+    
+    </summary>
+    
+      <category term="基础" scheme="https://www1350.github.io/hexo/categories/%E5%9F%BA%E7%A1%80/"/>
+    
+    
+      <category term="java" scheme="https://www1350.github.io/hexo/tags/java/"/>
+    
+  </entry>
+  
+</feed>

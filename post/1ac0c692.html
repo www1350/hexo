@@ -1,0 +1,478 @@
+<!DOCTYPE html>
+<html lang="zh-Hans">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width">
+<meta name="theme-color" content="#222" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#222" media="(prefers-color-scheme: dark)">
+<meta name="generator" content="Hexo 6.0.0">
+
+
+  <link rel="apple-touch-icon" sizes="180x180" href="/hexo/images/apple-touch-icon-next.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/hexo/images/favicon-32x32-next.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/hexo/images/favicon-16x16-next.png">
+  <link rel="mask-icon" href="/hexo/images/logo.svg" color="#222">
+
+<link rel="stylesheet" href="/hexo/css/main.css">
+
+
+
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@5.15.4/css/all.min.css" integrity="sha256-mUZM63G8m73Mcidfrv5E+Y61y7a12O5mW4ezU3bxqW4=" crossorigin="anonymous">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/animate.css@3.1.1/animate.min.css" integrity="sha256-PR7ttpcvz8qrF57fur/yAx1qXMFJeJFiA6pSzWi0OIE=" crossorigin="anonymous">
+
+<script class="next-config" data-name="main" type="application/json">{"hostname":"www1350.github.io","root":"/hexo/","images":"/hexo/images","scheme":"Mist","darkmode":true,"version":"8.9.0","exturl":false,"sidebar":{"position":"left","display":"post","padding":18,"offset":12},"copycode":false,"bookmark":{"enable":false,"color":"#222","save":"auto"},"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"stickytabs":false,"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"fadeInDown","post_body":"fadeInDown","coll_header":"fadeInLeft","sidebar":"fadeInUp"}},"prism":false,"i18n":{"placeholder":"Searching...","empty":"We didn't find any results for the search: ${query}","hits_time":"${hits} results found in ${time} ms","hits":"${hits} results found"},"path":"/hexo/search.xml","localsearch":{"enable":true,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":true}}</script><script src="/hexo/js/config.js"></script>
+<meta name="description" content="平常的使用过程中我们经常需要使用日志打印，有些信息比如线程信息、时间戳、日志级别等都可以用一些默认规则很容易的使用。但是如果是一些自定义的信息可能就需要拓展一下了。 Logback简单使用 12345678910111213package chapters.introduction;import org.slf4j.Logger;import org.slf4j.LoggerFactory;pub">
+<meta property="og:type" content="article">
+<meta property="og:title" content="自定义拓展日志">
+<meta property="og:url" content="https://www1350.github.io/hexo/post/1ac0c692.html">
+<meta property="og:site_name" content="Absurd博客">
+<meta property="og:description" content="平常的使用过程中我们经常需要使用日志打印，有些信息比如线程信息、时间戳、日志级别等都可以用一些默认规则很容易的使用。但是如果是一些自定义的信息可能就需要拓展一下了。 Logback简单使用 12345678910111213package chapters.introduction;import org.slf4j.Logger;import org.slf4j.LoggerFactory;pub">
+<meta property="og:locale">
+<meta property="article:published_time" content="2018-04-25T16:50:59.000Z">
+<meta property="article:modified_time" content="2022-01-28T07:09:17.742Z">
+<meta property="article:author" content="Absurd">
+<meta property="article:tag" content="log4j">
+<meta property="article:tag" content="logback">
+<meta name="twitter:card" content="summary">
+
+
+<link rel="canonical" href="https://www1350.github.io/hexo/post/1ac0c692.html">
+
+
+
+<script class="next-config" data-name="page" type="application/json">{"sidebar":"","isHome":false,"isPost":true,"lang":"zh-Hans","comments":true,"permalink":"https://www1350.github.io/hexo/post/1ac0c692.html","path":"post/1ac0c692.html","title":"自定义拓展日志"}</script>
+
+<script class="next-config" data-name="calendar" type="application/json">""</script>
+<title>自定义拓展日志 | Absurd博客</title>
+  
+
+
+
+
+  <noscript>
+    <link rel="stylesheet" href="/hexo/css/noscript.css">
+  </noscript>
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage" class="use-motion">
+  <div class="headband"></div>
+
+  <main class="main">
+    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="Toggle navigation bar" role="button">
+        <span class="toggle-line"></span>
+        <span class="toggle-line"></span>
+        <span class="toggle-line"></span>
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/hexo/" class="brand" rel="start">
+      <i class="logo-line"></i>
+      <p class="site-title">Absurd博客</p>
+      <i class="logo-line"></i>
+    </a>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger">
+        <i class="fa fa-search fa-fw fa-lg"></i>
+    </div>
+  </div>
+</div>
+
+
+
+<nav class="site-nav">
+  <ul class="main-menu menu">
+        <li class="menu-item menu-item-home"><a href="/hexo/" rel="section"><i class="fa fa-home fa-fw"></i>Home</a></li>
+        <li class="menu-item menu-item-about"><a href="/hexo/about/" rel="section"><i class="fa fa-user fa-fw"></i>About</a></li>
+        <li class="menu-item menu-item-tags"><a href="/hexo/tags/" rel="section"><i class="fa fa-tags fa-fw"></i>Tags</a></li>
+        <li class="menu-item menu-item-categories"><a href="/hexo/categories/" rel="section"><i class="fa fa-th fa-fw"></i>Categories</a></li>
+        <li class="menu-item menu-item-archives"><a href="/hexo/archives/" rel="section"><i class="fa fa-archive fa-fw"></i>Archives</a></li>
+        <li class="menu-item menu-item-bookmarks"><a href="/hexo/bookmarks/" rel="section"><i class="fa fa-archive fa-fw"></i>bookmarks</a></li>
+      <li class="menu-item menu-item-search">
+        <a role="button" class="popup-trigger"><i class="fa fa-search fa-fw"></i>Search
+        </a>
+      </li>
+  </ul>
+</nav>
+
+
+
+  <div class="search-pop-overlay">
+    <div class="popup search-popup"><div class="search-header">
+  <span class="search-icon">
+    <i class="fa fa-search"></i>
+  </span>
+  <div class="search-input-container">
+    <input autocomplete="off" autocapitalize="off" maxlength="80"
+           placeholder="Searching..." spellcheck="false"
+           type="search" class="search-input">
+  </div>
+  <span class="popup-btn-close" role="button">
+    <i class="fa fa-times-circle"></i>
+  </span>
+</div>
+<div class="search-result-container no-result">
+  <div class="search-result-icon">
+    <i class="fa fa-spinner fa-pulse fa-5x"></i>
+  </div>
+</div>
+
+    </div>
+  </div>
+
+</div>
+        
+  
+  <div class="toggle sidebar-toggle" role="button">
+    <span class="toggle-line"></span>
+    <span class="toggle-line"></span>
+    <span class="toggle-line"></span>
+  </div>
+
+  <aside class="sidebar">
+
+    <div class="sidebar-inner sidebar-nav-active sidebar-toc-active">
+      <ul class="sidebar-nav">
+        <li class="sidebar-nav-toc">
+          Table of Contents
+        </li>
+        <li class="sidebar-nav-overview">
+          Overview
+        </li>
+      </ul>
+
+      <div class="sidebar-panel-container">
+        <!--noindex-->
+        <div class="post-toc-wrap sidebar-panel">
+            <div class="post-toc animated"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#Logback"><span class="nav-number">1.</span> <span class="nav-text">Logback</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#%E5%AE%8C%E5%85%A8%E8%87%AA%E5%AE%9A%E4%B9%89layout"><span class="nav-number">1.1.</span> <span class="nav-text">完全自定义layout</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#LayoutBase"><span class="nav-number">1.1.1.</span> <span class="nav-text">LayoutBase</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#PatternLayout"><span class="nav-number">1.1.2.</span> <span class="nav-text">PatternLayout</span></a><ol class="nav-child"><li class="nav-item nav-level-5"><a class="nav-link" href="#%E5%88%9B%E5%BB%BA%E4%B8%80%E4%B8%AA%E8%87%AA%E5%AE%9A%E4%B9%89%E8%BD%AC%E6%8D%A2%E8%AF%B4%E6%98%8E%E7%AC%A6"><span class="nav-number">1.1.2.1.</span> <span class="nav-text">创建一个自定义转换说明符</span></a></li></ol></li></ol></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#Log4j"><span class="nav-number">2.</span> <span class="nav-text">Log4j</span></a></li></ol></div>
+        </div>
+        <!--/noindex-->
+
+        <div class="site-overview-wrap sidebar-panel">
+          <div class="site-author site-overview-item animated" itemprop="author" itemscope itemtype="http://schema.org/Person">
+    <img class="site-author-image" itemprop="image" alt="Absurd"
+      src="/hexo/images/avatar.gif">
+  <p class="site-author-name" itemprop="name">Absurd</p>
+  <div class="site-description" itemprop="description"></div>
+</div>
+<div class="site-state-wrap site-overview-item animated">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+        <a href="/hexo/archives/">
+          <span class="site-state-item-count">75</span>
+          <span class="site-state-item-name">posts</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+          <a href="/hexo/categories/">
+        <span class="site-state-item-count">17</span>
+        <span class="site-state-item-name">categories</span></a>
+      </div>
+      <div class="site-state-item site-state-tags">
+          <a href="/hexo/tags/">
+        <span class="site-state-item-count">46</span>
+        <span class="site-state-item-name">tags</span></a>
+      </div>
+  </nav>
+</div>
+  <div class="links-of-author site-overview-item animated">
+      <span class="links-of-author-item">
+        <a href="https://github.com/www1350" title="GitHub → https:&#x2F;&#x2F;github.com&#x2F;www1350" rel="noopener" target="_blank"><i class="fab fa-github fa-fw"></i>GitHub</a>
+      </span>
+      <span class="links-of-author-item">
+        <a href="mailto:www_1350@163.com" title="E-Mail → mailto:www_1350@163.com" rel="noopener" target="_blank"><i class="fa fa-envelope fa-fw"></i>E-Mail</a>
+      </span>
+  </div>
+
+
+
+        </div>
+      </div>
+    </div>
+  </aside>
+  <div class="sidebar-dimmer"></div>
+
+
+    </header>
+
+    
+  <div class="back-to-top" role="button" aria-label="Back to top">
+    <i class="fa fa-arrow-up"></i>
+    <span>0%</span>
+  </div>
+
+<noscript>
+  <div class="noscript-warning">Theme NexT works best with JavaScript enabled</div>
+</noscript>
+
+
+    <div class="main-inner post posts-expand">
+
+
+  
+
+
+<div class="post-block">
+  
+  
+
+  <article itemscope itemtype="http://schema.org/Article" class="post-content" lang="zh-Hans">
+    <link itemprop="mainEntityOfPage" href="https://www1350.github.io/hexo/post/1ac0c692.html">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/hexo/images/avatar.gif">
+      <meta itemprop="name" content="Absurd">
+      <meta itemprop="description" content="">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Absurd博客">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          自定义拓展日志
+        </h1>
+
+        <div class="post-meta-container">
+          <div class="post-meta">
+    <span class="post-meta-item">
+      <span class="post-meta-item-icon">
+        <i class="far fa-calendar"></i>
+      </span>
+      <span class="post-meta-item-text">Posted on</span>
+
+      <time title="Created: 2018-04-26 00:50:59" itemprop="dateCreated datePublished" datetime="2018-04-26T00:50:59+08:00">2018-04-26</time>
+    </span>
+    <span class="post-meta-item">
+      <span class="post-meta-item-icon">
+        <i class="far fa-calendar-check"></i>
+      </span>
+      <span class="post-meta-item-text">Edited on</span>
+      <time title="Modified: 2022-01-28 15:09:17" itemprop="dateModified" datetime="2022-01-28T15:09:17+08:00">2022-01-28</time>
+    </span>
+    <span class="post-meta-item">
+      <span class="post-meta-item-icon">
+        <i class="far fa-folder"></i>
+      </span>
+      <span class="post-meta-item-text">In</span>
+        <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+          <a href="/hexo/categories/%E5%9F%BA%E7%A1%80/" itemprop="url" rel="index"><span itemprop="name">基础</span></a>
+        </span>
+    </span>
+
+  
+</div>
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+        <p>平常的使用过程中我们经常需要使用日志打印，有些信息比如线程信息、时间戳、日志级别等都可以用一些默认规则很容易的使用。但是如果是一些自定义的信息可能就需要拓展一下了。</p>
+<h2 id="Logback"><a href="#Logback" class="headerlink" title="Logback"></a>Logback</h2><p>简单使用</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">package</span> chapters.introduction;</span><br><span class="line"></span><br><span class="line"><span class="keyword">import</span> org.slf4j.Logger;</span><br><span class="line"><span class="keyword">import</span> org.slf4j.LoggerFactory;</span><br><span class="line"></span><br><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">HelloWorld1</span> </span>&#123;</span><br><span class="line"></span><br><span class="line">  <span class="function"><span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">void</span> <span class="title">main</span><span class="params">(String[] args)</span> </span>&#123;</span><br><span class="line">    Logger logger = LoggerFactory.getLogger(<span class="string">&quot;chapters.introduction.HelloWorld1&quot;</span>);</span><br><span class="line">    logger.debug(<span class="string">&quot;Hello world.&quot;</span>);</span><br><span class="line"></span><br><span class="line">  &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<blockquote>
+<p>20:49:07.962 [main] DEBUG chapters.introduction.HelloWorld1 - Hello world.</p>
+</blockquote>
+<p>配置</p>
+<figure class="highlight xml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line"><span class="tag">&lt;<span class="name">configuration</span>&gt;</span></span><br><span class="line">  <span class="tag">&lt;<span class="name">appender</span> <span class="attr">name</span>=<span class="string">&quot;STDOUT&quot;</span> <span class="attr">class</span>=<span class="string">&quot;ch.qos.logback.core.ConsoleAppender&quot;</span>&gt;</span></span><br><span class="line">    <span class="comment">&lt;!-- encoders are assigned the type</span></span><br><span class="line"><span class="comment">         ch.qos.logback.classic.encoder.PatternLayoutEncoder by default --&gt;</span></span><br><span class="line">    <span class="tag">&lt;<span class="name">encoder</span>&gt;</span></span><br><span class="line">      <span class="tag">&lt;<span class="name">pattern</span>&gt;</span>%d&#123;HH:mm:ss.SSS&#125; [%thread] %-5level %logger&#123;36&#125; - %msg%n<span class="tag">&lt;/<span class="name">pattern</span>&gt;</span></span><br><span class="line">    <span class="tag">&lt;/<span class="name">encoder</span>&gt;</span></span><br><span class="line">  <span class="tag">&lt;/<span class="name">appender</span>&gt;</span></span><br><span class="line">  <span class="tag">&lt;<span class="name">root</span> <span class="attr">level</span>=<span class="string">&quot;debug&quot;</span>&gt;</span></span><br><span class="line">    <span class="tag">&lt;<span class="name">appender-ref</span> <span class="attr">ref</span>=<span class="string">&quot;STDOUT&quot;</span> /&gt;</span></span><br><span class="line">  <span class="tag">&lt;/<span class="name">root</span>&gt;</span></span><br><span class="line"><span class="tag">&lt;/<span class="name">configuration</span>&gt;</span></span><br></pre></td></tr></table></figure>
+
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">package</span> chapters.configuration;</span><br><span class="line">  </span><br><span class="line"><span class="keyword">import</span> org.slf4j.Logger;</span><br><span class="line"><span class="keyword">import</span> org.slf4j.LoggerFactory;</span><br><span class="line">   </span><br><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">Foo</span> </span>&#123;</span><br><span class="line">  <span class="keyword">static</span> <span class="keyword">final</span> Logger logger = LoggerFactory.getLogger(Foo.class);</span><br><span class="line">  </span><br><span class="line">  <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">doIt</span><span class="params">()</span> </span>&#123;</span><br><span class="line">    logger.debug(<span class="string">&quot;Did it again!&quot;</span>);</span><br><span class="line">  &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<blockquote>
+<p>16:06:09.031 [main] INFO  chapters.configuration.MyApp1 - Entering application.<br>16:06:09.046 [main] DEBUG chapters.configuration.Foo - Did it again!<br>16:06:09.046 [main] INFO  chapters.configuration.MyApp1 - Exiting application.</p>
+</blockquote>
+<p>通过配置规则*%d{HH:mm:ss.SSS} [%thread] %-5level %logger{36} - %msg%n*来输出响应信息</p>
+<p>logback主要由三块组成： <code>Logger</code>, <code>Appender</code> and <code>Layout</code></p>
+<p><code>Appender</code>负责把日志事件的任务写入</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">interface</span> <span class="title">Appender</span>&lt;<span class="title">E</span>&gt; <span class="keyword">extends</span> <span class="title">LifeCycle</span>, <span class="title">ContextAware</span>, <span class="title">FilterAttachable</span> </span>&#123;</span><br><span class="line">  <span class="function"><span class="keyword">public</span> String <span class="title">getName</span><span class="params">()</span></span>;</span><br><span class="line">  <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">setName</span><span class="params">(String name)</span></span>;</span><br><span class="line">  <span class="function"><span class="keyword">void</span> <span class="title">doAppend</span><span class="params">(E event)</span></span>;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p><code>encoder</code>将事件转换为一个字节数组</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">package</span> ch.qos.logback.core.encoder;</span><br><span class="line"></span><br><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">interface</span> <span class="title">Encoder</span>&lt;<span class="title">E</span>&gt; <span class="keyword">extends</span> <span class="title">ContextAware</span>, <span class="title">LifeCycle</span> </span>&#123;</span><br><span class="line"></span><br><span class="line">   <span class="comment">/**</span></span><br><span class="line"><span class="comment">   * This method is called when the owning appender starts or whenever output</span></span><br><span class="line"><span class="comment">   * needs to be directed to a new OutputStream, for instance as a result of a</span></span><br><span class="line"><span class="comment">   * rollover.</span></span><br><span class="line"><span class="comment">   */</span></span><br><span class="line">  <span class="function"><span class="keyword">void</span> <span class="title">init</span><span class="params">(OutputStream os)</span> <span class="keyword">throws</span> IOException</span>;</span><br><span class="line"></span><br><span class="line">  <span class="comment">/**</span></span><br><span class="line"><span class="comment">   * Encode and write an event to the appropriate &#123;<span class="doctag">@link</span> OutputStream&#125;.</span></span><br><span class="line"><span class="comment">   * Implementations are free to defer writing out of the encoded event and</span></span><br><span class="line"><span class="comment">   * instead write in batches.</span></span><br><span class="line"><span class="comment">   */</span></span><br><span class="line">  <span class="function"><span class="keyword">void</span> <span class="title">doEncode</span><span class="params">(E event)</span> <span class="keyword">throws</span> IOException</span>;</span><br><span class="line"></span><br><span class="line"></span><br><span class="line">  <span class="comment">/**</span></span><br><span class="line"><span class="comment">   * This method is called prior to the closing of the underling</span></span><br><span class="line"><span class="comment">   * &#123;<span class="doctag">@link</span> OutputStream&#125;. Implementations MUST not close the underlying</span></span><br><span class="line"><span class="comment">   * &#123;<span class="doctag">@link</span> OutputStream&#125; which is the responsibility of the owning appender.</span></span><br><span class="line"><span class="comment">   */</span></span><br><span class="line">  <span class="function"><span class="keyword">void</span> <span class="title">close</span><span class="params">()</span> <span class="keyword">throws</span> IOException</span>;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p> <code>Layout</code>负责将传入的事件转换为一个字符串</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">interface</span> <span class="title">Layout</span>&lt;<span class="title">E</span>&gt; <span class="keyword">extends</span> <span class="title">ContextAware</span>, <span class="title">LifeCycle</span> </span>&#123;</span><br><span class="line"></span><br><span class="line">  <span class="function">String <span class="title">doLayout</span><span class="params">(E event)</span></span>;</span><br><span class="line">  <span class="function">String <span class="title">getFileHeader</span><span class="params">()</span></span>;</span><br><span class="line">  <span class="function">String <span class="title">getPresentationHeader</span><span class="params">()</span></span>;</span><br><span class="line">  <span class="function">String <span class="title">getFileFooter</span><span class="params">()</span></span>;</span><br><span class="line">  <span class="function">String <span class="title">getPresentationFooter</span><span class="params">()</span></span>;</span><br><span class="line">  <span class="function">String <span class="title">getContentType</span><span class="params">()</span></span>;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+
+
+<h3 id="完全自定义layout"><a href="#完全自定义layout" class="headerlink" title="完全自定义layout"></a>完全自定义layout</h3><h4 id="LayoutBase"><a href="#LayoutBase" class="headerlink" title="LayoutBase"></a>LayoutBase</h4><figure class="highlight xml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br></pre></td><td class="code"><pre><span class="line"><span class="tag">&lt;<span class="name">configuration</span>&gt;</span></span><br><span class="line">  <span class="tag">&lt;<span class="name">appender</span> <span class="attr">name</span>=<span class="string">&quot;STDOUT&quot;</span> <span class="attr">class</span>=<span class="string">&quot;ch.qos.logback.core.ConsoleAppender&quot;</span>&gt;</span></span><br><span class="line">    <span class="tag">&lt;<span class="name">encoder</span> <span class="attr">class</span>=<span class="string">&quot;ch.qos.logback.core.encoder.LayoutWrappingEncoder&quot;</span>&gt;</span></span><br><span class="line">      <span class="tag">&lt;<span class="name">layout</span> <span class="attr">class</span>=<span class="string">&quot;chapters.layouts.MySampleLayout2&quot;</span>&gt;</span> </span><br><span class="line">        <span class="tag">&lt;<span class="name">prefix</span>&gt;</span>MyPrefix<span class="tag">&lt;/<span class="name">prefix</span>&gt;</span></span><br><span class="line">        <span class="tag">&lt;<span class="name">printThreadName</span>&gt;</span>false<span class="tag">&lt;/<span class="name">printThreadName</span>&gt;</span></span><br><span class="line">      <span class="tag">&lt;/<span class="name">layout</span>&gt;</span></span><br><span class="line">    <span class="tag">&lt;/<span class="name">encoder</span>&gt;</span></span><br><span class="line">  <span class="tag">&lt;/<span class="name">appender</span>&gt;</span></span><br><span class="line"></span><br><span class="line">  <span class="tag">&lt;<span class="name">root</span> <span class="attr">level</span>=<span class="string">&quot;DEBUG&quot;</span>&gt;</span></span><br><span class="line">    <span class="tag">&lt;<span class="name">appender-ref</span> <span class="attr">ref</span>=<span class="string">&quot;STDOUT&quot;</span> /&gt;</span></span><br><span class="line">  <span class="tag">&lt;/<span class="name">root</span>&gt;</span></span><br><span class="line"><span class="tag">&lt;/<span class="name">configuration</span>&gt;</span></span><br></pre></td></tr></table></figure>
+
+
+
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">package</span> chapters.layouts;</span><br><span class="line"></span><br><span class="line"><span class="keyword">import</span> ch.qos.logback.classic.spi.ILoggingEvent;</span><br><span class="line"><span class="keyword">import</span> ch.qos.logback.core.LayoutBase;</span><br><span class="line"></span><br><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">MySampleLayout2</span> <span class="keyword">extends</span> <span class="title">LayoutBase</span>&lt;<span class="title">ILoggingEvent</span>&gt; </span>&#123;</span><br><span class="line"></span><br><span class="line">  String prefix = <span class="keyword">null</span>;</span><br><span class="line">  <span class="keyword">boolean</span> printThreadName = <span class="keyword">true</span>;</span><br><span class="line"></span><br><span class="line">  <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">setPrefix</span><span class="params">(String prefix)</span> </span>&#123;</span><br><span class="line">    <span class="keyword">this</span>.prefix = prefix;</span><br><span class="line">  &#125;</span><br><span class="line"></span><br><span class="line">  <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">setPrintThreadName</span><span class="params">(<span class="keyword">boolean</span> printThreadName)</span> </span>&#123;</span><br><span class="line">    <span class="keyword">this</span>.printThreadName = printThreadName;</span><br><span class="line">  &#125;</span><br><span class="line"></span><br><span class="line">  <span class="function"><span class="keyword">public</span> String <span class="title">doLayout</span><span class="params">(ILoggingEvent event)</span> </span>&#123;</span><br><span class="line">    StringBuffer sbuf = <span class="keyword">new</span> StringBuffer(<span class="number">128</span>);</span><br><span class="line">    <span class="keyword">if</span> (prefix != <span class="keyword">null</span>) &#123;</span><br><span class="line">      sbuf.append(prefix + <span class="string">&quot;: &quot;</span>);</span><br><span class="line">    &#125;</span><br><span class="line">    sbuf.append(event.getTimeStamp() - event.getLoggerContextVO().getBirthTime());</span><br><span class="line">    sbuf.append(<span class="string">&quot; &quot;</span>);</span><br><span class="line">    sbuf.append(event.getLevel());</span><br><span class="line">    <span class="keyword">if</span> (printThreadName) &#123;</span><br><span class="line">      sbuf.append(<span class="string">&quot; [&quot;</span>);</span><br><span class="line">      sbuf.append(event.getThreadName());</span><br><span class="line">      sbuf.append(<span class="string">&quot;] &quot;</span>);</span><br><span class="line">    &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">      sbuf.append(<span class="string">&quot; &quot;</span>);</span><br><span class="line">    &#125;</span><br><span class="line">    sbuf.append(event.getLoggerName());</span><br><span class="line">    sbuf.append(<span class="string">&quot; - &quot;</span>);</span><br><span class="line">    sbuf.append(event.getFormattedMessage());</span><br><span class="line">    sbuf.append(LINE_SEP);</span><br><span class="line">    <span class="keyword">return</span> sbuf.toString();</span><br><span class="line">  &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<h4 id="PatternLayout"><a href="#PatternLayout" class="headerlink" title="PatternLayout"></a>PatternLayout</h4><p>Logback classic附带一个叫做PatternLayout灵活的布局。所有Layout,PatternLayout负责日志事件并返回一个字符串。这个字符串可以通过调整PatternLayout定制的转换模式。</p>
+<p>你可以在转换模式里面插入任意文字，格式都是以百分号开头，括号括起来的。比如[%thread]</p>
+<h5 id="创建一个自定义转换说明符"><a href="#创建一个自定义转换说明符" class="headerlink" title="创建一个自定义转换说明符"></a>创建一个自定义转换说明符</h5><ol>
+<li>继承ClassicConverter</li>
+</ol>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">MySampleConverter</span> <span class="keyword">extends</span> <span class="title">ClassicConverter</span> </span>&#123;</span><br><span class="line"></span><br><span class="line">  <span class="keyword">long</span> start = System.nanoTime();</span><br><span class="line"></span><br><span class="line">  <span class="meta">@Override</span></span><br><span class="line">  <span class="function"><span class="keyword">public</span> String <span class="title">convert</span><span class="params">(ILoggingEvent event)</span> </span>&#123;</span><br><span class="line">    <span class="keyword">long</span> nowInNanos = System.nanoTime();</span><br><span class="line">    <span class="keyword">return</span> Long.toString(nowInNanos-start);</span><br><span class="line">  &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<ol start="2">
+<li>声明转换文件</li>
+</ol>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br></pre></td><td class="code"><pre><span class="line">&lt;configuration&gt;</span><br><span class="line"></span><br><span class="line">  &lt;conversionRule conversionWord=<span class="string">&quot;nanos&quot;</span> </span><br><span class="line">                  converterClass=<span class="string">&quot;chapters.layouts.MySampleConverter&quot;</span> /&gt;</span><br><span class="line">        </span><br><span class="line">  &lt;appender name=<span class="string">&quot;STDOUT&quot;</span> <span class="class"><span class="keyword">class</span></span>=<span class="string">&quot;ch.qos.logback.core.ConsoleAppender&quot;</span>&gt;</span><br><span class="line">    &lt;encoder&gt;</span><br><span class="line">      &lt;pattern&gt;%-6nanos [%thread] - %msg%n&lt;/pattern&gt;</span><br><span class="line">    &lt;/encoder&gt;</span><br><span class="line">  &lt;/appender&gt;</span><br><span class="line"></span><br><span class="line">  &lt;root level=<span class="string">&quot;DEBUG&quot;</span>&gt;</span><br><span class="line">    &lt;appender-ref ref=<span class="string">&quot;STDOUT&quot;</span> /&gt;</span><br><span class="line">  &lt;/root&gt;</span><br><span class="line">&lt;/configuration&gt;</span><br></pre></td></tr></table></figure>
+
+<blockquote>
+<p>4868695 [main] DEBUG - Everything’s going well<br>5758748 [main] ERROR - maybe not quite…</p>
+</blockquote>
+<p>另外一种方式</p>
+<ol>
+<li>继承PatternLayout，默认转换说明符号多设置一条</li>
+</ol>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">TraceIdPatternLogbackLayout</span> <span class="keyword">extends</span> <span class="title">PatternLayout</span> </span>&#123;</span><br><span class="line">    <span class="keyword">static</span> &#123;</span><br><span class="line">        defaultConverterMap.put(<span class="string">&quot;traceId&quot;</span>, LogbackPatternConverter.class.getName());</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<ol start="2">
+<li>继承ClassicConverter</li>
+</ol>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">LogbackPatternConverter</span> <span class="keyword">extends</span> <span class="title">ClassicConverter</span> </span>&#123;</span><br><span class="line">    <span class="meta">@Override</span></span><br><span class="line">    <span class="function"><span class="keyword">public</span> String <span class="title">convert</span><span class="params">(ILoggingEvent iLoggingEvent)</span> </span>&#123;</span><br><span class="line">        <span class="keyword">return</span> Strings.isNullOrEmpty(TraceUtil.getTraceId()) ? <span class="string">&quot;N/A&quot;</span> : TraceUtil.getTraceId();</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<ol start="3">
+<li>配置自定义layout配置文件</li>
+</ol>
+<figure class="highlight xml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line"><span class="tag">&lt;<span class="name">appender</span> <span class="attr">name</span>=<span class="string">&quot;STDOUT&quot;</span> <span class="attr">class</span>=<span class="string">&quot;ch.qos.logback.core.ConsoleAppender&quot;</span>&gt;</span></span><br><span class="line">      <span class="tag">&lt;<span class="name">encoder</span> <span class="attr">class</span>=<span class="string">&quot;ch.qos.logback.core.encoder.LayoutWrappingEncoder&quot;</span>&gt;</span></span><br><span class="line">         <span class="tag">&lt;<span class="name">layout</span> <span class="attr">class</span>=<span class="string">&quot;com.absurd.logback.TraceIdPatternLogbackLayout&quot;</span>&gt;</span></span><br><span class="line">            <span class="tag">&lt;<span class="name">pattern</span>&gt;</span>[%d&#123;MM-dd HH:mm:ss.SSS&#125;] [%traceId] [%thread] %-5level %logger[%M] - %msg%n<span class="tag">&lt;/<span class="name">pattern</span>&gt;</span></span><br><span class="line">         <span class="tag">&lt;/<span class="name">layout</span>&gt;</span></span><br><span class="line">      <span class="tag">&lt;/<span class="name">encoder</span>&gt;</span></span><br><span class="line">   <span class="tag">&lt;/<span class="name">appender</span>&gt;</span></span><br></pre></td></tr></table></figure>
+<h2 id="Log4j"><a href="#Log4j" class="headerlink" title="Log4j"></a>Log4j</h2><p>简单使用</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">import</span> com.foo.Bar;</span><br><span class="line"></span><br><span class="line"> <span class="keyword">import</span> org.apache.log4j.Logger;</span><br><span class="line"> <span class="keyword">import</span> org.apache.log4j.BasicConfigurator;</span><br><span class="line"></span><br><span class="line"> <span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">MyApp</span> </span>&#123;</span><br><span class="line"></span><br><span class="line">   <span class="comment">// Define a static logger variable so that it references the</span></span><br><span class="line">   <span class="comment">// Logger instance named &quot;MyApp&quot;.</span></span><br><span class="line">   <span class="keyword">static</span> Logger logger = Logger.getLogger(MyApp.class);</span><br><span class="line"></span><br><span class="line">   <span class="function"><span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">void</span> <span class="title">main</span><span class="params">(String[] args)</span> </span>&#123;</span><br><span class="line"></span><br><span class="line">     <span class="comment">// 打印到控制台</span></span><br><span class="line">     BasicConfigurator.configure();</span><br><span class="line"></span><br><span class="line">     logger.info(<span class="string">&quot;Entering application.&quot;</span>);</span><br><span class="line">     Bar bar = <span class="keyword">new</span> Bar();</span><br><span class="line">     bar.doIt();</span><br><span class="line">     logger.info(<span class="string">&quot;Exiting application.&quot;</span>);</span><br><span class="line">   &#125;</span><br><span class="line"> &#125;</span><br></pre></td></tr></table></figure>
+
+<blockquote>
+<p>0    [main] INFO  MyApp  - Entering application.<br>36   [main] DEBUG com.foo.Bar  - Did it again!<br>51   [main] INFO  MyApp  - Exiting application.</p>
+</blockquote>
+<p>手动设置配置文件</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">import</span> com.foo.Bar;</span><br><span class="line"></span><br><span class="line"><span class="keyword">import</span> org.apache.log4j.Logger;</span><br><span class="line"><span class="keyword">import</span> org.apache.log4j.PropertyConfigurator;</span><br><span class="line"></span><br><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">MyApp</span> </span>&#123;</span><br><span class="line"></span><br><span class="line">  <span class="keyword">static</span> Logger logger = Logger.getLogger(MyApp.class.getName());</span><br><span class="line"></span><br><span class="line">  <span class="function"><span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">void</span> <span class="title">main</span><span class="params">(String[] args)</span> </span>&#123;</span><br><span class="line"></span><br><span class="line"></span><br><span class="line">    <span class="comment">// BasicConfigurator replaced with PropertyConfigurator.</span></span><br><span class="line">    PropertyConfigurator.configure(args[<span class="number">0</span>]);</span><br><span class="line"></span><br><span class="line">    logger.info(<span class="string">&quot;Entering application.&quot;</span>);</span><br><span class="line">    Bar bar = <span class="keyword">new</span> Bar();</span><br><span class="line">    bar.doIt();</span><br><span class="line">    logger.info(<span class="string">&quot;Exiting application.&quot;</span>);</span><br><span class="line">  &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>屏蔽日志</p>
+<figure class="highlight properties"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">log4j.rootLogger</span>=<span class="string">DEBUG, A1</span></span><br><span class="line"><span class="meta">log4j.appender.A1</span>=<span class="string">org.apache.log4j.ConsoleAppender</span></span><br><span class="line"><span class="meta">log4j.appender.A1.layout</span>=<span class="string">org.apache.log4j.PatternLayout</span></span><br><span class="line"><span class="comment"></span></span><br><span class="line"><span class="comment"># Print the date in ISO 8601 format</span></span><br><span class="line"><span class="meta">log4j.appender.A1.layout.ConversionPattern</span>=<span class="string">%d [%t] %-5p %c - %m%n</span></span><br><span class="line"><span class="comment"></span></span><br><span class="line"><span class="comment"># Print only messages of level WARN or above in the package com.foo.</span></span><br><span class="line"><span class="meta">log4j.logger.com.foo</span>=<span class="string">WARN</span></span><br></pre></td></tr></table></figure>
+
+<blockquote>
+<p>2000-09-07 14:07:41,508 [main] INFO  MyApp - Entering application.<br>2000-09-07 14:07:41,529 [main] INFO  MyApp - Exiting application.</p>
+</blockquote>
+<p>多个appender</p>
+<figure class="highlight properties"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">log4j.rootLogger</span>=<span class="string">debug, stdout, R</span></span><br><span class="line"></span><br><span class="line"><span class="meta">log4j.appender.stdout</span>=<span class="string">org.apache.log4j.ConsoleAppender</span></span><br><span class="line"><span class="meta">log4j.appender.stdout.layout</span>=<span class="string">org.apache.log4j.PatternLayout</span></span><br><span class="line"><span class="comment"></span></span><br><span class="line"><span class="comment"># Pattern to output the caller&#x27;s file name and line number.</span></span><br><span class="line"><span class="meta">log4j.appender.stdout.layout.ConversionPattern</span>=<span class="string">%5p [%t] (%F:%L) - %m%n</span></span><br><span class="line"></span><br><span class="line"><span class="meta">log4j.appender.R</span>=<span class="string">org.apache.log4j.RollingFileAppender</span></span><br><span class="line"><span class="meta">log4j.appender.R.File</span>=<span class="string">example.log</span></span><br><span class="line"></span><br><span class="line"><span class="meta">log4j.appender.R.MaxFileSize</span>=<span class="string">100KB</span></span><br><span class="line"><span class="comment"># Keep one backup file</span></span><br><span class="line"><span class="meta">log4j.appender.R.MaxBackupIndex</span>=<span class="string">1</span></span><br><span class="line"></span><br><span class="line"><span class="meta">log4j.appender.R.layout</span>=<span class="string">org.apache.log4j.PatternLayout</span></span><br><span class="line"><span class="meta">log4j.appender.R.layout.ConversionPattern</span>=<span class="string">%p %t %c - %m%n</span></span><br></pre></td></tr></table></figure>
+
+<blockquote>
+<p> INFO [main] (MyApp2.java:12) - Entering application.<br>DEBUG [main] (Bar.java:8) - Doing it again!<br> INFO [main] (MyApp2.java:15) - Exiting application.</p>
+</blockquote>
+<p>自定义</p>
+<p>log4j-1.x</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">TraceIdPatternConverter</span>  <span class="keyword">extends</span> <span class="title">PatternConverter</span> </span>&#123;</span><br><span class="line">    <span class="meta">@Override</span></span><br><span class="line">    <span class="function"><span class="keyword">protected</span> String <span class="title">convert</span><span class="params">(LoggingEvent loggingEvent)</span> </span>&#123;</span><br><span class="line">        <span class="keyword">return</span> Strings.isNullOrEmpty(TraceUtil.getTraceId()) ? <span class="string">&quot;N/A&quot;</span> : TraceUtil.getTraceId();</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">TraceIdPatternParser</span> <span class="keyword">extends</span> <span class="title">PatternParser</span> </span>&#123;</span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="title">TraceIdPatternParser</span><span class="params">(String pattern)</span> </span>&#123;</span><br><span class="line">        <span class="keyword">super</span>(pattern);</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="meta">@Override</span></span><br><span class="line">    <span class="function"><span class="keyword">protected</span> <span class="keyword">void</span> <span class="title">finalizeConverter</span><span class="params">(<span class="keyword">char</span> c)</span> </span>&#123;</span><br><span class="line">        <span class="keyword">if</span> (<span class="string">&#x27;T&#x27;</span> == c) &#123;</span><br><span class="line">            addConverter(<span class="keyword">new</span> TraceIdPatternConverter());</span><br><span class="line">        &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">            <span class="keyword">super</span>.finalizeConverter(c);</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+
+
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">TraceIdPatternLayout</span> <span class="keyword">extends</span> <span class="title">PatternLayout</span> </span>&#123;</span><br><span class="line">    <span class="meta">@Override</span></span><br><span class="line">    <span class="function"><span class="keyword">protected</span> PatternParser <span class="title">createPatternParser</span><span class="params">(String pattern)</span> </span>&#123;</span><br><span class="line">        <span class="keyword">return</span> <span class="keyword">new</span> TraceIdPatternParser(pattern);</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br></pre></td><td class="code"><pre><span class="line">log4j.rootLogger=debug, stdout, R</span><br><span class="line"></span><br><span class="line">log4j.appender.stdout=org.apache.log4j.ConsoleAppender</span><br><span class="line">log4j.appender.stdout.layout=com.absurd.log4j.TraceIdPatternLayout</span><br><span class="line"></span><br><span class="line"># Pattern to output the caller&#x27;s file name and line number.</span><br><span class="line">log4j.appender.stdout.layout.ConversionPattern=%5p [%T] [%t] (%F:%L) - %m%n</span><br><span class="line"></span><br><span class="line">log4j.appender.R=org.apache.log4j.RollingFileAppender</span><br><span class="line">log4j.appender.R.File=trace.log</span><br><span class="line"></span><br><span class="line">log4j.appender.R.MaxFileSize=100KB</span><br><span class="line"># Keep one backup file</span><br><span class="line">log4j.appender.R.MaxBackupIndex=1</span><br><span class="line"></span><br><span class="line">log4j.appender.R.layout=com.absurd.log4j.TraceIdPatternLayout</span><br><span class="line">log4j.appender.R.layout.ConversionPattern=%p [%T] %t %c - %m%n</span><br></pre></td></tr></table></figure>
+
+<blockquote>
+<p> INFO [1524824013684_bOcv][main] (TraceTest.java:44) - Entering application.<br> INFO [1524824013684_bOcv][main] (TraceTest.java:45) - Exiting application.</p>
+</blockquote>
+<p>log4j-2.x</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">@Plugin(name = &quot;TraceIdConverter&quot;, category = &quot;Converter&quot;)</span></span><br><span class="line"><span class="meta">@ConverterKeys(&#123;&quot;traceId&quot;&#125;)</span></span><br><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">TraceIdConverter</span> <span class="keyword">extends</span> <span class="title">LogEventPatternConverter</span> </span>&#123;</span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">protected</span> <span class="title">TraceIdConverter</span><span class="params">(String name, String style)</span> </span>&#123;</span><br><span class="line">        <span class="keyword">super</span>(name, style);</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">static</span> TraceIdConverter <span class="title">newInstance</span><span class="params">(String[] options)</span> </span>&#123;</span><br><span class="line">        <span class="keyword">return</span> <span class="keyword">new</span> TraceIdConverter(<span class="string">&quot;traceId&quot;</span>, <span class="string">&quot;traceId&quot;</span>);</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="meta">@Override</span></span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">format</span><span class="params">(LogEvent event, StringBuilder toAppendTo)</span> </span>&#123;</span><br><span class="line">        Log4j2OutputAppender.append(toAppendTo);</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+
+
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">Log4j2OutputAppender</span> </span>&#123;</span><br><span class="line">    </span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">void</span> <span class="title">append</span><span class="params">(StringBuilder toAppendTo)</span> </span>&#123;</span><br><span class="line">        toAppendTo.append(Strings.isNullOrEmpty(TraceUtil.getTraceId()) ? <span class="string">&quot;N/A&quot;</span> : TraceUtil.getTraceId());</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+
+
+<figure class="highlight xml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="tag">&lt;<span class="name">Appenders</span>&gt;</span></span><br><span class="line">   <span class="tag">&lt;<span class="name">Console</span> <span class="attr">name</span>=<span class="string">&quot;Console&quot;</span> <span class="attr">target</span>=<span class="string">&quot;SYSTEM_OUT&quot;</span>&gt;</span></span><br><span class="line">      <span class="tag">&lt;<span class="name">PatternLayout</span> <span class="attr">pattern</span>=<span class="string">&quot;%d [%traceId] %-5p %c&#123;1&#125;:%L - %m%n&quot;</span>/&gt;</span></span><br><span class="line">   <span class="tag">&lt;/<span class="name">Console</span>&gt;</span></span><br><span class="line"><span class="tag">&lt;/<span class="name">Appenders</span>&gt;</span></span><br></pre></td></tr></table></figure>
+    </div>
+
+    
+    
+    
+
+    <footer class="post-footer">
+          <div class="reward-container">
+  <div>Buy me a coffee</div>
+  <button>
+    Donate
+  </button>
+  <div class="post-reward">
+      <div>
+        <img src="/hexo/images/wechatpay.png" alt="Absurd WeChat Pay">
+        <span>WeChat Pay</span>
+      </div>
+
+  </div>
+</div>
+
+          <div class="post-tags">
+              <a href="/hexo/tags/log4j/" rel="tag"># log4j</a>
+              <a href="/hexo/tags/logback/" rel="tag"># logback</a>
+          </div>
+
+        
+
+          <div class="post-nav">
+            <div class="post-nav-item">
+                <a href="/hexo/post/f64ed43e.html" rel="prev" title="dubbo源码解析（十） Dispatcher">
+                  <i class="fa fa-chevron-left"></i> dubbo源码解析（十） Dispatcher
+                </a>
+            </div>
+            <div class="post-nav-item">
+                <a href="/hexo/post/a362c3af.html" rel="next" title="自定义spring xml配置">
+                  自定义spring xml配置 <i class="fa fa-chevron-right"></i>
+                </a>
+            </div>
+          </div>
+    </footer>
+  </article>
+</div>
+
+
+
+
+
+
+</div>
+  </main>
+
+  <footer class="footer">
+    <div class="footer-inner">
+
+
+<div class="copyright">
+  &copy; 
+  <span itemprop="copyrightYear">2022</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">Absurd</span>
+</div>
+  <div class="powered-by">Powered by <a href="https://hexo.io/" rel="noopener" target="_blank">Hexo</a> & <a href="https://theme-next.js.org/mist/" rel="noopener" target="_blank">NexT.Mist</a>
+  </div>
+
+    </div>
+  </footer>
+
+  
+  <script src="https://cdn.jsdelivr.net/npm/animejs@3.2.1/lib/anime.min.js" integrity="sha256-XL2inqUJaslATFnHdJOi9GfQ60on8Wx1C2H8DYiN1xY=" crossorigin="anonymous"></script>
+<script src="/hexo/js/comments.js"></script><script src="/hexo/js/utils.js"></script><script src="/hexo/js/motion.js"></script><script src="/hexo/js/schemes/muse.js"></script><script src="/hexo/js/next-boot.js"></script>
+
+  
+<script src="https://cdn.jsdelivr.net/npm/hexo-generator-searchdb@1.4.0/dist/search.js" integrity="sha256-vXZMYLEqsROAXkEw93GGIvaB2ab+QW6w3+1ahD9nXXA=" crossorigin="anonymous"></script>
+<script src="/hexo/js/third-party/search/local-search.js"></script>
+
+
+
+
+
+  
+
+
+
+
+
+</body>
+</html>

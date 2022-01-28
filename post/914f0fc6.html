@@ -1,0 +1,455 @@
+<!DOCTYPE html>
+<html lang="zh-Hans">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width">
+<meta name="theme-color" content="#222" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#222" media="(prefers-color-scheme: dark)">
+<meta name="generator" content="Hexo 6.0.0">
+
+
+  <link rel="apple-touch-icon" sizes="180x180" href="/hexo/images/apple-touch-icon-next.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/hexo/images/favicon-32x32-next.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/hexo/images/favicon-16x16-next.png">
+  <link rel="mask-icon" href="/hexo/images/logo.svg" color="#222">
+
+<link rel="stylesheet" href="/hexo/css/main.css">
+
+
+
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@5.15.4/css/all.min.css" integrity="sha256-mUZM63G8m73Mcidfrv5E+Y61y7a12O5mW4ezU3bxqW4=" crossorigin="anonymous">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/animate.css@3.1.1/animate.min.css" integrity="sha256-PR7ttpcvz8qrF57fur/yAx1qXMFJeJFiA6pSzWi0OIE=" crossorigin="anonymous">
+
+<script class="next-config" data-name="main" type="application/json">{"hostname":"www1350.github.io","root":"/hexo/","images":"/hexo/images","scheme":"Mist","darkmode":true,"version":"8.9.0","exturl":false,"sidebar":{"position":"left","display":"post","padding":18,"offset":12},"copycode":false,"bookmark":{"enable":false,"color":"#222","save":"auto"},"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"stickytabs":false,"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"fadeInDown","post_body":"fadeInDown","coll_header":"fadeInLeft","sidebar":"fadeInUp"}},"prism":false,"i18n":{"placeholder":"Searching...","empty":"We didn't find any results for the search: ${query}","hits_time":"${hits} results found in ${time} ms","hits":"${hits} results found"},"path":"/hexo/search.xml","localsearch":{"enable":true,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":true}}</script><script src="/hexo/js/config.js"></script>
+<meta name="description" content="在集群调用失败时，Dubbo 提供了多种容错方案，缺省为 failover 重试。  各节点关系：  这里的 Invoker 是 Provider 的一个可调用 Service 的抽象，Invoker 封装了 Provider 地址及 Service 接口信息  Directory 代表多个 Invoker，可以把它看成 List&lt;Invoker&gt; ，但与 List 不同的是，它的值可">
+<meta property="og:type" content="article">
+<meta property="og:title" content="dubbo源码解析（七） Cluster">
+<meta property="og:url" content="https://www1350.github.io/hexo/post/914f0fc6.html">
+<meta property="og:site_name" content="Absurd博客">
+<meta property="og:description" content="在集群调用失败时，Dubbo 提供了多种容错方案，缺省为 failover 重试。  各节点关系：  这里的 Invoker 是 Provider 的一个可调用 Service 的抽象，Invoker 封装了 Provider 地址及 Service 接口信息  Directory 代表多个 Invoker，可以把它看成 List&lt;Invoker&gt; ，但与 List 不同的是，它的值可">
+<meta property="og:locale">
+<meta property="og:image" content="https://user-images.githubusercontent.com/7789698/38236939-50ec9e00-3758-11e8-88d5-7b470bac0352.png">
+<meta property="article:published_time" content="2018-04-03T14:44:53.000Z">
+<meta property="article:modified_time" content="2022-01-28T07:09:17.730Z">
+<meta property="article:author" content="Absurd">
+<meta property="article:tag" content="rpc">
+<meta property="article:tag" content="dubbo">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="https://user-images.githubusercontent.com/7789698/38236939-50ec9e00-3758-11e8-88d5-7b470bac0352.png">
+
+
+<link rel="canonical" href="https://www1350.github.io/hexo/post/914f0fc6.html">
+
+
+
+<script class="next-config" data-name="page" type="application/json">{"sidebar":"","isHome":false,"isPost":true,"lang":"zh-Hans","comments":true,"permalink":"https://www1350.github.io/hexo/post/914f0fc6.html","path":"post/914f0fc6.html","title":"dubbo源码解析（七） Cluster"}</script>
+
+<script class="next-config" data-name="calendar" type="application/json">""</script>
+<title>dubbo源码解析（七） Cluster | Absurd博客</title>
+  
+
+
+
+
+  <noscript>
+    <link rel="stylesheet" href="/hexo/css/noscript.css">
+  </noscript>
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage" class="use-motion">
+  <div class="headband"></div>
+
+  <main class="main">
+    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="Toggle navigation bar" role="button">
+        <span class="toggle-line"></span>
+        <span class="toggle-line"></span>
+        <span class="toggle-line"></span>
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/hexo/" class="brand" rel="start">
+      <i class="logo-line"></i>
+      <p class="site-title">Absurd博客</p>
+      <i class="logo-line"></i>
+    </a>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger">
+        <i class="fa fa-search fa-fw fa-lg"></i>
+    </div>
+  </div>
+</div>
+
+
+
+<nav class="site-nav">
+  <ul class="main-menu menu">
+        <li class="menu-item menu-item-home"><a href="/hexo/" rel="section"><i class="fa fa-home fa-fw"></i>Home</a></li>
+        <li class="menu-item menu-item-about"><a href="/hexo/about/" rel="section"><i class="fa fa-user fa-fw"></i>About</a></li>
+        <li class="menu-item menu-item-tags"><a href="/hexo/tags/" rel="section"><i class="fa fa-tags fa-fw"></i>Tags</a></li>
+        <li class="menu-item menu-item-categories"><a href="/hexo/categories/" rel="section"><i class="fa fa-th fa-fw"></i>Categories</a></li>
+        <li class="menu-item menu-item-archives"><a href="/hexo/archives/" rel="section"><i class="fa fa-archive fa-fw"></i>Archives</a></li>
+        <li class="menu-item menu-item-bookmarks"><a href="/hexo/bookmarks/" rel="section"><i class="fa fa-archive fa-fw"></i>bookmarks</a></li>
+      <li class="menu-item menu-item-search">
+        <a role="button" class="popup-trigger"><i class="fa fa-search fa-fw"></i>Search
+        </a>
+      </li>
+  </ul>
+</nav>
+
+
+
+  <div class="search-pop-overlay">
+    <div class="popup search-popup"><div class="search-header">
+  <span class="search-icon">
+    <i class="fa fa-search"></i>
+  </span>
+  <div class="search-input-container">
+    <input autocomplete="off" autocapitalize="off" maxlength="80"
+           placeholder="Searching..." spellcheck="false"
+           type="search" class="search-input">
+  </div>
+  <span class="popup-btn-close" role="button">
+    <i class="fa fa-times-circle"></i>
+  </span>
+</div>
+<div class="search-result-container no-result">
+  <div class="search-result-icon">
+    <i class="fa fa-spinner fa-pulse fa-5x"></i>
+  </div>
+</div>
+
+    </div>
+  </div>
+
+</div>
+        
+  
+  <div class="toggle sidebar-toggle" role="button">
+    <span class="toggle-line"></span>
+    <span class="toggle-line"></span>
+    <span class="toggle-line"></span>
+  </div>
+
+  <aside class="sidebar">
+
+    <div class="sidebar-inner sidebar-nav-active sidebar-toc-active">
+      <ul class="sidebar-nav">
+        <li class="sidebar-nav-toc">
+          Table of Contents
+        </li>
+        <li class="sidebar-nav-overview">
+          Overview
+        </li>
+      </ul>
+
+      <div class="sidebar-panel-container">
+        <!--noindex-->
+        <div class="post-toc-wrap sidebar-panel">
+            <div class="post-toc animated"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#cluster%E5%B1%82"><span class="nav-number">1.</span> <span class="nav-text">cluster层</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#%E9%9B%86%E7%BE%A4%E6%A8%A1%E5%BC%8F%E9%85%8D%E7%BD%AE"><span class="nav-number">1.1.</span> <span class="nav-text">集群模式配置</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#Failover-Cluster"><span class="nav-number">1.2.</span> <span class="nav-text">Failover Cluster</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#Failfast-Cluster"><span class="nav-number">1.3.</span> <span class="nav-text">Failfast Cluster</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#Failsafe-Cluster"><span class="nav-number">1.4.</span> <span class="nav-text">Failsafe Cluster</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#Failback-Cluster"><span class="nav-number">1.5.</span> <span class="nav-text">Failback Cluster</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#Forking-Cluster"><span class="nav-number">1.6.</span> <span class="nav-text">Forking Cluster</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#Broadcast-Cluster"><span class="nav-number">1.7.</span> <span class="nav-text">Broadcast Cluster</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#Available-Cluster"><span class="nav-number">1.8.</span> <span class="nav-text">Available Cluster</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#Mergeable-Cluster"><span class="nav-number">1.9.</span> <span class="nav-text">Mergeable Cluster</span></a></li></ol></li></ol></div>
+        </div>
+        <!--/noindex-->
+
+        <div class="site-overview-wrap sidebar-panel">
+          <div class="site-author site-overview-item animated" itemprop="author" itemscope itemtype="http://schema.org/Person">
+    <img class="site-author-image" itemprop="image" alt="Absurd"
+      src="/hexo/images/avatar.gif">
+  <p class="site-author-name" itemprop="name">Absurd</p>
+  <div class="site-description" itemprop="description"></div>
+</div>
+<div class="site-state-wrap site-overview-item animated">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+        <a href="/hexo/archives/">
+          <span class="site-state-item-count">75</span>
+          <span class="site-state-item-name">posts</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+          <a href="/hexo/categories/">
+        <span class="site-state-item-count">17</span>
+        <span class="site-state-item-name">categories</span></a>
+      </div>
+      <div class="site-state-item site-state-tags">
+          <a href="/hexo/tags/">
+        <span class="site-state-item-count">46</span>
+        <span class="site-state-item-name">tags</span></a>
+      </div>
+  </nav>
+</div>
+  <div class="links-of-author site-overview-item animated">
+      <span class="links-of-author-item">
+        <a href="https://github.com/www1350" title="GitHub → https:&#x2F;&#x2F;github.com&#x2F;www1350" rel="noopener" target="_blank"><i class="fab fa-github fa-fw"></i>GitHub</a>
+      </span>
+      <span class="links-of-author-item">
+        <a href="mailto:www_1350@163.com" title="E-Mail → mailto:www_1350@163.com" rel="noopener" target="_blank"><i class="fa fa-envelope fa-fw"></i>E-Mail</a>
+      </span>
+  </div>
+
+
+
+        </div>
+      </div>
+    </div>
+  </aside>
+  <div class="sidebar-dimmer"></div>
+
+
+    </header>
+
+    
+  <div class="back-to-top" role="button" aria-label="Back to top">
+    <i class="fa fa-arrow-up"></i>
+    <span>0%</span>
+  </div>
+
+<noscript>
+  <div class="noscript-warning">Theme NexT works best with JavaScript enabled</div>
+</noscript>
+
+
+    <div class="main-inner post posts-expand">
+
+
+  
+
+
+<div class="post-block">
+  
+  
+
+  <article itemscope itemtype="http://schema.org/Article" class="post-content" lang="zh-Hans">
+    <link itemprop="mainEntityOfPage" href="https://www1350.github.io/hexo/post/914f0fc6.html">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/hexo/images/avatar.gif">
+      <meta itemprop="name" content="Absurd">
+      <meta itemprop="description" content="">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Absurd博客">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          dubbo源码解析（七） Cluster
+        </h1>
+
+        <div class="post-meta-container">
+          <div class="post-meta">
+    <span class="post-meta-item">
+      <span class="post-meta-item-icon">
+        <i class="far fa-calendar"></i>
+      </span>
+      <span class="post-meta-item-text">Posted on</span>
+
+      <time title="Created: 2018-04-03 22:44:53" itemprop="dateCreated datePublished" datetime="2018-04-03T22:44:53+08:00">2018-04-03</time>
+    </span>
+    <span class="post-meta-item">
+      <span class="post-meta-item-icon">
+        <i class="far fa-calendar-check"></i>
+      </span>
+      <span class="post-meta-item-text">Edited on</span>
+      <time title="Modified: 2022-01-28 15:09:17" itemprop="dateModified" datetime="2022-01-28T15:09:17+08:00">2022-01-28</time>
+    </span>
+    <span class="post-meta-item">
+      <span class="post-meta-item-icon">
+        <i class="far fa-folder"></i>
+      </span>
+      <span class="post-meta-item-text">In</span>
+        <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+          <a href="/hexo/categories/%E4%B8%AD%E9%97%B4%E4%BB%B6/" itemprop="url" rel="index"><span itemprop="name">中间件</span></a>
+        </span>
+          , 
+        <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+          <a href="/hexo/categories/%E4%B8%AD%E9%97%B4%E4%BB%B6/%E6%BA%90%E7%A0%81/" itemprop="url" rel="index"><span itemprop="name">源码</span></a>
+        </span>
+    </span>
+
+  
+</div>
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+        <p>在集群调用失败时，Dubbo 提供了多种容错方案，缺省为 failover 重试。</p>
+<p><a target="_blank" rel="noopener" href="https://user-images.githubusercontent.com/7789698/38236939-50ec9e00-3758-11e8-88d5-7b470bac0352.png"><img src="https://user-images.githubusercontent.com/7789698/38236939-50ec9e00-3758-11e8-88d5-7b470bac0352.png" alt="image"></a></p>
+<p>各节点关系：</p>
+<ul>
+<li><p>这里的 <code>Invoker</code> 是 <code>Provider</code> 的一个可调用 <code>Service</code> 的抽象，<code>Invoker</code> 封装了 <code>Provider</code> 地址及 <code>Service</code> 接口信息</p>
+</li>
+<li><p><code>Directory</code> 代表多个 <code>Invoker</code>，可以把它看成 <code>List&lt;Invoker&gt;</code> ，但与 <code>List</code> 不同的是，它的值可能是动态变化的，比如注册中心推送变更</p>
+</li>
+<li><p><code>Cluster</code> 将 <code>Directory</code> 中的多个 <code>Invoker</code> 伪装成一个 <code>Invoker</code>，对上层透明，伪装过程包含了容错逻辑，调用失败后，重试另一个</p>
+</li>
+<li><p><code>Router</code> 负责从多个 <code>Invoker</code> 中按路由规则选出子集，比如读写分离，应用隔离等</p>
+</li>
+<li><p><code>LoadBalance</code> 负责从多个 <code>Invoker</code> 中选出具体的一个用于本次调用，选的过程包含了负载均衡算法，调用失败后，需要重选</p>
+<span id="more"></span></li>
+</ul>
+<h2 id="cluster层"><a href="#cluster层" class="headerlink" title="cluster层"></a>cluster层</h2><h3 id="集群模式配置"><a href="#集群模式配置" class="headerlink" title="集群模式配置"></a>集群模式配置</h3><p>按照以下示例在服务提供方和消费方配置集群模式</p>
+<figure class="highlight xml"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="tag">&lt;<span class="name">dubbo:service</span> <span class="attr">cluster</span>=<span class="string">&quot;failsafe&quot;</span> /&gt;</span></span><br></pre></td></tr></table></figure>
+
+<p>或</p>
+<figure class="highlight xml"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="tag">&lt;<span class="name">dubbo:reference</span> <span class="attr">cluster</span>=<span class="string">&quot;failsafe&quot;</span> /&gt;</span></span><br></pre></td></tr></table></figure>
+
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">@SPI(FailoverCluster.NAME)</span></span><br><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">interface</span> <span class="title">Cluster</span> </span>&#123;</span><br><span class="line"></span><br><span class="line">    <span class="comment">/**</span></span><br><span class="line"><span class="comment">     * Merge the directory invokers to a virtual invoker.</span></span><br><span class="line"><span class="comment">     *</span></span><br><span class="line"><span class="comment">     * <span class="doctag">@param</span> &lt;T&gt;</span></span><br><span class="line"><span class="comment">     * <span class="doctag">@param</span> directory</span></span><br><span class="line"><span class="comment">     * <span class="doctag">@return</span> cluster invoker</span></span><br><span class="line"><span class="comment">     * <span class="doctag">@throws</span> RpcException</span></span><br><span class="line"><span class="comment">     */</span></span><br><span class="line">    <span class="meta">@Adaptive</span></span><br><span class="line">    &lt;T&gt; <span class="function">Invoker&lt;T&gt; <span class="title">join</span><span class="params">(Directory&lt;T&gt; directory)</span> <span class="keyword">throws</span> RpcException</span>;</span><br><span class="line"></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<h3 id="Failover-Cluster"><a href="#Failover-Cluster" class="headerlink" title="Failover Cluster"></a>Failover Cluster</h3><p>failover失败自动切换，当出现失败，重试其它服务器 <a target="_blank" rel="noopener" href="http://dubbo.incubator.apache.org/books/dubbo-user-book/demos/fault-tolerent-strategy.html#fn_1">1</a>。通常用于读操作，但重试会带来更长延迟。可通过 <code>retries=&quot;2&quot;</code> 来设置重试次数(不含第一次)。</p>
+<p>重试次数配置如下：</p>
+<figure class="highlight xml"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="tag">&lt;<span class="name">dubbo:service</span> <span class="attr">retries</span>=<span class="string">&quot;2&quot;</span> /&gt;</span></span><br></pre></td></tr></table></figure>
+
+<p>或</p>
+<figure class="highlight xml"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="tag">&lt;<span class="name">dubbo:reference</span> <span class="attr">retries</span>=<span class="string">&quot;2&quot;</span> /&gt;</span></span><br></pre></td></tr></table></figure>
+
+<p>或</p>
+<figure class="highlight xml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="tag">&lt;<span class="name">dubbo:reference</span>&gt;</span></span><br><span class="line">    <span class="tag">&lt;<span class="name">dubbo:method</span> <span class="attr">name</span>=<span class="string">&quot;findFoo&quot;</span> <span class="attr">retries</span>=<span class="string">&quot;2&quot;</span> /&gt;</span></span><br><span class="line"><span class="tag">&lt;/<span class="name">dubbo:reference</span>&gt;</span></span><br></pre></td></tr></table></figure>
+
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">FailoverCluster</span> <span class="keyword">implements</span> <span class="title">Cluster</span> </span>&#123;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">public</span> <span class="keyword">final</span> <span class="keyword">static</span> String NAME = <span class="string">&quot;failover&quot;</span>;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">public</span> &lt;T&gt; <span class="function">Invoker&lt;T&gt; <span class="title">join</span><span class="params">(Directory&lt;T&gt; directory)</span> <span class="keyword">throws</span> RpcException </span>&#123;</span><br><span class="line">        <span class="keyword">return</span> <span class="keyword">new</span> FailoverClusterInvoker&lt;T&gt;(directory);</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>当服务被调用的时候，将会使用FailoverClusterInvoker</p>
+<h3 id="Failfast-Cluster"><a href="#Failfast-Cluster" class="headerlink" title="Failfast Cluster"></a>Failfast Cluster</h3><p>failfast快速失败，只发起一次调用，失败立即报错。通常用于非幂等性的写操作，比如新增记录。</p>
+<p>使用FailfastClusterInvoker</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">FailfastClusterInvoker</span>&lt;<span class="title">T</span>&gt; <span class="keyword">extends</span> <span class="title">AbstractClusterInvoker</span>&lt;<span class="title">T</span>&gt; </span>&#123;</span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="title">FailfastClusterInvoker</span><span class="params">(Directory&lt;T&gt; directory)</span> </span>&#123;</span><br><span class="line">        <span class="keyword">super</span>(directory);</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">public</span> Result <span class="title">doInvoke</span><span class="params">(Invocation invocation, List&lt;Invoker&lt;T&gt;&gt; invokers, LoadBalance loadbalance)</span> <span class="keyword">throws</span> RpcException </span>&#123;</span><br><span class="line">        checkInvokers(invokers, invocation);</span><br><span class="line">        <span class="comment">//通过负载均衡选出invoker</span></span><br><span class="line">        Invoker&lt;T&gt; invoker = select(loadbalance, invocation, invokers, <span class="keyword">null</span>);</span><br><span class="line">        <span class="keyword">try</span> &#123;</span><br><span class="line">            <span class="keyword">return</span> invoker.invoke(invocation);</span><br><span class="line">        &#125; <span class="keyword">catch</span> (Throwable e) &#123;</span><br><span class="line">            <span class="comment">//只要失败就报错</span></span><br><span class="line">            <span class="keyword">if</span> (e <span class="keyword">instanceof</span> RpcException &amp;&amp; ((RpcException) e).isBiz()) &#123; <span class="comment">// biz exception.</span></span><br><span class="line">                <span class="keyword">throw</span> (RpcException) e;</span><br><span class="line">            &#125;</span><br><span class="line">            <span class="keyword">throw</span> <span class="keyword">new</span> RpcException(e <span class="keyword">instanceof</span> RpcException ? ((RpcException) e).getCode() : <span class="number">0</span>, <span class="string">&quot;Failfast invoke providers &quot;</span> + invoker.getUrl() + <span class="string">&quot; &quot;</span> + loadbalance.getClass().getSimpleName() + <span class="string">&quot; select from all providers &quot;</span> + invokers + <span class="string">&quot; for service &quot;</span> + getInterface().getName() + <span class="string">&quot; method &quot;</span> + invocation.getMethodName() + <span class="string">&quot; on consumer &quot;</span> + NetUtils.getLocalHost() + <span class="string">&quot; use dubbo version &quot;</span> + Version.getVersion() + <span class="string">&quot;, but no luck to perform the invocation. Last error is: &quot;</span> + e.getMessage(), e.getCause() != <span class="keyword">null</span> ? e.getCause() : e);</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<h3 id="Failsafe-Cluster"><a href="#Failsafe-Cluster" class="headerlink" title="Failsafe Cluster"></a>Failsafe Cluster</h3><p>failsafe失败安全，出现异常时，直接忽略。通常用于写入审计日志等操作。</p>
+<p>使用FailsafeClusterInvoker</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">FailsafeClusterInvoker</span>&lt;<span class="title">T</span>&gt; <span class="keyword">extends</span> <span class="title">AbstractClusterInvoker</span>&lt;<span class="title">T</span>&gt; </span>&#123;</span><br><span class="line">    <span class="keyword">private</span> <span class="keyword">static</span> <span class="keyword">final</span> Logger logger = LoggerFactory.getLogger(FailsafeClusterInvoker.class);</span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="title">FailsafeClusterInvoker</span><span class="params">(Directory&lt;T&gt; directory)</span> </span>&#123;</span><br><span class="line">        <span class="keyword">super</span>(directory);</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">public</span> Result <span class="title">doInvoke</span><span class="params">(Invocation invocation, List&lt;Invoker&lt;T&gt;&gt; invokers, LoadBalance loadbalance)</span> <span class="keyword">throws</span> RpcException </span>&#123;</span><br><span class="line">        <span class="keyword">try</span> &#123;</span><br><span class="line">            checkInvokers(invokers, invocation);</span><br><span class="line">            Invoker&lt;T&gt; invoker = select(loadbalance, invocation, invokers, <span class="keyword">null</span>);</span><br><span class="line">            <span class="keyword">return</span> invoker.invoke(invocation);</span><br><span class="line">        &#125; <span class="keyword">catch</span> (Throwable e) &#123;</span><br><span class="line">            <span class="comment">//忽略异常，返回一个空的RpcResult</span></span><br><span class="line">            logger.error(<span class="string">&quot;Failsafe ignore exception: &quot;</span> + e.getMessage(), e);</span><br><span class="line">            <span class="keyword">return</span> <span class="keyword">new</span> RpcResult(); <span class="comment">// ignore</span></span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<h3 id="Failback-Cluster"><a href="#Failback-Cluster" class="headerlink" title="Failback Cluster"></a>Failback Cluster</h3><p>failback失败自动恢复，后台记录失败请求，定时重发。通常用于消息通知操作。</p>
+<p>使用FailbackClusterInvoker</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br><span class="line">65</span><br><span class="line">66</span><br><span class="line">67</span><br><span class="line">68</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">FailbackClusterInvoker</span>&lt;<span class="title">T</span>&gt; <span class="keyword">extends</span> <span class="title">AbstractClusterInvoker</span>&lt;<span class="title">T</span>&gt; </span>&#123;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">private</span> <span class="keyword">static</span> <span class="keyword">final</span> Logger logger = LoggerFactory.getLogger(FailbackClusterInvoker.class);</span><br><span class="line"></span><br><span class="line">    <span class="keyword">private</span> <span class="keyword">static</span> <span class="keyword">final</span> <span class="keyword">long</span> RETRY_FAILED_PERIOD = <span class="number">5</span> * <span class="number">1000</span>;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">private</span> <span class="keyword">final</span> ScheduledExecutorService scheduledExecutorService = Executors.newScheduledThreadPool(<span class="number">2</span>, <span class="keyword">new</span> NamedThreadFactory(<span class="string">&quot;failback-cluster-timer&quot;</span>, <span class="keyword">true</span>));</span><br><span class="line">    <span class="keyword">private</span> <span class="keyword">final</span> ConcurrentMap&lt;Invocation, AbstractClusterInvoker&lt;?&gt;&gt; failed = <span class="keyword">new</span> ConcurrentHashMap&lt;Invocation, AbstractClusterInvoker&lt;?&gt;&gt;();</span><br><span class="line">    <span class="keyword">private</span> <span class="keyword">volatile</span> ScheduledFuture&lt;?&gt; retryFuture;</span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="title">FailbackClusterInvoker</span><span class="params">(Directory&lt;T&gt; directory)</span> </span>&#123;</span><br><span class="line">        <span class="keyword">super</span>(directory);</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">private</span> <span class="keyword">void</span> <span class="title">addFailed</span><span class="params">(Invocation invocation, AbstractClusterInvoker&lt;?&gt; router)</span> </span>&#123;</span><br><span class="line">        <span class="keyword">if</span> (retryFuture == <span class="keyword">null</span>) &#123;</span><br><span class="line">            <span class="keyword">synchronized</span> (<span class="keyword">this</span>) &#123;</span><br><span class="line">                <span class="keyword">if</span> (retryFuture == <span class="keyword">null</span>) &#123;</span><br><span class="line">                    <span class="comment">//启动一个定时任务用来重发</span></span><br><span class="line">                    retryFuture = scheduledExecutorService.scheduleWithFixedDelay(<span class="keyword">new</span> Runnable() &#123;</span><br><span class="line"></span><br><span class="line">                        <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">run</span><span class="params">()</span> </span>&#123;</span><br><span class="line">                            <span class="comment">// collect retry statistics</span></span><br><span class="line">                            <span class="keyword">try</span> &#123;</span><br><span class="line">                                retryFailed();</span><br><span class="line">                            &#125; <span class="keyword">catch</span> (Throwable t) &#123; <span class="comment">// Defensive fault tolerance</span></span><br><span class="line">                                logger.error(<span class="string">&quot;Unexpected error occur at collect statistic&quot;</span>, t);</span><br><span class="line">                            &#125;</span><br><span class="line">                        &#125;</span><br><span class="line">                    &#125;, RETRY_FAILED_PERIOD, RETRY_FAILED_PERIOD, TimeUnit.MILLISECONDS);</span><br><span class="line">                &#125;</span><br><span class="line">            &#125;</span><br><span class="line">        &#125;</span><br><span class="line">        failed.put(invocation, router);</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">void</span> <span class="title">retryFailed</span><span class="params">()</span> </span>&#123;</span><br><span class="line">        <span class="keyword">if</span> (failed.size() == <span class="number">0</span>) &#123;</span><br><span class="line">            <span class="keyword">return</span>;</span><br><span class="line">        &#125;</span><br><span class="line">        <span class="keyword">for</span> (Map.Entry&lt;Invocation, AbstractClusterInvoker&lt;?&gt;&gt; entry : <span class="keyword">new</span> HashMap&lt;Invocation, AbstractClusterInvoker&lt;?&gt;&gt;(</span><br><span class="line">                failed).entrySet()) &#123;</span><br><span class="line">            Invocation invocation = entry.getKey();</span><br><span class="line">            Invoker&lt;?&gt; invoker = entry.getValue();</span><br><span class="line">            <span class="keyword">try</span> &#123;</span><br><span class="line">                invoker.invoke(invocation);</span><br><span class="line">                failed.remove(invocation);</span><br><span class="line">            &#125; <span class="keyword">catch</span> (Throwable e) &#123;</span><br><span class="line">                logger.error(<span class="string">&quot;Failed retry to invoke method &quot;</span> + invocation.getMethodName() + <span class="string">&quot;, waiting again.&quot;</span>, e);</span><br><span class="line">            &#125;</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">protected</span> Result <span class="title">doInvoke</span><span class="params">(Invocation invocation, List&lt;Invoker&lt;T&gt;&gt; invokers, LoadBalance loadbalance)</span> <span class="keyword">throws</span> RpcException </span>&#123;</span><br><span class="line">        <span class="keyword">try</span> &#123;</span><br><span class="line">            checkInvokers(invokers, invocation);</span><br><span class="line">            Invoker&lt;T&gt; invoker = select(loadbalance, invocation, invokers, <span class="keyword">null</span>);</span><br><span class="line">            <span class="keyword">return</span> invoker.invoke(invocation);</span><br><span class="line">        &#125; <span class="keyword">catch</span> (Throwable e) &#123;</span><br><span class="line">            logger.error(<span class="string">&quot;Failback to invoke method &quot;</span> + invocation.getMethodName() + <span class="string">&quot;, wait for retry in background. Ignored exception: &quot;</span></span><br><span class="line">                    + e.getMessage() + <span class="string">&quot;, &quot;</span>, e);</span><br><span class="line">            <span class="comment">//失败记录下重试</span></span><br><span class="line">            addFailed(invocation, <span class="keyword">this</span>);</span><br><span class="line">            <span class="keyword">return</span> <span class="keyword">new</span> RpcResult(); <span class="comment">// ignore</span></span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<h3 id="Forking-Cluster"><a href="#Forking-Cluster" class="headerlink" title="Forking Cluster"></a>Forking Cluster</h3><p>并行调用多个服务器，只要一个成功即返回。通常用于实时性要求较高的读操作，但需要浪费更多服务资源。可通过 <code>forks=&quot;2&quot;</code> 来设置最大并行数。</p>
+<p>使用ForkingClusterInvoker</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">ForkingClusterInvoker</span>&lt;<span class="title">T</span>&gt; <span class="keyword">extends</span> <span class="title">AbstractClusterInvoker</span>&lt;<span class="title">T</span>&gt; </span>&#123;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">private</span> <span class="keyword">final</span> ExecutorService executor = Executors.newCachedThreadPool(<span class="keyword">new</span> NamedThreadFactory(<span class="string">&quot;forking-cluster-timer&quot;</span>, <span class="keyword">true</span>));</span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="title">ForkingClusterInvoker</span><span class="params">(Directory&lt;T&gt; directory)</span> </span>&#123;</span><br><span class="line">        <span class="keyword">super</span>(directory);</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="meta">@SuppressWarnings(&#123;&quot;unchecked&quot;, &quot;rawtypes&quot;&#125;)</span></span><br><span class="line">    <span class="function"><span class="keyword">public</span> Result <span class="title">doInvoke</span><span class="params">(<span class="keyword">final</span> Invocation invocation, List&lt;Invoker&lt;T&gt;&gt; invokers, LoadBalance loadbalance)</span> <span class="keyword">throws</span> RpcException </span>&#123;</span><br><span class="line">        checkInvokers(invokers, invocation);</span><br><span class="line">        <span class="keyword">final</span> List&lt;Invoker&lt;T&gt;&gt; selected;</span><br><span class="line">        <span class="keyword">final</span> <span class="keyword">int</span> forks = getUrl().getParameter(Constants.FORKS_KEY, Constants.DEFAULT_FORKS);</span><br><span class="line">        <span class="keyword">final</span> <span class="keyword">int</span> timeout = getUrl().getParameter(Constants.TIMEOUT_KEY, Constants.DEFAULT_TIMEOUT);</span><br><span class="line">        <span class="keyword">if</span> (forks &lt;= <span class="number">0</span> || forks &gt;= invokers.size()) &#123;</span><br><span class="line">            selected = invokers;</span><br><span class="line">        &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">            selected = <span class="keyword">new</span> ArrayList&lt;Invoker&lt;T&gt;&gt;();</span><br><span class="line">            <span class="keyword">for</span> (<span class="keyword">int</span> i = <span class="number">0</span>; i &lt; forks; i++) &#123;</span><br><span class="line">                <span class="comment">// TODO. Add some comment here, refer chinese version for more details.</span></span><br><span class="line">                Invoker&lt;T&gt; invoker = select(loadbalance, invocation, invokers, selected);</span><br><span class="line">                <span class="comment">//可能取同一个，所以去除下</span></span><br><span class="line">                <span class="keyword">if</span> (!selected.contains(invoker)) &#123;<span class="comment">//Avoid add the same invoker several times.</span></span><br><span class="line">                    selected.add(invoker);</span><br><span class="line">                &#125;</span><br><span class="line">            &#125;</span><br><span class="line">        &#125;</span><br><span class="line">        RpcContext.getContext().setInvokers((List) selected);</span><br><span class="line">        <span class="keyword">final</span> AtomicInteger count = <span class="keyword">new</span> AtomicInteger();</span><br><span class="line">        <span class="keyword">final</span> BlockingQueue&lt;Object&gt; ref = <span class="keyword">new</span> LinkedBlockingQueue&lt;Object&gt;();</span><br><span class="line">        <span class="keyword">for</span> (<span class="keyword">final</span> Invoker&lt;T&gt; invoker : selected) &#123;</span><br><span class="line">            executor.execute(<span class="keyword">new</span> Runnable() &#123;</span><br><span class="line">                <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">run</span><span class="params">()</span> </span>&#123;</span><br><span class="line">                    <span class="keyword">try</span> &#123;</span><br><span class="line">                        Result result = invoker.invoke(invocation);</span><br><span class="line">                        ref.offer(result);</span><br><span class="line">                    &#125; <span class="keyword">catch</span> (Throwable e) &#123;</span><br><span class="line">                        <span class="keyword">int</span> value = count.incrementAndGet();</span><br><span class="line">                        <span class="keyword">if</span> (value &gt;= selected.size()) &#123;</span><br><span class="line">                            ref.offer(e);</span><br><span class="line">                        &#125;</span><br><span class="line">                    &#125;</span><br><span class="line">                &#125;</span><br><span class="line">            &#125;);</span><br><span class="line">        &#125;</span><br><span class="line">        <span class="keyword">try</span> &#123;</span><br><span class="line">            <span class="comment">//拿出时间较少的</span></span><br><span class="line">            Object ret = ref.poll(timeout, TimeUnit.MILLISECONDS);</span><br><span class="line">            <span class="keyword">if</span> (ret <span class="keyword">instanceof</span> Throwable) &#123;</span><br><span class="line">                Throwable e = (Throwable) ret;</span><br><span class="line">                <span class="keyword">throw</span> <span class="keyword">new</span> RpcException(e <span class="keyword">instanceof</span> RpcException ? ((RpcException) e).getCode() : <span class="number">0</span>, <span class="string">&quot;Failed to forking invoke provider &quot;</span> + selected + <span class="string">&quot;, but no luck to perform the invocation. Last error is: &quot;</span> + e.getMessage(), e.getCause() != <span class="keyword">null</span> ? e.getCause() : e);</span><br><span class="line">            &#125;</span><br><span class="line">            <span class="keyword">return</span> (Result) ret;</span><br><span class="line">        &#125; <span class="keyword">catch</span> (InterruptedException e) &#123;</span><br><span class="line">            <span class="keyword">throw</span> <span class="keyword">new</span> RpcException(<span class="string">&quot;Failed to forking invoke provider &quot;</span> + selected + <span class="string">&quot;, but no luck to perform the invocation. Last error is: &quot;</span> + e.getMessage(), e);</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<h3 id="Broadcast-Cluster"><a href="#Broadcast-Cluster" class="headerlink" title="Broadcast Cluster"></a>Broadcast Cluster</h3><p>broadcast 广播调用所有提供者，逐个调用，任意一台报错则报错 <a target="_blank" rel="noopener" href="http://dubbo.incubator.apache.org/books/dubbo-user-book/demos/fault-tolerent-strategy.html#fn_2">2</a>。通常用于通知所有提供者更新缓存或日志等本地资源信息。</p>
+<p>使用BroadcastClusterInvoker</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">BroadcastClusterInvoker</span>&lt;<span class="title">T</span>&gt; <span class="keyword">extends</span> <span class="title">AbstractClusterInvoker</span>&lt;<span class="title">T</span>&gt; </span>&#123;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">private</span> <span class="keyword">static</span> <span class="keyword">final</span> Logger logger = LoggerFactory.getLogger(BroadcastClusterInvoker.class);</span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="title">BroadcastClusterInvoker</span><span class="params">(Directory&lt;T&gt; directory)</span> </span>&#123;</span><br><span class="line">        <span class="keyword">super</span>(directory);</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="meta">@SuppressWarnings(&#123;&quot;unchecked&quot;, &quot;rawtypes&quot;&#125;)</span></span><br><span class="line">    <span class="function"><span class="keyword">public</span> Result <span class="title">doInvoke</span><span class="params">(<span class="keyword">final</span> Invocation invocation, List&lt;Invoker&lt;T&gt;&gt; invokers, LoadBalance loadbalance)</span> <span class="keyword">throws</span> RpcException </span>&#123;</span><br><span class="line">        checkInvokers(invokers, invocation);</span><br><span class="line">        RpcContext.getContext().setInvokers((List) invokers);</span><br><span class="line">        RpcException exception = <span class="keyword">null</span>;</span><br><span class="line">        Result result = <span class="keyword">null</span>;</span><br><span class="line">        <span class="keyword">for</span> (Invoker&lt;T&gt; invoker : invokers) &#123;</span><br><span class="line">            <span class="keyword">try</span> &#123;</span><br><span class="line">                <span class="comment">//遍历广播</span></span><br><span class="line">                result = invoker.invoke(invocation);</span><br><span class="line">            &#125; <span class="keyword">catch</span> (RpcException e) &#123;</span><br><span class="line">                exception = e;</span><br><span class="line">                logger.warn(e.getMessage(), e);</span><br><span class="line">            &#125; <span class="keyword">catch</span> (Throwable e) &#123;</span><br><span class="line">                exception = <span class="keyword">new</span> RpcException(e.getMessage(), e);</span><br><span class="line">                logger.warn(e.getMessage(), e);</span><br><span class="line">            &#125;</span><br><span class="line">        &#125;</span><br><span class="line">        <span class="keyword">if</span> (exception != <span class="keyword">null</span>) &#123;</span><br><span class="line">            <span class="keyword">throw</span> exception;</span><br><span class="line">        &#125;</span><br><span class="line">        <span class="keyword">return</span> result;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<h3 id="Available-Cluster"><a href="#Available-Cluster" class="headerlink" title="Available Cluster"></a>Available Cluster</h3><p>available选取第一个可用的</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">AvailableClusterInvoker</span>&lt;<span class="title">T</span>&gt; <span class="keyword">extends</span> <span class="title">AbstractClusterInvoker</span>&lt;<span class="title">T</span>&gt; </span>&#123;</span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="title">AvailableClusterInvoker</span><span class="params">(Directory&lt;T&gt; directory)</span> </span>&#123;</span><br><span class="line">        <span class="keyword">super</span>(directory);</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">public</span> Result <span class="title">doInvoke</span><span class="params">(Invocation invocation, List&lt;Invoker&lt;T&gt;&gt; invokers, LoadBalance loadbalance)</span> <span class="keyword">throws</span> RpcException </span>&#123;</span><br><span class="line">        <span class="keyword">for</span> (Invoker&lt;T&gt; invoker : invokers) &#123;</span><br><span class="line">            <span class="keyword">if</span> (invoker.isAvailable()) &#123;</span><br><span class="line">                <span class="keyword">return</span> invoker.invoke(invocation);</span><br><span class="line">            &#125;</span><br><span class="line">        &#125;</span><br><span class="line">        <span class="keyword">throw</span> <span class="keyword">new</span> RpcException(<span class="string">&quot;No provider available in &quot;</span> + invokers);</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+
+
+<h3 id="Mergeable-Cluster"><a href="#Mergeable-Cluster" class="headerlink" title="Mergeable Cluster"></a>Mergeable Cluster</h3><p>搜索所有分组</p>
+<figure class="highlight xml"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="tag">&lt;<span class="name">dubbo:reference</span> <span class="attr">interface</span>=<span class="string">&quot;com.xxx.MenuService&quot;</span> <span class="attr">group</span>=<span class="string">&quot;*&quot;</span> <span class="attr">merger</span>=<span class="string">&quot;true&quot;</span> /&gt;</span></span><br></pre></td></tr></table></figure>
+
+<p>合并指定分组</p>
+<figure class="highlight xml"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="tag">&lt;<span class="name">dubbo:reference</span> <span class="attr">interface</span>=<span class="string">&quot;com.xxx.MenuService&quot;</span> <span class="attr">group</span>=<span class="string">&quot;aaa,bbb&quot;</span> <span class="attr">merger</span>=<span class="string">&quot;true&quot;</span> /&gt;</span></span><br></pre></td></tr></table></figure>
+
+<p>指定方法合并结果，其它未指定的方法，将只调用一个 Group</p>
+<figure class="highlight xml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="tag">&lt;<span class="name">dubbo:reference</span> <span class="attr">interface</span>=<span class="string">&quot;com.xxx.MenuService&quot;</span> <span class="attr">group</span>=<span class="string">&quot;*&quot;</span>&gt;</span></span><br><span class="line">    <span class="tag">&lt;<span class="name">dubbo:method</span> <span class="attr">name</span>=<span class="string">&quot;getMenuItems&quot;</span> <span class="attr">merger</span>=<span class="string">&quot;true&quot;</span> /&gt;</span></span><br><span class="line"><span class="tag">&lt;/<span class="name">dubbo:service</span>&gt;</span></span><br></pre></td></tr></table></figure>
+
+<p>某个方法不合并结果，其它都合并结果</p>
+<figure class="highlight xml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="tag">&lt;<span class="name">dubbo:reference</span> <span class="attr">interface</span>=<span class="string">&quot;com.xxx.MenuService&quot;</span> <span class="attr">group</span>=<span class="string">&quot;*&quot;</span> <span class="attr">merger</span>=<span class="string">&quot;true&quot;</span>&gt;</span></span><br><span class="line">    <span class="tag">&lt;<span class="name">dubbo:method</span> <span class="attr">name</span>=<span class="string">&quot;getMenuItems&quot;</span> <span class="attr">merger</span>=<span class="string">&quot;false&quot;</span> /&gt;</span></span><br><span class="line"><span class="tag">&lt;/<span class="name">dubbo:service</span>&gt;</span></span><br></pre></td></tr></table></figure>
+
+<p>指定合并策略，缺省根据返回值类型自动匹配，如果同一类型有两个合并器时，需指定合并器的名称 <a target="_blank" rel="noopener" href="http://dubbo.apache.org/books/dubbo-user-book/demos/group-merger.html#fn_2">2</a></p>
+<figure class="highlight xml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="tag">&lt;<span class="name">dubbo:reference</span> <span class="attr">interface</span>=<span class="string">&quot;com.xxx.MenuService&quot;</span> <span class="attr">group</span>=<span class="string">&quot;*&quot;</span>&gt;</span></span><br><span class="line">    <span class="tag">&lt;<span class="name">dubbo:method</span> <span class="attr">name</span>=<span class="string">&quot;getMenuItems&quot;</span> <span class="attr">merger</span>=<span class="string">&quot;mymerge&quot;</span> /&gt;</span></span><br><span class="line"><span class="tag">&lt;/<span class="name">dubbo:service</span>&gt;</span></span><br></pre></td></tr></table></figure>
+
+<p>指定合并方法，将调用返回结果的指定方法进行合并，合并方法的参数类型必须是返回结果类型本身</p>
+<figure class="highlight xml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="tag">&lt;<span class="name">dubbo:reference</span> <span class="attr">interface</span>=<span class="string">&quot;com.xxx.MenuService&quot;</span> <span class="attr">group</span>=<span class="string">&quot;*&quot;</span>&gt;</span></span><br><span class="line">    <span class="tag">&lt;<span class="name">dubbo:method</span> <span class="attr">name</span>=<span class="string">&quot;getMenuItems&quot;</span> <span class="attr">merger</span>=<span class="string">&quot;.addAll&quot;</span> /&gt;</span></span><br><span class="line"><span class="tag">&lt;/<span class="name">dubbo:service</span>&gt;</span></span><br></pre></td></tr></table></figure>
+
+<p>mergeable 合并分组</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br><span class="line">65</span><br><span class="line">66</span><br><span class="line">67</span><br><span class="line">68</span><br><span class="line">69</span><br><span class="line">70</span><br><span class="line">71</span><br><span class="line">72</span><br><span class="line">73</span><br><span class="line">74</span><br><span class="line">75</span><br><span class="line">76</span><br><span class="line">77</span><br><span class="line">78</span><br><span class="line">79</span><br><span class="line">80</span><br><span class="line">81</span><br><span class="line">82</span><br><span class="line">83</span><br><span class="line">84</span><br><span class="line">85</span><br><span class="line">86</span><br><span class="line">87</span><br><span class="line">88</span><br><span class="line">89</span><br><span class="line">90</span><br><span class="line">91</span><br><span class="line">92</span><br><span class="line">93</span><br><span class="line">94</span><br><span class="line">95</span><br><span class="line">96</span><br><span class="line">97</span><br><span class="line">98</span><br><span class="line">99</span><br><span class="line">100</span><br><span class="line">101</span><br><span class="line">102</span><br><span class="line">103</span><br><span class="line">104</span><br><span class="line">105</span><br><span class="line">106</span><br><span class="line">107</span><br><span class="line">108</span><br><span class="line">109</span><br><span class="line">110</span><br><span class="line">111</span><br><span class="line">112</span><br><span class="line">113</span><br><span class="line">114</span><br><span class="line">115</span><br><span class="line">116</span><br><span class="line">117</span><br><span class="line">118</span><br><span class="line">119</span><br><span class="line">120</span><br><span class="line">121</span><br><span class="line">122</span><br><span class="line">123</span><br><span class="line">124</span><br><span class="line">125</span><br><span class="line">126</span><br><span class="line">127</span><br><span class="line">128</span><br><span class="line">129</span><br><span class="line">130</span><br><span class="line">131</span><br><span class="line">132</span><br><span class="line">133</span><br><span class="line">134</span><br><span class="line">135</span><br><span class="line">136</span><br><span class="line">137</span><br><span class="line">138</span><br><span class="line">139</span><br><span class="line">140</span><br><span class="line">141</span><br><span class="line">142</span><br><span class="line">143</span><br><span class="line">144</span><br><span class="line">145</span><br><span class="line">146</span><br><span class="line">147</span><br><span class="line">148</span><br><span class="line">149</span><br><span class="line">150</span><br><span class="line">151</span><br><span class="line">152</span><br><span class="line">153</span><br><span class="line">154</span><br><span class="line">155</span><br><span class="line">156</span><br><span class="line">157</span><br><span class="line">158</span><br><span class="line">159</span><br><span class="line">160</span><br><span class="line">161</span><br><span class="line">162</span><br><span class="line">163</span><br><span class="line">164</span><br><span class="line">165</span><br><span class="line">166</span><br><span class="line">167</span><br><span class="line">168</span><br><span class="line">169</span><br><span class="line">170</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">MergeableClusterInvoker</span>&lt;<span class="title">T</span>&gt; <span class="keyword">implements</span> <span class="title">Invoker</span>&lt;<span class="title">T</span>&gt; </span>&#123;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">private</span> <span class="keyword">static</span> <span class="keyword">final</span> Logger log = LoggerFactory.getLogger(MergeableClusterInvoker.class);</span><br><span class="line">    <span class="keyword">private</span> <span class="keyword">final</span> Directory&lt;T&gt; directory;</span><br><span class="line">    <span class="keyword">private</span> ExecutorService executor = Executors.newCachedThreadPool(<span class="keyword">new</span> NamedThreadFactory(<span class="string">&quot;mergeable-cluster-executor&quot;</span>, <span class="keyword">true</span>));</span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="title">MergeableClusterInvoker</span><span class="params">(Directory&lt;T&gt; directory)</span> </span>&#123;</span><br><span class="line">        <span class="keyword">this</span>.directory = directory;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="meta">@SuppressWarnings(&quot;rawtypes&quot;)</span></span><br><span class="line">    <span class="function"><span class="keyword">public</span> Result <span class="title">invoke</span><span class="params">(<span class="keyword">final</span> Invocation invocation)</span> <span class="keyword">throws</span> RpcException </span>&#123;</span><br><span class="line">        List&lt;Invoker&lt;T&gt;&gt; invokers = directory.list(invocation);</span><br><span class="line"><span class="comment">//获取merger配置</span></span><br><span class="line">        String merger = getUrl().getMethodParameter(invocation.getMethodName(), Constants.MERGER_KEY);</span><br><span class="line">        <span class="comment">//不需要合并，调用第一个可用的group</span></span><br><span class="line">        <span class="keyword">if</span> (ConfigUtils.isEmpty(merger)) &#123; <span class="comment">// If a method doesn&#x27;t have a merger, only invoke one Group</span></span><br><span class="line">            <span class="keyword">for</span> (<span class="keyword">final</span> Invoker&lt;T&gt; invoker : invokers) &#123;</span><br><span class="line">                <span class="keyword">if</span> (invoker.isAvailable()) &#123;</span><br><span class="line">                    <span class="keyword">return</span> invoker.invoke(invocation);</span><br><span class="line">                &#125;</span><br><span class="line">            &#125;</span><br><span class="line">            <span class="keyword">return</span> invokers.iterator().next().invoke(invocation);</span><br><span class="line">        &#125;</span><br><span class="line"></span><br><span class="line">        Class&lt;?&gt; returnType;</span><br><span class="line">        <span class="keyword">try</span> &#123;</span><br><span class="line">            <span class="comment">//获取返回的类型</span></span><br><span class="line">            returnType = getInterface().getMethod(</span><br><span class="line">                    invocation.getMethodName(), invocation.getParameterTypes()).getReturnType();</span><br><span class="line">        &#125; <span class="keyword">catch</span> (NoSuchMethodException e) &#123;</span><br><span class="line">            returnType = <span class="keyword">null</span>;</span><br><span class="line">        &#125;</span><br><span class="line"></span><br><span class="line">        Map&lt;String, Future&lt;Result&gt;&gt; results = <span class="keyword">new</span> HashMap&lt;String, Future&lt;Result&gt;&gt;();</span><br><span class="line">        <span class="keyword">for</span> (<span class="keyword">final</span> Invoker&lt;T&gt; invoker : invokers) &#123;</span><br><span class="line">            Future&lt;Result&gt; future = executor.submit(<span class="keyword">new</span> Callable&lt;Result&gt;() &#123;</span><br><span class="line">                <span class="function"><span class="keyword">public</span> Result <span class="title">call</span><span class="params">()</span> <span class="keyword">throws</span> Exception </span>&#123;</span><br><span class="line">                    <span class="keyword">return</span> invoker.invoke(<span class="keyword">new</span> RpcInvocation(invocation, invoker));</span><br><span class="line">                &#125;</span><br><span class="line">            &#125;);</span><br><span class="line">            <span class="comment">//遍历结果</span></span><br><span class="line">            results.put(invoker.getUrl().getServiceKey(), future);</span><br><span class="line">        &#125;</span><br><span class="line"></span><br><span class="line">        Object result = <span class="keyword">null</span>;</span><br><span class="line"></span><br><span class="line">        List&lt;Result&gt; resultList = <span class="keyword">new</span> ArrayList&lt;Result&gt;(results.size());</span><br><span class="line"><span class="comment">//获取timeout 超时配置</span></span><br><span class="line">        <span class="keyword">int</span> timeout = getUrl().getMethodParameter(invocation.getMethodName(), Constants.TIMEOUT_KEY, Constants.DEFAULT_TIMEOUT);</span><br><span class="line">        <span class="keyword">for</span> (Map.Entry&lt;String, Future&lt;Result&gt;&gt; entry : results.entrySet()) &#123;</span><br><span class="line">            Future&lt;Result&gt; future = entry.getValue();</span><br><span class="line">            <span class="keyword">try</span> &#123;</span><br><span class="line">                Result r = future.get(timeout, TimeUnit.MILLISECONDS);</span><br><span class="line">                <span class="keyword">if</span> (r.hasException()) &#123;</span><br><span class="line">                    log.error(<span class="keyword">new</span> StringBuilder(<span class="number">32</span>).append(<span class="string">&quot;Invoke &quot;</span>)</span><br><span class="line">                                    .append(getGroupDescFromServiceKey(entry.getKey()))</span><br><span class="line">                                    .append(<span class="string">&quot; failed: &quot;</span>)</span><br><span class="line">                                    .append(r.getException().getMessage()).toString(),</span><br><span class="line">                            r.getException());</span><br><span class="line">                &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">                    <span class="comment">//获取未超时结果</span></span><br><span class="line">                    resultList.add(r);</span><br><span class="line">                &#125;</span><br><span class="line">            &#125; <span class="keyword">catch</span> (Exception e) &#123;</span><br><span class="line">                <span class="keyword">throw</span> <span class="keyword">new</span> RpcException(<span class="keyword">new</span> StringBuilder(<span class="number">32</span>)</span><br><span class="line">                        .append(<span class="string">&quot;Failed to invoke service &quot;</span>)</span><br><span class="line">                        .append(entry.getKey())</span><br><span class="line">                        .append(<span class="string">&quot;: &quot;</span>)</span><br><span class="line">                        .append(e.getMessage()).toString(),</span><br><span class="line">                        e);</span><br><span class="line">            &#125;</span><br><span class="line">        &#125;</span><br><span class="line"></span><br><span class="line">        <span class="keyword">if</span> (resultList.isEmpty()) &#123;</span><br><span class="line">            <span class="keyword">return</span> <span class="keyword">new</span> RpcResult((Object) <span class="keyword">null</span>);</span><br><span class="line">        &#125; <span class="keyword">else</span> <span class="keyword">if</span> (resultList.size() == <span class="number">1</span>) &#123;</span><br><span class="line">            <span class="keyword">return</span> resultList.iterator().next();</span><br><span class="line">        &#125;</span><br><span class="line"></span><br><span class="line">        <span class="keyword">if</span> (returnType == <span class="keyword">void</span>.class) &#123;</span><br><span class="line">            <span class="keyword">return</span> <span class="keyword">new</span> RpcResult((Object) <span class="keyword">null</span>);</span><br><span class="line">        &#125;</span><br><span class="line"><span class="comment">//.开头则按方法合并</span></span><br><span class="line">        <span class="keyword">if</span> (merger.startsWith(<span class="string">&quot;.&quot;</span>)) &#123;</span><br><span class="line">            merger = merger.substring(<span class="number">1</span>);</span><br><span class="line">            Method method;</span><br><span class="line">            <span class="keyword">try</span> &#123;</span><br><span class="line">                method = returnType.getMethod(merger, returnType);</span><br><span class="line">            &#125; <span class="keyword">catch</span> (NoSuchMethodException e) &#123;</span><br><span class="line">                <span class="keyword">throw</span> <span class="keyword">new</span> RpcException(<span class="keyword">new</span> StringBuilder(<span class="number">32</span>)</span><br><span class="line">                        .append(<span class="string">&quot;Can not merge result because missing method [ &quot;</span>)</span><br><span class="line">                        .append(merger)</span><br><span class="line">                        .append(<span class="string">&quot; ] in class [ &quot;</span>)</span><br><span class="line">                        .append(returnType.getClass().getName())</span><br><span class="line">                        .append(<span class="string">&quot; ]&quot;</span>)</span><br><span class="line">                        .toString());</span><br><span class="line">            &#125;</span><br><span class="line">            <span class="keyword">if</span> (!Modifier.isPublic(method.getModifiers())) &#123;</span><br><span class="line">                method.setAccessible(<span class="keyword">true</span>);</span><br><span class="line">            &#125;</span><br><span class="line">            result = resultList.remove(<span class="number">0</span>).getValue();</span><br><span class="line">            <span class="keyword">try</span> &#123;</span><br><span class="line">                <span class="keyword">if</span> (method.getReturnType() != <span class="keyword">void</span>.class</span><br><span class="line">                        &amp;&amp; method.getReturnType().isAssignableFrom(result.getClass())) &#123;</span><br><span class="line">                    <span class="keyword">for</span> (Result r : resultList) &#123;</span><br><span class="line">                        <span class="comment">//执行.xxx获取结果</span></span><br><span class="line">                        result = method.invoke(result, r.getValue());</span><br><span class="line">                    &#125;</span><br><span class="line">                &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">                    <span class="comment">//结果为空</span></span><br><span class="line">                    <span class="keyword">for</span> (Result r : resultList) &#123;</span><br><span class="line">                        method.invoke(result, r.getValue());</span><br><span class="line">                    &#125;</span><br><span class="line">                &#125;</span><br><span class="line">            &#125; <span class="keyword">catch</span> (Exception e) &#123;</span><br><span class="line">                <span class="keyword">throw</span> <span class="keyword">new</span> RpcException(</span><br><span class="line">                        <span class="keyword">new</span> StringBuilder(<span class="number">32</span>)</span><br><span class="line">                                .append(<span class="string">&quot;Can not merge result: &quot;</span>)</span><br><span class="line">                                .append(e.getMessage()).toString(),</span><br><span class="line">                        e);</span><br><span class="line">            &#125;</span><br><span class="line">        &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">            Merger resultMerger;</span><br><span class="line">            <span class="comment">//true或者default，按类型加载</span></span><br><span class="line">            <span class="keyword">if</span> (ConfigUtils.isDefault(merger)) &#123;</span><br><span class="line">                resultMerger = MergerFactory.getMerger(returnType);</span><br><span class="line">            &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">                <span class="comment">//指定了，则按指定加载</span></span><br><span class="line">                resultMerger = ExtensionLoader.getExtensionLoader(Merger.class).getExtension(merger);</span><br><span class="line">            &#125;</span><br><span class="line">            <span class="keyword">if</span> (resultMerger != <span class="keyword">null</span>) &#123;</span><br><span class="line">                List&lt;Object&gt; rets = <span class="keyword">new</span> ArrayList&lt;Object&gt;(resultList.size());</span><br><span class="line">                <span class="keyword">for</span> (Result r : resultList) &#123;</span><br><span class="line">                    rets.add(r.getValue());</span><br><span class="line">                &#125;</span><br><span class="line">                result = resultMerger.merge(</span><br><span class="line">                        rets.toArray((Object[]) Array.newInstance(returnType, <span class="number">0</span>)));</span><br><span class="line">            &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">                <span class="keyword">throw</span> <span class="keyword">new</span> RpcException(<span class="string">&quot;There is no merger to merge result.&quot;</span>);</span><br><span class="line">            &#125;</span><br><span class="line">        &#125;</span><br><span class="line">        <span class="keyword">return</span> <span class="keyword">new</span> RpcResult(result);</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">public</span> Class&lt;T&gt; <span class="title">getInterface</span><span class="params">()</span> </span>&#123;</span><br><span class="line">        <span class="keyword">return</span> directory.getInterface();</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">public</span> URL <span class="title">getUrl</span><span class="params">()</span> </span>&#123;</span><br><span class="line">        <span class="keyword">return</span> directory.getUrl();</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">boolean</span> <span class="title">isAvailable</span><span class="params">()</span> </span>&#123;</span><br><span class="line">        <span class="keyword">return</span> directory.isAvailable();</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">destroy</span><span class="params">()</span> </span>&#123;</span><br><span class="line">        directory.destroy();</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">private</span> String <span class="title">getGroupDescFromServiceKey</span><span class="params">(String key)</span> </span>&#123;</span><br><span class="line">        <span class="keyword">int</span> index = key.indexOf(<span class="string">&quot;/&quot;</span>);</span><br><span class="line">        <span class="keyword">if</span> (index &gt; <span class="number">0</span>) &#123;</span><br><span class="line">            <span class="keyword">return</span> <span class="keyword">new</span> StringBuilder(<span class="number">32</span>).append(<span class="string">&quot;group [ &quot;</span>)</span><br><span class="line">                    .append(key.substring(<span class="number">0</span>, index)).append(<span class="string">&quot; ]&quot;</span>).toString();</span><br><span class="line">        &#125;</span><br><span class="line">        <span class="keyword">return</span> key;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+    </div>
+
+    
+    
+    
+
+    <footer class="post-footer">
+          <div class="reward-container">
+  <div>Buy me a coffee</div>
+  <button>
+    Donate
+  </button>
+  <div class="post-reward">
+      <div>
+        <img src="/hexo/images/wechatpay.png" alt="Absurd WeChat Pay">
+        <span>WeChat Pay</span>
+      </div>
+
+  </div>
+</div>
+
+          <div class="post-tags">
+              <a href="/hexo/tags/rpc/" rel="tag"># rpc</a>
+              <a href="/hexo/tags/dubbo/" rel="tag"># dubbo</a>
+          </div>
+
+        
+
+          <div class="post-nav">
+            <div class="post-nav-item">
+                <a href="/hexo/post/a645d07f.html" rel="prev" title="dubbo源码解析（六） DubboInvoker">
+                  <i class="fa fa-chevron-left"></i> dubbo源码解析（六） DubboInvoker
+                </a>
+            </div>
+            <div class="post-nav-item">
+                <a href="/hexo/post/eb51c74d.html" rel="next" title="dubbo源码解析（八） LoadBalance">
+                  dubbo源码解析（八） LoadBalance <i class="fa fa-chevron-right"></i>
+                </a>
+            </div>
+          </div>
+    </footer>
+  </article>
+</div>
+
+
+
+
+
+
+</div>
+  </main>
+
+  <footer class="footer">
+    <div class="footer-inner">
+
+
+<div class="copyright">
+  &copy; 
+  <span itemprop="copyrightYear">2022</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">Absurd</span>
+</div>
+  <div class="powered-by">Powered by <a href="https://hexo.io/" rel="noopener" target="_blank">Hexo</a> & <a href="https://theme-next.js.org/mist/" rel="noopener" target="_blank">NexT.Mist</a>
+  </div>
+
+    </div>
+  </footer>
+
+  
+  <script src="https://cdn.jsdelivr.net/npm/animejs@3.2.1/lib/anime.min.js" integrity="sha256-XL2inqUJaslATFnHdJOi9GfQ60on8Wx1C2H8DYiN1xY=" crossorigin="anonymous"></script>
+<script src="/hexo/js/comments.js"></script><script src="/hexo/js/utils.js"></script><script src="/hexo/js/motion.js"></script><script src="/hexo/js/schemes/muse.js"></script><script src="/hexo/js/next-boot.js"></script>
+
+  
+<script src="https://cdn.jsdelivr.net/npm/hexo-generator-searchdb@1.4.0/dist/search.js" integrity="sha256-vXZMYLEqsROAXkEw93GGIvaB2ab+QW6w3+1ahD9nXXA=" crossorigin="anonymous"></script>
+<script src="/hexo/js/third-party/search/local-search.js"></script>
+
+
+
+
+
+  
+
+
+
+
+
+</body>
+</html>
