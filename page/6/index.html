@@ -157,7 +157,7 @@
   <nav class="site-state">
       <div class="site-state-item site-state-posts">
         <a href="/hexo/archives/">
-          <span class="site-state-item-count">75</span>
+          <span class="site-state-item-count">76</span>
           <span class="site-state-item-name">posts</span>
         </a>
       </div>
@@ -205,6 +205,96 @@
 
 
     <div class="main-inner index posts-expand">
+
+    
+
+
+<div class="post-block">
+  
+  
+
+  <article itemscope itemtype="http://schema.org/Article" class="post-content" lang="">
+    <link itemprop="mainEntityOfPage" href="https://www1350.github.io/hexo/post/79fd2ad8.html">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/hexo/images/avatar.gif">
+      <meta itemprop="name" content="Absurd">
+      <meta itemprop="description" content="">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Absurd博客">
+    </span>
+      <header class="post-header">
+        <h2 class="post-title" itemprop="name headline">
+          <a href="/hexo/post/79fd2ad8.html" class="post-title-link" itemprop="url">Spring AOP 源码解析</a>
+        </h2>
+
+        <div class="post-meta-container">
+          <div class="post-meta">
+    <span class="post-meta-item">
+      <span class="post-meta-item-icon">
+        <i class="far fa-calendar"></i>
+      </span>
+      <span class="post-meta-item-text">Posted on</span>
+
+      <time title="Created: 2018-03-09 22:42:29" itemprop="dateCreated datePublished" datetime="2018-03-09T22:42:29+08:00">2018-03-09</time>
+    </span>
+    <span class="post-meta-item">
+      <span class="post-meta-item-icon">
+        <i class="far fa-calendar-check"></i>
+      </span>
+      <span class="post-meta-item-text">Edited on</span>
+      <time title="Modified: 2022-01-28 15:09:17" itemprop="dateModified" datetime="2022-01-28T15:09:17+08:00">2022-01-28</time>
+    </span>
+    <span class="post-meta-item">
+      <span class="post-meta-item-icon">
+        <i class="far fa-folder"></i>
+      </span>
+      <span class="post-meta-item-text">In</span>
+        <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+          <a href="/hexo/categories/%E6%BA%90%E7%A0%81/" itemprop="url" rel="index"><span itemprop="name">源码</span></a>
+        </span>
+    </span>
+
+  
+</div>
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+          <p>首先通过继承BeanDefinitionParser的触发过程看<a href="http://www1350.github.io/#post/84">http://www1350.github.io/#post/84</a></p>
+<p><img src="https://user-images.githubusercontent.com/7789698/37197018-fc2e50b4-23b3-11e8-90bb-3d4ff69603ce.png" alt="sequencediagram11"></p>
+<p>通过继承NamespaceHandlerSupport来注册，最核心的类就是AnnotationAwareAspectJAutoProxyCreator</p>
+<img width="1074" alt="sssxx2 2x" src="https://user-images.githubusercontent.com/7789698/37197055-1d5bbd44-23b4-11e8-9784-cd943486df30.png">
+          <!--noindex-->
+            <div class="post-button">
+              <a class="btn" href="/hexo/post/79fd2ad8.html#more" rel="contents">
+                Read more &raquo;
+              </a>
+            </div>
+          <!--/noindex-->
+        
+      
+    </div>
+
+    
+    
+    
+
+    <footer class="post-footer">
+        <div class="post-eof"></div>
+      
+    </footer>
+  </article>
+</div>
+
+
+
 
     
 
@@ -3049,131 +3139,6 @@
 <figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br></pre></td><td class="code"><pre><span class="line">fileChannel.read(buffer, position, buffer, new CompletionHandler&lt;Integer, ByteBuffer&gt;() &#123;</span><br><span class="line">    @Override</span><br><span class="line">    public void completed(Integer result, ByteBuffer attachment) &#123;</span><br><span class="line">        System.out.println(&quot;result = &quot; + result);</span><br><span class="line"></span><br><span class="line">        attachment.flip();</span><br><span class="line">        byte[] data = new byte[attachment.limit()];</span><br><span class="line">        attachment.get(data);</span><br><span class="line">        System.out.println(new String(data));</span><br><span class="line">        attachment.clear();</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    @Override</span><br><span class="line">    public void failed(Throwable exc, ByteBuffer attachment) &#123;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;);</span><br></pre></td></tr></table></figure>
 <p>一旦读取完成，将会触发CompletionHandler的completed()方法，并传入一个Integer和ByteBuffer。前面的整形表示的是读取到的字节数大小。第二个ByteBuffer也可以换成其他合适的对象方便数据写入。 如果读取操作失败了，那么会触发failed()方法。</p>
 <p>参考：<a target="_blank" rel="noopener" href="http://www.jianshu.com/p/052035037297">http://www.jianshu.com/p/052035037297</a><br><a target="_blank" rel="noopener" href="http://ifeve.com/java-nio-scattergather/">http://ifeve.com/java-nio-scattergather/</a><br><a target="_blank" rel="noopener" href="https://java-nio.avenwu.net/java-nio-channel.html">https://java-nio.avenwu.net/java-nio-channel.html</a><br><a target="_blank" rel="noopener" href="http://www.importnew.com/24794.html">http://www.importnew.com/24794.html</a></p>
-
-      
-    </div>
-
-    
-    
-    
-
-    <footer class="post-footer">
-        <div class="post-eof"></div>
-      
-    </footer>
-  </article>
-</div>
-
-
-
-
-    
-
-
-<div class="post-block">
-  
-  
-
-  <article itemscope itemtype="http://schema.org/Article" class="post-content" lang="">
-    <link itemprop="mainEntityOfPage" href="https://www1350.github.io/hexo/post/2400ed9b.html">
-
-    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
-      <meta itemprop="image" content="/hexo/images/avatar.gif">
-      <meta itemprop="name" content="Absurd">
-      <meta itemprop="description" content="">
-    </span>
-
-    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
-      <meta itemprop="name" content="Absurd博客">
-    </span>
-      <header class="post-header">
-        <h2 class="post-title" itemprop="name headline">
-          <a href="/hexo/post/2400ed9b.html" class="post-title-link" itemprop="url">SPI</a>
-        </h2>
-
-        <div class="post-meta-container">
-          <div class="post-meta">
-    <span class="post-meta-item">
-      <span class="post-meta-item-icon">
-        <i class="far fa-calendar"></i>
-      </span>
-      <span class="post-meta-item-text">Posted on</span>
-
-      <time title="Created: 2017-09-01 22:40:29" itemprop="dateCreated datePublished" datetime="2017-09-01T22:40:29+08:00">2017-09-01</time>
-    </span>
-    <span class="post-meta-item">
-      <span class="post-meta-item-icon">
-        <i class="far fa-calendar-check"></i>
-      </span>
-      <span class="post-meta-item-text">Edited on</span>
-      <time title="Modified: 2022-01-28 15:09:17" itemprop="dateModified" datetime="2022-01-28T15:09:17+08:00">2022-01-28</time>
-    </span>
-    <span class="post-meta-item">
-      <span class="post-meta-item-icon">
-        <i class="far fa-folder"></i>
-      </span>
-      <span class="post-meta-item-text">In</span>
-        <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
-          <a href="/hexo/categories/%E5%9F%BA%E7%A1%80/" itemprop="url" rel="index"><span itemprop="name">基础</span></a>
-        </span>
-    </span>
-
-  
-</div>
-
-        </div>
-      </header>
-
-    
-    
-    
-    <div class="post-body" itemprop="articleBody">
-          <p>SPI指的是Service Provider Interface，服务提供接口</p>
-<p>我们系统里抽象的各个模块，往往有很多不同的实现方案，比如日志模块的方案，xml解析模块、jdbc模块的方案等。面向的对象的设计里，我们一般推荐模块之间基于接口编程，模块之间不对实现类进行硬编码。一旦代码里涉及具体的实现类，就违反了可拔插的原则，如果需要替换一种实现，就需要修改代码。</p>
-<p>为了实现在模块装配的时候能不在程序里动态指明，这就需要一种服务发现机制。Java spi就是提供这样的一个机制：为某个接口寻找服务实现的机制。有点类似IOC的思想，就是将装配的控制权移到程序之外，在模块化设计中这个机制尤其重要。</p>
-<p>当服务的提供者，提供了服务接口的一种实现之后，在jar包的META-INF/services/目录里同时创建一个以服务接口命名的文件。该文件里就是实现该服务接口的具体实现类。而当外部程序装配这个模块的时候，就能通过该jar包META-INF/services/里的配置文件找到具体的实现类名，并装载实例化，完成模块的注入。 </p>
-<p>基于这样一个约定就能很好的找到服务接口的实现类，而不需要再代码里制定。jdk提供服务实现查找的一个工具类：java.util.ServiceLoader. </p>
-<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">package</span> spi;  </span><br><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">interface</span> <span class="title">Search</span> </span>&#123;  </span><br><span class="line">  <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">search</span><span class="params">()</span></span>;  </span><br><span class="line">&#125;  </span><br><span class="line"></span><br><span class="line"></span><br><span class="line"></span><br><span class="line"><span class="keyword">package</span> spi;  </span><br><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">FileSearch</span> <span class="keyword">implements</span> <span class="title">Search</span> </span>&#123;  </span><br><span class="line">  <span class="meta">@Override</span>  </span><br><span class="line">  <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">search</span><span class="params">()</span> </span>&#123;  </span><br><span class="line">    System.out.println(<span class="string">&quot;哥是文件搜索&quot;</span>);  </span><br><span class="line">  &#125;  </span><br><span class="line">&#125;  </span><br><span class="line"></span><br><span class="line"></span><br><span class="line"></span><br><span class="line"><span class="keyword">package</span> spi;  </span><br><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">DataBaseSearch</span> <span class="keyword">implements</span> <span class="title">Search</span> </span>&#123;  </span><br><span class="line">  <span class="meta">@Override</span>  </span><br><span class="line">  <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">search</span><span class="params">()</span> </span>&#123;  </span><br><span class="line">    System.out.println(<span class="string">&quot;哥是database搜索&quot;</span>);  </span><br><span class="line">  &#125;  </span><br><span class="line">&#125;  </span><br><span class="line"></span><br><span class="line"></span><br><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">DoSearch</span> </span>&#123;  </span><br><span class="line">  <span class="function"><span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">void</span> <span class="title">main</span><span class="params">(String[] args)</span> </span>&#123;  </span><br><span class="line">    ServiceLoader&lt;Search&gt; sl = ServiceLoader.load(Search.class);  </span><br><span class="line">    Iterator&lt;Search&gt; s = sl.iterator();  </span><br><span class="line">    <span class="keyword">if</span> (s.hasNext()) &#123;  </span><br><span class="line">      Search ss = s.next();  </span><br><span class="line">      ss.search();  </span><br><span class="line">    &#125;  </span><br><span class="line">  &#125;  </span><br><span class="line">&#125;  </span><br></pre></td></tr></table></figure>
-
-
-
-
-<p>最后在META-INF/services目录下创建spi.Search(包名+接口名)文件，<br>当文件内容为spi.FileSearch（包名+实现类名）时，程序输出结果为：哥是文件搜索<br>当内容为spi.DataBaseSearch时，程序输出结果为：哥是database搜索.<br>由此可以看出DOSearch类中没有任何和具体实现有关的代码，而是基于spi的机制去查找服务的实现</p>
-<p>dubbo中基于SPI思想的实现</p>
-<p>Dubbo改进了JDK标准的SPI的以下问题：</p>
-<p>1.JDK标准的SPI会一次性实例化扩展点所有实现，如果有扩展实现初始化很耗时，但如果没用上也加载，会很浪费资源。</p>
-<p>2.如果扩展点加载失败，连扩展点的名称都拿不到了。比如：JDK标准的ScriptEngine，通过getName();获取脚本类型的名称，但如果RubyScriptEngine因为所依赖的jruby.jar不存在，导致RubyScriptEngine类加载失败，这个失败原因被吃掉了，和ruby对应不起来，当用户执行ruby脚本时，会报不支持ruby，而不是真正失败的原因。</p>
-<p>3.增加了对扩展点IoC和AOP的支持，一个扩展点可以直接setter注入其它扩展点。</p>
-<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="meta">@interface</span> SPI &#123;  </span><br><span class="line">    <span class="comment">/**  </span></span><br><span class="line"><span class="comment">     * 缺省扩展点名。  </span></span><br><span class="line"><span class="comment">     */</span>   </span><br><span class="line">    <span class="function">String <span class="title">value</span><span class="params">()</span> <span class="keyword">default</span> &quot;&quot;</span>;  </span><br><span class="line">&#125;  </span><br></pre></td></tr></table></figure>
-
-
-<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">@SPI(&quot;spring&quot;)</span>   </span><br><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">interface</span> <span class="title">Container</span> </span>&#123;  </span><br><span class="line">&#125;  </span><br></pre></td></tr></table></figure>
-
-<p>dubbo/dubbo-container/src/main/resources/META-INF/dubbo/internal</p>
-<figure class="highlight properties"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="attr">jetty</span>=<span class="string">com.alibaba.dubbo.container.jetty.JettyContainer</span></span><br><span class="line"><span class="attr">log4j</span>=<span class="string">com.alibaba.dubbo.container.log4j.Log4jContainer</span></span><br><span class="line"><span class="attr">logback</span>=<span class="string">com.alibaba.dubbo.container.logback.LogbackContainer</span></span><br><span class="line"><span class="attr">spring</span>=<span class="string">com.alibaba.dubbo.container.spring.SpringContainer</span></span><br></pre></td></tr></table></figure>
-
-<p><code>ExtensionLoader.getExtensionLoader(Container.class).getExtension(name)</code></p>
-<p>ExtensionLoader</p>
-<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// 此方法已经getExtensionClasses方法同步过。</span></span><br><span class="line"><span class="keyword">private</span> Map&lt;String, Class&lt;?&gt;&gt; loadExtensionClasses() &#123;</span><br><span class="line">    <span class="keyword">final</span> SPI defaultAnnotation = type.getAnnotation(SPI.class);</span><br><span class="line">    <span class="keyword">if</span>(defaultAnnotation != <span class="keyword">null</span>) &#123;</span><br><span class="line">        String value = defaultAnnotation.value();</span><br><span class="line">        <span class="keyword">if</span>(value != <span class="keyword">null</span> &amp;&amp; (value = value.trim()).length() &gt; <span class="number">0</span>) &#123;</span><br><span class="line">            String[] names = NAME_SEPARATOR.split(value);</span><br><span class="line">            <span class="keyword">if</span>(names.length &gt; <span class="number">1</span>) &#123;</span><br><span class="line">                <span class="keyword">throw</span> <span class="keyword">new</span> IllegalStateException(<span class="string">&quot;more than 1 default extension name on extension &quot;</span> + type.getName()</span><br><span class="line">                        + <span class="string">&quot;: &quot;</span> + Arrays.toString(names));</span><br><span class="line">            &#125;</span><br><span class="line">            <span class="keyword">if</span>(names.length == <span class="number">1</span>) cachedDefaultName = names[<span class="number">0</span>];</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line">    </span><br><span class="line">    Map&lt;String, Class&lt;?&gt;&gt; extensionClasses = <span class="keyword">new</span> HashMap&lt;String, Class&lt;?&gt;&gt;();</span><br><span class="line">    loadFile(extensionClasses, DUBBO_INTERNAL_DIRECTORY);</span><br><span class="line">    loadFile(extensionClasses, DUBBO_DIRECTORY);</span><br><span class="line">    loadFile(extensionClasses, SERVICES_DIRECTORY);</span><br><span class="line">    <span class="keyword">return</span> extensionClasses;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"></span><br><span class="line"></span><br><span class="line"><span class="keyword">private</span> <span class="keyword">static</span> <span class="keyword">final</span> String SERVICES_DIRECTORY = <span class="string">&quot;META-INF/services/&quot;</span>;</span><br><span class="line"></span><br><span class="line"><span class="keyword">private</span> <span class="keyword">static</span> <span class="keyword">final</span> String DUBBO_DIRECTORY = <span class="string">&quot;META-INF/dubbo/&quot;</span>;</span><br><span class="line"></span><br><span class="line"><span class="keyword">private</span> <span class="keyword">static</span> <span class="keyword">final</span> String DUBBO_INTERNAL_DIRECTORY = DUBBO_DIRECTORY + <span class="string">&quot;internal/&quot;</span>;</span><br></pre></td></tr></table></figure>
-
-
-<p>cachedAdaptiveClass : 当前Extension类型对应的AdaptiveExtension类型(只能一个)</p>
-<p>cachedWrapperClasses : 当前Extension类型对应的所有Wrapper实现类型(无顺序)</p>
-<p>cachedActivates : 当前Extension实现自动激活实现缓存(map,无序)</p>
-<p>cachedNames : 扩展点实现类对应的名称(如配置多个名称则值为第一个)</p>
-<p>cachedDefaultName : 当前扩展点的默认实现名称</p>
-<p>cachedClasses : 扩展点实现名称对应的实现类(一个实现类可能有多个名称)</p>
-<p>loadFile最后调用的是Class.forName(line, true, classLoader);</p>
-<p>然后injectExtension 注入</p>
-<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">private</span> T <span class="title">injectExtension</span><span class="params">(T instance)</span> </span>&#123;</span><br><span class="line">    <span class="keyword">try</span> &#123;</span><br><span class="line">        <span class="keyword">if</span> (objectFactory != <span class="keyword">null</span>) &#123;</span><br><span class="line">            <span class="keyword">for</span> (Method method : instance.getClass().getMethods()) &#123;</span><br><span class="line">                <span class="keyword">if</span> (method.getName().startsWith(<span class="string">&quot;set&quot;</span>)</span><br><span class="line">                        &amp;&amp; method.getParameterTypes().length == <span class="number">1</span></span><br><span class="line">                        &amp;&amp; Modifier.isPublic(method.getModifiers())) &#123;</span><br><span class="line">                    Class&lt;?&gt; pt = method.getParameterTypes()[<span class="number">0</span>];</span><br><span class="line">                    <span class="keyword">try</span> &#123;</span><br><span class="line">                        String property = method.getName().length() &gt; <span class="number">3</span> ? method.getName().substring(<span class="number">3</span>, <span class="number">4</span>).toLowerCase() + method.getName().substring(<span class="number">4</span>) : <span class="string">&quot;&quot;</span>;</span><br><span class="line">                        Object object = objectFactory.getExtension(pt, property);</span><br><span class="line">                        <span class="keyword">if</span> (object != <span class="keyword">null</span>) &#123;</span><br><span class="line">                            method.invoke(instance, object);</span><br><span class="line">                        &#125;</span><br><span class="line">                    &#125; <span class="keyword">catch</span> (Exception e) &#123;</span><br><span class="line">                        logger.error(<span class="string">&quot;fail to inject via method &quot;</span> + method.getName()</span><br><span class="line">                                + <span class="string">&quot; of interface &quot;</span> + type.getName() + <span class="string">&quot;: &quot;</span> + e.getMessage(), e);</span><br><span class="line">                    &#125;</span><br><span class="line">                &#125;</span><br><span class="line">            &#125;</span><br><span class="line">        &#125;</span><br><span class="line">    &#125; <span class="keyword">catch</span> (Exception e) &#123;</span><br><span class="line">        logger.error(e.getMessage(), e);</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="keyword">return</span> instance;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-
-
-<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">SpiExtensionFactory</span> <span class="keyword">implements</span> <span class="title">ExtensionFactory</span> </span>&#123;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">public</span> &lt;T&gt; <span class="function">T <span class="title">getExtension</span><span class="params">(Class&lt;T&gt; type, String name)</span> </span>&#123;</span><br><span class="line">        <span class="keyword">if</span> (type.isInterface() &amp;&amp; type.isAnnotationPresent(SPI.class)) &#123;</span><br><span class="line">            ExtensionLoader&lt;T&gt; loader = ExtensionLoader.getExtensionLoader(type);</span><br><span class="line">            <span class="keyword">if</span> (loader.getSupportedExtensions().size() &gt; <span class="number">0</span>) &#123;</span><br><span class="line">                <span class="keyword">return</span> loader.getAdaptiveExtension();</span><br><span class="line">            &#125;</span><br><span class="line">        &#125;</span><br><span class="line">        <span class="keyword">return</span> <span class="keyword">null</span>;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-
-
-<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">SpringExtensionFactory</span> <span class="keyword">implements</span> <span class="title">ExtensionFactory</span> </span>&#123;</span><br><span class="line">    </span><br><span class="line">    <span class="keyword">private</span> <span class="keyword">static</span> <span class="keyword">final</span> Set&lt;ApplicationContext&gt; contexts = <span class="keyword">new</span> ConcurrentHashSet&lt;ApplicationContext&gt;();</span><br><span class="line">    </span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">void</span> <span class="title">addApplicationContext</span><span class="params">(ApplicationContext context)</span> </span>&#123;</span><br><span class="line">        contexts.add(context);</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">void</span> <span class="title">removeApplicationContext</span><span class="params">(ApplicationContext context)</span> </span>&#123;</span><br><span class="line">        contexts.remove(context);</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="meta">@SuppressWarnings(&quot;unchecked&quot;)</span></span><br><span class="line">    <span class="keyword">public</span> &lt;T&gt; <span class="function">T <span class="title">getExtension</span><span class="params">(Class&lt;T&gt; type, String name)</span> </span>&#123;</span><br><span class="line">        <span class="keyword">for</span> (ApplicationContext context : contexts) &#123;</span><br><span class="line">            <span class="keyword">if</span> (context.containsBean(name)) &#123;</span><br><span class="line">                Object bean = context.getBean(name);</span><br><span class="line">                <span class="keyword">if</span> (type.isInstance(bean)) &#123;</span><br><span class="line">                    <span class="keyword">return</span> (T) bean;</span><br><span class="line">                &#125;</span><br><span class="line">            &#125;</span><br><span class="line">        &#125;</span><br><span class="line">        <span class="keyword">return</span> <span class="keyword">null</span>;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">&#125;</span><br><span class="line"></span><br></pre></td></tr></table></figure>
-
-<p><img src="https://user-images.githubusercontent.com/7789698/29960840-e18362a4-8f2f-11e7-9891-4dc0d0fd7ad6.png" alt="1"></p>
 
       
     </div>

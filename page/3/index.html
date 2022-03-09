@@ -157,7 +157,7 @@
   <nav class="site-state">
       <div class="site-state-item site-state-posts">
         <a href="/hexo/archives/">
-          <span class="site-state-item-count">75</span>
+          <span class="site-state-item-count">76</span>
           <span class="site-state-item-name">posts</span>
         </a>
       </div>
@@ -205,6 +205,105 @@
 
 
     <div class="main-inner index posts-expand">
+
+    
+
+
+<div class="post-block">
+  
+  
+
+  <article itemscope itemtype="http://schema.org/Article" class="post-content" lang="">
+    <link itemprop="mainEntityOfPage" href="https://www1350.github.io/hexo/post/a7ba99a3.html">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/hexo/images/avatar.gif">
+      <meta itemprop="name" content="Absurd">
+      <meta itemprop="description" content="">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Absurd博客">
+    </span>
+      <header class="post-header">
+        <h2 class="post-title" itemprop="name headline">
+          <a href="/hexo/post/a7ba99a3.html" class="post-title-link" itemprop="url">java基础概念</a>
+        </h2>
+
+        <div class="post-meta-container">
+          <div class="post-meta">
+    <span class="post-meta-item">
+      <span class="post-meta-item-icon">
+        <i class="far fa-calendar"></i>
+      </span>
+      <span class="post-meta-item-text">Posted on</span>
+
+      <time title="Created: 2018-04-09 17:24:07" itemprop="dateCreated datePublished" datetime="2018-04-09T17:24:07+08:00">2018-04-09</time>
+    </span>
+    <span class="post-meta-item">
+      <span class="post-meta-item-icon">
+        <i class="far fa-calendar-check"></i>
+      </span>
+      <span class="post-meta-item-text">Edited on</span>
+      <time title="Modified: 2022-01-28 15:09:17" itemprop="dateModified" datetime="2022-01-28T15:09:17+08:00">2022-01-28</time>
+    </span>
+    <span class="post-meta-item">
+      <span class="post-meta-item-icon">
+        <i class="far fa-folder"></i>
+      </span>
+      <span class="post-meta-item-text">In</span>
+        <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+          <a href="/hexo/categories/%E5%9F%BA%E7%A1%80/" itemprop="url" rel="index"><span itemprop="name">基础</span></a>
+        </span>
+    </span>
+
+  
+</div>
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+          <h2 id="基本概念"><a href="#基本概念" class="headerlink" title="基本概念"></a>基本概念</h2><p>JDK：包括编译器（javac.exe）、开发工具（javadoc.exe、jar.exe、keytool.exe、jconsole.exe）和更多的类库（如tools.jar）等。总结就是Java语言、Java虚拟机、Java API类库<br>JRE： 支持java运行的基本环境</p>
+<p><img src="https://user-images.githubusercontent.com/7789698/29321251-65a89fd0-820c-11e7-93e7-b15d5c2db752.png" alt="image"></p>
+<p>JIT：just in time</p>
+<p>运行时数据区：<br><img src="https://user-images.githubusercontent.com/7789698/29417094-9fc9b106-839a-11e7-9be9-310174cd0d60.png" alt="image"></p>
+<h2 id="JVM的内存结构"><a href="#JVM的内存结构" class="headerlink" title="JVM的内存结构"></a>JVM的内存结构</h2><h3 id="程序计数器："><a href="#程序计数器：" class="headerlink" title="程序计数器："></a>程序计数器：</h3><p>  当前代码行号指示器。各个线程计数器互不影响，独立存储。如果是执行Java方法，是虚拟机字节码地址。<em>如果是native方法，计数器为空。</em>唯一一个没有OOM的区域。是当前线程所执行的字节码的行号指示器，每条线程都要有一个独立的程序计数器，这类内存也称为“<strong>线程私有</strong>”的内存。</p>
+<p>程序计数器是指CPU中的寄存器，它保存的是程序当前执行的指令的地址（也可以说保存下一条指令的所在存储单元的地址），当CPU需要执行指令时，需要从程序计数器中得到当前需要执行的指令所在存储单元的地址，然后根据得到的地址获取到指令，在得到指令之后，程序计数器便自动加1或者根据转移指针得到下一条指令的地址，如此循环，直至执行完所有的指令。　</p>
+<p>在JVM规范中规定，如果线程执行的是非native方法，则程序计数器中保存的是当前需要执行的指令的地址；如果线程执行的是native方法，则程序计数器中的值是undefined。由于程序计数器中存储的数据所占空间的大小不会随程序的执行而发生改变，因此，对于程序计数器是不会发生内存溢出现象(OutOfMemory)的。</p>
+<h3 id="Java虚拟机栈："><a href="#Java虚拟机栈：" class="headerlink" title="Java虚拟机栈："></a>Java虚拟机栈：</h3><p>  描述Java方法执行的内存模型：每个执行时会创建一个栈帧，用于存储局部变量表、操作数栈、动态链接、方法出口等。每个方法调用到执行完成过程，对应一个栈帧在虚拟机栈中入栈到出栈的过程。<strong>线程私有</strong>。</p>
+<ul>
+<li><p>局部变量表：</p>
+<p>存放编译期可知的各种基本数据类型、对象引用类型（一个指向对象起始地址的引用指针）、returnAddress类型（一个字节码指令地址）。其中64位长度long和double会占用2个局部变量空间，其余占一个。局部变量表所需内存大小是在编译期间完成分配的，方法运行期间不会改变。如果栈深度大于虚拟机允许的深度，将抛出StackOverflowError异常；如果虚拟机栈动态扩张时无法申请到足够的内存，就会抛出OutOfMemoryError异常。</p>
+</li>
+</ul>
+          <!--noindex-->
+            <div class="post-button">
+              <a class="btn" href="/hexo/post/a7ba99a3.html#more" rel="contents">
+                Read more &raquo;
+              </a>
+            </div>
+          <!--/noindex-->
+        
+      
+    </div>
+
+    
+    
+    
+
+    <footer class="post-footer">
+        <div class="post-eof"></div>
+      
+    </footer>
+  </article>
+</div>
+
+
+
 
     
 
@@ -1031,99 +1130,6 @@
           <!--noindex-->
             <div class="post-button">
               <a class="btn" href="/hexo/post/ee087dca.html#more" rel="contents">
-                Read more &raquo;
-              </a>
-            </div>
-          <!--/noindex-->
-        
-      
-    </div>
-
-    
-    
-    
-
-    <footer class="post-footer">
-        <div class="post-eof"></div>
-      
-    </footer>
-  </article>
-</div>
-
-
-
-
-    
-
-
-<div class="post-block">
-  
-  
-
-  <article itemscope itemtype="http://schema.org/Article" class="post-content" lang="">
-    <link itemprop="mainEntityOfPage" href="https://www1350.github.io/hexo/post/de6ecf19.html">
-
-    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
-      <meta itemprop="image" content="/hexo/images/avatar.gif">
-      <meta itemprop="name" content="Absurd">
-      <meta itemprop="description" content="">
-    </span>
-
-    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
-      <meta itemprop="name" content="Absurd博客">
-    </span>
-      <header class="post-header">
-        <h2 class="post-title" itemprop="name headline">
-          <a href="/hexo/post/de6ecf19.html" class="post-title-link" itemprop="url">dubbo源码解析（三）serialize</a>
-        </h2>
-
-        <div class="post-meta-container">
-          <div class="post-meta">
-    <span class="post-meta-item">
-      <span class="post-meta-item-icon">
-        <i class="far fa-calendar"></i>
-      </span>
-      <span class="post-meta-item-text">Posted on</span>
-
-      <time title="Created: 2018-04-03 22:44:07" itemprop="dateCreated datePublished" datetime="2018-04-03T22:44:07+08:00">2018-04-03</time>
-    </span>
-    <span class="post-meta-item">
-      <span class="post-meta-item-icon">
-        <i class="far fa-calendar-check"></i>
-      </span>
-      <span class="post-meta-item-text">Edited on</span>
-      <time title="Modified: 2022-01-28 15:09:17" itemprop="dateModified" datetime="2022-01-28T15:09:17+08:00">2022-01-28</time>
-    </span>
-    <span class="post-meta-item">
-      <span class="post-meta-item-icon">
-        <i class="far fa-folder"></i>
-      </span>
-      <span class="post-meta-item-text">In</span>
-        <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
-          <a href="/hexo/categories/%E4%B8%AD%E9%97%B4%E4%BB%B6/" itemprop="url" rel="index"><span itemprop="name">中间件</span></a>
-        </span>
-          , 
-        <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
-          <a href="/hexo/categories/%E4%B8%AD%E9%97%B4%E4%BB%B6/%E6%BA%90%E7%A0%81/" itemprop="url" rel="index"><span itemprop="name">源码</span></a>
-        </span>
-    </span>
-
-  
-</div>
-
-        </div>
-      </header>
-
-    
-    
-    
-    <div class="post-body" itemprop="articleBody">
-          <p>serialize层</p>
-<p>dubbo的序列化方式包括：hessian2、fastjson、fst、jdk、kryo</p>
-<p>只要通过配置<code>&lt;dubbo:protocol serialization=&quot;&quot;&gt;</code> 或<code>&lt;dubbo:service serialization=&quot;&quot;&gt;</code> 就可以实现</p>
-          <!--noindex-->
-            <div class="post-button">
-              <a class="btn" href="/hexo/post/de6ecf19.html#more" rel="contents">
                 Read more &raquo;
               </a>
             </div>

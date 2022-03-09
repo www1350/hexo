@@ -157,7 +157,7 @@
   <nav class="site-state">
       <div class="site-state-item site-state-posts">
         <a href="/hexo/archives/">
-          <span class="site-state-item-count">75</span>
+          <span class="site-state-item-count">76</span>
           <span class="site-state-item-name">posts</span>
         </a>
       </div>
@@ -205,6 +205,104 @@
 
 
     <div class="main-inner index posts-expand">
+
+    
+
+
+<div class="post-block">
+  
+  
+
+  <article itemscope itemtype="http://schema.org/Article" class="post-content" lang="">
+    <link itemprop="mainEntityOfPage" href="https://www1350.github.io/hexo/post/cb39cd53.html">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/hexo/images/avatar.gif">
+      <meta itemprop="name" content="Absurd">
+      <meta itemprop="description" content="">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Absurd博客">
+    </span>
+      <header class="post-header">
+        <h2 class="post-title" itemprop="name headline">
+          <a href="/hexo/post/cb39cd53.html" class="post-title-link" itemprop="url">RabbitMq整合spring简单样例</a>
+        </h2>
+
+        <div class="post-meta-container">
+          <div class="post-meta">
+    <span class="post-meta-item">
+      <span class="post-meta-item-icon">
+        <i class="far fa-calendar"></i>
+      </span>
+      <span class="post-meta-item-text">Posted on</span>
+
+      <time title="Created: 2016-07-04 22:06:07" itemprop="dateCreated datePublished" datetime="2016-07-04T22:06:07+08:00">2016-07-04</time>
+    </span>
+    <span class="post-meta-item">
+      <span class="post-meta-item-icon">
+        <i class="far fa-calendar-check"></i>
+      </span>
+      <span class="post-meta-item-text">Edited on</span>
+      <time title="Modified: 2022-01-28 15:09:17" itemprop="dateModified" datetime="2022-01-28T15:09:17+08:00">2022-01-28</time>
+    </span>
+    <span class="post-meta-item">
+      <span class="post-meta-item-icon">
+        <i class="far fa-folder"></i>
+      </span>
+      <span class="post-meta-item-text">In</span>
+        <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+          <a href="/hexo/categories/%E6%B6%88%E6%81%AF%E9%98%9F%E5%88%97/" itemprop="url" rel="index"><span itemprop="name">消息队列</span></a>
+        </span>
+    </span>
+
+  
+</div>
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+          <p><strong>生产者</strong><br>spring 配置如下：</p>
+<figure class="highlight xml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br></pre></td><td class="code"><pre><span class="line"><span class="tag">&lt;<span class="name">rabbit:connection-factory</span> <span class="attr">id</span>=<span class="string">&quot;connectionFactory&quot;</span> <span class="attr">host</span>=<span class="string">&quot;localhost&quot;</span> <span class="attr">port</span>=<span class="string">&quot;5672&quot;</span> <span class="attr">publisher-confirms</span>=<span class="string">&quot;true&quot;</span> <span class="attr">virtual-host</span>=<span class="string">&quot;/&quot;</span> <span class="attr">username</span>=<span class="string">&quot;absurd&quot;</span> <span class="attr">password</span>=<span class="string">&quot;absurd&quot;</span> /&gt;</span></span><br><span class="line"><span class="comment">&lt;!--下面只有当声明了exchange和队列才可以使用-&gt;</span></span><br><span class="line"><span class="comment">&lt;!-- &lt;rabbit:queue id=&quot;queue&quot; durable=&quot;true&quot; auto-delete=&quot;false&quot; exclusive=&quot;false&quot; name=&quot;queue&quot;/&gt;</span></span><br><span class="line"><span class="comment">&lt;rabbit:queue id=&quot;queue2&quot; durable=&quot;true&quot; auto-delete=&quot;false&quot; exclusive=&quot;false&quot; name=&quot;queue2&quot;/&gt;</span></span><br><span class="line"><span class="comment">        将队列绑定到交换路由同时与key绑定</span></span><br><span class="line"><span class="comment">    &lt;rabbit:fanout-exchange name=&quot;absurd_exchange&quot; durable=&quot;true&quot; auto-delete=&quot;false&quot; id=&quot;absurd_exchange&quot;&gt;</span></span><br><span class="line"><span class="comment">        &lt;rabbit:bindings&gt;</span></span><br><span class="line"><span class="comment">            &lt;rabbit:binding queue=&quot;queue&quot; /&gt;</span></span><br><span class="line"><span class="comment">            &lt;rabbit:binding queue=&quot;queue2&quot; /&gt;</span></span><br><span class="line"><span class="comment">        &lt;/rabbit:bindings&gt;</span></span><br><span class="line"><span class="comment">    &lt;/rabbit:fanout-exchange&gt; </span></span><br><span class="line"><span class="comment"> &lt;rabbit:template id=&quot;rabbitTemplate&quot; exchange=&quot;absurd_exchange&quot; connection-factory=&quot;connectionFactory&quot;/&gt;  --&gt;</span></span><br><span class="line"><span class="tag">&lt;<span class="name">rabbit:template</span> <span class="attr">id</span>=<span class="string">&quot;rabbitTemplate&quot;</span>  <span class="attr">connection-factory</span>=<span class="string">&quot;connectionFactory&quot;</span>/&gt;</span> </span><br></pre></td></tr></table></figure>
+
+<p>service</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">@Service</span></span><br><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">ProducerServiceImpl</span> <span class="keyword">implements</span> <span class="title">ProducerService</span></span>&#123;</span><br><span class="line"></span><br><span class="line">    <span class="meta">@Autowired</span> <span class="keyword">private</span> RabbitTemplate rabbitTemplate;</span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">sendMessage</span><span class="params">(String msg, String routingKey,String exchange)</span> </span>&#123;</span><br><span class="line">        System.err.println(<span class="string">&quot;err&quot;</span>+msg+routingKey+exchange);</span><br><span class="line">        RabbitAdmin admin = <span class="keyword">new</span> RabbitAdmin(<span class="keyword">this</span>.rabbitTemplate.getConnectionFactory());</span><br><span class="line">        admin.declareExchange(<span class="keyword">new</span> FanoutExchange(exchange,<span class="keyword">true</span>,<span class="keyword">false</span>));  </span><br><span class="line">        admin.declareQueue(<span class="keyword">new</span> Queue(routingKey,<span class="keyword">true</span>,<span class="keyword">false</span>,<span class="keyword">false</span>) );</span><br><span class="line">        admin.declareBinding(<span class="keyword">new</span> Binding(routingKey, DestinationType.QUEUE, exchange, routingKey, <span class="keyword">null</span>));<span class="comment">//如果声明了队列、exchange、绑定后就无需使用RabbitAdmin </span></span><br><span class="line">        rabbitTemplate.convertAndSend(exchange,routingKey,msg);</span><br><span class="line">        rabbitTemplate.convertAndSend(routingKey,msg);</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>controller</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">@RequestMapping(value=&quot;/publish/&#123;msg&#125;/&#123;queue&#125;/&#123;exchange&#125;&quot;,method=RequestMethod.GET)</span></span><br><span class="line"><span class="function"><span class="keyword">public</span> ModelAndView <span class="title">publish</span><span class="params">(<span class="meta">@PathVariable(value=&quot;msg&quot;)</span>String msg,<span class="meta">@PathVariable(value=&quot;queue&quot;)</span>String queue,<span class="meta">@PathVariable(value=&quot;exchange&quot;)</span>String exchange)</span></span>&#123;</span><br><span class="line">    ModelAndView mv = <span class="keyword">new</span> ModelAndView();</span><br><span class="line">    producerService.sendMessage(msg, queue,exchange);</span><br><span class="line">    System.out.println(msg);</span><br><span class="line">    mv.setViewName(<span class="string">&quot;a&quot;</span>);</span><br><span class="line">    mv.addObject(<span class="string">&quot;msg&quot;</span>, msg);</span><br><span class="line">    <span class="keyword">return</span> mv;</span><br><span class="line"></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p><strong>消费者</strong><br>spring配置</p>
+<figure class="highlight xml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br></pre></td><td class="code"><pre><span class="line">    <span class="comment">&lt;!-- 连接工厂 --&gt;</span></span><br><span class="line">    <span class="tag">&lt;<span class="name">rabbit:connection-factory</span> <span class="attr">id</span>=<span class="string">&quot;connectionFactory&quot;</span> <span class="attr">host</span>=<span class="string">&quot;localhost&quot;</span> <span class="attr">publisher-confirms</span>=<span class="string">&quot;true&quot;</span> <span class="attr">virtual-host</span>=<span class="string">&quot;/&quot;</span> <span class="attr">username</span>=<span class="string">&quot;absurd&quot;</span> <span class="attr">password</span>=<span class="string">&quot;absurd&quot;</span> /&gt;</span></span><br><span class="line">    <span class="comment">&lt;!-- 监听器 --&gt;</span></span><br><span class="line">    <span class="tag">&lt;<span class="name">rabbit:listener-container</span> <span class="attr">connection-factory</span>=<span class="string">&quot;connectionFactory&quot;</span> <span class="attr">acknowledge</span>=<span class="string">&quot;auto&quot;</span> <span class="attr">task-executor</span>=<span class="string">&quot;taskExecutor&quot;</span>&gt;</span></span><br><span class="line">        <span class="comment">&lt;!-- queues是队列名称，可填多个，用逗号隔开， method是ref指定的Bean调用Invoke方法执行的方法名称 --&gt;</span></span><br><span class="line">        <span class="tag">&lt;<span class="name">rabbit:listener</span> <span class="attr">queues</span>=<span class="string">&quot;queue&quot;</span> <span class="attr">method</span>=<span class="string">&quot;onMessage&quot;</span> <span class="attr">ref</span>=<span class="string">&quot;redQueueListener&quot;</span> /&gt;</span></span><br><span class="line">    <span class="tag">&lt;/<span class="name">rabbit:listener-container</span>&gt;</span></span><br><span class="line">    <span class="comment">&lt;!-- 队列声明 --&gt;</span></span><br><span class="line">    <span class="tag">&lt;<span class="name">rabbit:queue</span> <span class="attr">name</span>=<span class="string">&quot;queue&quot;</span> <span class="attr">durable</span>=<span class="string">&quot;true&quot;</span> /&gt;</span></span><br><span class="line"></span><br><span class="line">       <span class="comment">&lt;!-- 配置线程池 --&gt;</span>  </span><br><span class="line"><span class="tag">&lt;<span class="name">bean</span> <span class="attr">id</span> =<span class="string">&quot;taskExecutor&quot;</span>  <span class="attr">class</span> =<span class="string">&quot;org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor&quot;</span> &gt;</span>  </span><br><span class="line">    <span class="comment">&lt;!-- 线程池维护线程的最少数量 --&gt;</span>  </span><br><span class="line"><span class="tag">&lt;<span class="name">property</span> <span class="attr">name</span> =<span class="string">&quot;corePoolSize&quot;</span> <span class="attr">value</span> =<span class="string">&quot;5&quot;</span> /&gt;</span>  </span><br><span class="line">    <span class="comment">&lt;!-- 线程池维护线程所允许的空闲时间 --&gt;</span>  </span><br><span class="line"><span class="tag">&lt;<span class="name">property</span> <span class="attr">name</span> =<span class="string">&quot;keepAliveSeconds&quot;</span> <span class="attr">value</span> =<span class="string">&quot;30000&quot;</span> /&gt;</span>  </span><br><span class="line">    <span class="comment">&lt;!-- 线程池维护线程的最大数量 --&gt;</span>  </span><br><span class="line"><span class="tag">&lt;<span class="name">property</span> <span class="attr">name</span> =<span class="string">&quot;maxPoolSize&quot;</span> <span class="attr">value</span> =<span class="string">&quot;1000&quot;</span> /&gt;</span>  </span><br><span class="line">    <span class="comment">&lt;!-- 线程池所使用的缓冲队列 --&gt;</span>  </span><br><span class="line"><span class="tag">&lt;<span class="name">property</span> <span class="attr">name</span> =<span class="string">&quot;queueCapacity&quot;</span> <span class="attr">value</span> =<span class="string">&quot;200&quot;</span> /&gt;</span>  </span><br><span class="line">    <span class="tag">&lt;/<span class="name">bean</span>&gt;</span>  </span><br><span class="line">    <span class="comment">&lt;!-- 红色监听处理器 --&gt;</span></span><br><span class="line">    <span class="tag">&lt;<span class="name">bean</span> <span class="attr">id</span>=<span class="string">&quot;redQueueListener&quot;</span> <span class="attr">class</span>=<span class="string">&quot;com.absurd.rabbitmqcustomer.RedQueueListener&quot;</span>  /&gt;</span></span><br></pre></td></tr></table></figure>
+
+<p>监听方法</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">RedQueueListener</span> </span>&#123;</span><br><span class="line">    <span class="keyword">private</span> <span class="keyword">static</span> Logger log = LoggerFactory.getLogger(RedQueueListener.class);</span><br><span class="line">    <span class="comment">/**</span></span><br><span class="line"><span class="comment">     * 处理消息</span></span><br><span class="line"><span class="comment">     * <span class="doctag">@param</span> message</span></span><br><span class="line"><span class="comment">     * void</span></span><br><span class="line"><span class="comment">     */</span></span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">onMessage</span><span class="params">(String message)</span> </span>&#123;</span><br><span class="line">        log.info(<span class="string">&quot;RedQueueListener Receved:&quot;</span>  + message);</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>rabbitmq引入：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">&lt;dependency&gt;</span><br><span class="line">    &lt;groupId&gt;org.springframework.amqp&lt;/groupId&gt;</span><br><span class="line">    &lt;artifactId&gt;spring-rabbit&lt;/artifactId&gt;</span><br><span class="line">    &lt;version&gt;1.5.6.RELEASE&lt;/version&gt;</span><br><span class="line">&lt;/dependency&gt;</span><br></pre></td></tr></table></figure>
+
+<p>效果：<br>访问<a target="_blank" rel="noopener" href="http://localhost:8080/rabbitmqproducer/hello/publish/bfdbdfbdfg/queue/absurd_exchange5">http://localhost:8080/rabbitmqproducer/hello/publish/bfdbdfbdfg/queue/absurd_exchange5</a><br>消费者就能监听到消息</p>
+
+      
+    </div>
+
+    
+    
+    
+
+    <footer class="post-footer">
+        <div class="post-eof"></div>
+      
+    </footer>
+  </article>
+</div>
+
+
+
 
     
 

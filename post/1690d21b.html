@@ -1,0 +1,629 @@
+<!DOCTYPE html>
+<html lang="zh-Hans">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width">
+<meta name="theme-color" content="#222">
+<meta name="generator" content="Hexo 6.0.0">
+
+
+  <link rel="apple-touch-icon" sizes="180x180" href="/hexo/images/apple-touch-icon-next.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/hexo/images/favicon-32x32-next.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/hexo/images/favicon-16x16-next.png">
+  <link rel="mask-icon" href="/hexo/images/logo.svg" color="#222">
+
+<link rel="stylesheet" href="/hexo/css/main.css">
+
+
+
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@5.15.4/css/all.min.css" integrity="sha256-mUZM63G8m73Mcidfrv5E+Y61y7a12O5mW4ezU3bxqW4=" crossorigin="anonymous">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/animate.css@3.1.1/animate.min.css" integrity="sha256-PR7ttpcvz8qrF57fur/yAx1qXMFJeJFiA6pSzWi0OIE=" crossorigin="anonymous">
+
+<script class="next-config" data-name="main" type="application/json">{"hostname":"www1350.github.io","root":"/hexo/","images":"/hexo/images","scheme":"Mist","darkmode":false,"version":"8.9.0","exturl":false,"sidebar":{"position":"left","display":"post","padding":18,"offset":12},"copycode":false,"bookmark":{"enable":false,"color":"#222","save":"auto"},"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"stickytabs":false,"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"fadeInDown","post_body":"fadeInDown","coll_header":"fadeInLeft","sidebar":"fadeInUp"}},"prism":false,"i18n":{"placeholder":"Searching...","empty":"We didn't find any results for the search: ${query}","hits_time":"${hits} results found in ${time} ms","hits":"${hits} results found"},"path":"/hexo/search.xml","localsearch":{"enable":true,"trigger":"auto","top_n_per_article":1,"unescape":true,"preload":true}}</script><script src="/hexo/js/config.js"></script>
+<meta name="description" content="编程范式Programming paradigm(编程范式) 是指某种编程语言典型的编程风格或编程方式。 编程范式是编程语言的一种分类方式，它并不针对某种编程语言。就编程语言而言，一种编程语言也可以适用多种编程范式。 常见的编程范型有：函数式编程、指令式编程、过程式编程、面向对象编程等等。 指令式编程指令式编程、命令式编程（英语：Imperative programming）；是一种描述电脑所需作">
+<meta property="og:type" content="article">
+<meta property="og:title" content="函数式编程">
+<meta property="og:url" content="https://www1350.github.io/hexo/post/1690d21b.html">
+<meta property="og:site_name" content="Absurd博客">
+<meta property="og:description" content="编程范式Programming paradigm(编程范式) 是指某种编程语言典型的编程风格或编程方式。 编程范式是编程语言的一种分类方式，它并不针对某种编程语言。就编程语言而言，一种编程语言也可以适用多种编程范式。 常见的编程范型有：函数式编程、指令式编程、过程式编程、面向对象编程等等。 指令式编程指令式编程、命令式编程（英语：Imperative programming）；是一种描述电脑所需作">
+<meta property="og:locale">
+<meta property="og:image" content="https://www1350.github.io/images/%E5%87%BD%E6%95%B0%E5%BC%8F%E7%BC%96%E7%A8%8B/157470078-42270eb9-131b-46f4-a7a6-7b8d38d177a7-20220309233741541.png">
+<meta property="og:image" content="https://www1350.github.io/images/%E5%87%BD%E6%95%B0%E5%BC%8F%E7%BC%96%E7%A8%8B/1646646643161-8f4178d6-cb26-4802-a3e6-059d5f87ad6a.png">
+<meta property="og:image" content="https://www1350.github.io/images/%E5%87%BD%E6%95%B0%E5%BC%8F%E7%BC%96%E7%A8%8B/image-20220309233528183-6840323.png">
+<meta property="og:image" content="https://www1350.github.io/images/1646723393125-4ee8e029-5dcd-4f9f-b8b5-f12af590eab8.png">
+<meta property="og:image" content="https://www1350.github.io/images/%E5%87%BD%E6%95%B0%E5%BC%8F%E7%BC%96%E7%A8%8B/1646723405108-44c8f62d-6eca-465d-86ce-9945b18b3f0a.png">
+<meta property="og:image" content="https://www1350.github.io/images/%E5%87%BD%E6%95%B0%E5%BC%8F%E7%BC%96%E7%A8%8B/1646723420340-41d09cf6-6f16-42fc-920d-3c7d218c9c91-6840367.png">
+<meta property="og:image" content="https://www1350.github.io/images/%E5%87%BD%E6%95%B0%E5%BC%8F%E7%BC%96%E7%A8%8B/1646723444427-c4d5040f-4fb8-40e8-9029-d8326dd23d62-6840376.png">
+<meta property="og:image" content="https://www1350.github.io/images/%E5%87%BD%E6%95%B0%E5%BC%8F%E7%BC%96%E7%A8%8B/1646646751422-c6d6dd51-5936-43d7-b357-90e299f9f76e-6840384.png">
+<meta property="og:image" content="https://www1350.github.io/images/%E5%87%BD%E6%95%B0%E5%BC%8F%E7%BC%96%E7%A8%8B/1646727263171-2b1c6cb6-7791-4703-843d-e21ee7509e08.png">
+<meta property="og:image" content="https://www1350.github.io/images/%E5%87%BD%E6%95%B0%E5%BC%8F%E7%BC%96%E7%A8%8B/1646731476987-ba1b4d64-4ef2-4e4d-91c4-1b04fcabf94a.png">
+<meta property="og:image" content="https://www1350.github.io/images/%E5%87%BD%E6%95%B0%E5%BC%8F%E7%BC%96%E7%A8%8B/1646731517811-695d1abd-95bc-4dc0-94cb-caee362d0549.png">
+<meta property="og:image" content="https://www1350.github.io/images/%E5%87%BD%E6%95%B0%E5%BC%8F%E7%BC%96%E7%A8%8B/1646654817397-cc4ea5b6-a55e-4d97-a923-7f3810607fbb.png">
+<meta property="og:image" content="https://www1350.github.io/hexo/images/1646740610546-c1403a0d-4ca7-498b-8b57-eb4c33e699b4.png">
+<meta property="article:published_time" content="2022-03-09T15:06:59.000Z">
+<meta property="article:modified_time" content="2022-03-09T15:45:06.092Z">
+<meta property="article:author" content="Absurd">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="https://www1350.github.io/images/%E5%87%BD%E6%95%B0%E5%BC%8F%E7%BC%96%E7%A8%8B/157470078-42270eb9-131b-46f4-a7a6-7b8d38d177a7-20220309233741541.png">
+
+
+<link rel="canonical" href="https://www1350.github.io/hexo/post/1690d21b.html">
+
+
+
+<script class="next-config" data-name="page" type="application/json">{"sidebar":"","isHome":false,"isPost":true,"lang":"zh-Hans","comments":true,"permalink":"https://www1350.github.io/hexo/post/1690d21b.html","path":"post/1690d21b.html","title":"函数式编程"}</script>
+
+<script class="next-config" data-name="calendar" type="application/json">""</script>
+<title>函数式编程 | Absurd博客</title>
+  
+
+
+
+
+  <noscript>
+    <link rel="stylesheet" href="/hexo/css/noscript.css">
+  </noscript>
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage" class="use-motion">
+  <div class="headband"></div>
+
+  <main class="main">
+    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="Toggle navigation bar" role="button">
+        <span class="toggle-line"></span>
+        <span class="toggle-line"></span>
+        <span class="toggle-line"></span>
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/hexo/" class="brand" rel="start">
+      <i class="logo-line"></i>
+      <p class="site-title">Absurd博客</p>
+      <i class="logo-line"></i>
+    </a>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger">
+        <i class="fa fa-search fa-fw fa-lg"></i>
+    </div>
+  </div>
+</div>
+
+
+
+<nav class="site-nav">
+  <ul class="main-menu menu">
+        <li class="menu-item menu-item-home"><a href="/hexo/" rel="section"><i class="fa fa-home fa-fw"></i>Home</a></li>
+        <li class="menu-item menu-item-about"><a href="/hexo/about/" rel="section"><i class="fa fa-user fa-fw"></i>About</a></li>
+        <li class="menu-item menu-item-tags"><a href="/hexo/tags/" rel="section"><i class="fa fa-tags fa-fw"></i>Tags</a></li>
+        <li class="menu-item menu-item-categories"><a href="/hexo/categories/" rel="section"><i class="fa fa-th fa-fw"></i>Categories</a></li>
+        <li class="menu-item menu-item-archives"><a href="/hexo/archives/" rel="section"><i class="fa fa-archive fa-fw"></i>Archives</a></li>
+        <li class="menu-item menu-item-bookmarks"><a href="/hexo/bookmarks/" rel="section"><i class="fa fa-archive fa-fw"></i>bookmarks</a></li>
+      <li class="menu-item menu-item-search">
+        <a role="button" class="popup-trigger"><i class="fa fa-search fa-fw"></i>Search
+        </a>
+      </li>
+  </ul>
+</nav>
+
+
+
+  <div class="search-pop-overlay">
+    <div class="popup search-popup"><div class="search-header">
+  <span class="search-icon">
+    <i class="fa fa-search"></i>
+  </span>
+  <div class="search-input-container">
+    <input autocomplete="off" autocapitalize="off" maxlength="80"
+           placeholder="Searching..." spellcheck="false"
+           type="search" class="search-input">
+  </div>
+  <span class="popup-btn-close" role="button">
+    <i class="fa fa-times-circle"></i>
+  </span>
+</div>
+<div class="search-result-container no-result">
+  <div class="search-result-icon">
+    <i class="fa fa-spinner fa-pulse fa-5x"></i>
+  </div>
+</div>
+
+    </div>
+  </div>
+
+</div>
+        
+  
+  <div class="toggle sidebar-toggle" role="button">
+    <span class="toggle-line"></span>
+    <span class="toggle-line"></span>
+    <span class="toggle-line"></span>
+  </div>
+
+  <aside class="sidebar">
+
+    <div class="sidebar-inner sidebar-nav-active sidebar-toc-active">
+      <ul class="sidebar-nav">
+        <li class="sidebar-nav-toc">
+          Table of Contents
+        </li>
+        <li class="sidebar-nav-overview">
+          Overview
+        </li>
+      </ul>
+
+      <div class="sidebar-panel-container">
+        <!--noindex-->
+        <div class="post-toc-wrap sidebar-panel">
+            <div class="post-toc animated"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#%E7%BC%96%E7%A8%8B%E8%8C%83%E5%BC%8F"><span class="nav-number">1.</span> <span class="nav-text">编程范式</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#%E6%8C%87%E4%BB%A4%E5%BC%8F%E7%BC%96%E7%A8%8B"><span class="nav-number">1.1.</span> <span class="nav-text">指令式编程</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#%E5%8E%9F%E7%90%86%E5%92%8C%E5%9F%BA%E7%A1%80"><span class="nav-number">1.1.1.</span> <span class="nav-text">原理和基础</span></a></li></ol></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E5%A3%B0%E6%98%8E%E5%BC%8F%E7%BC%96%E7%A8%8B"><span class="nav-number">1.2.</span> <span class="nav-text">声明式编程</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E5%8C%BA%E5%88%AB"><span class="nav-number">1.3.</span> <span class="nav-text">区别</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E8%BF%87%E7%A8%8B%E5%BC%8F%E7%BC%96%E7%A8%8B"><span class="nav-number">1.4.</span> <span class="nav-text">过程式编程</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E9%9D%A2%E5%90%91%E5%AF%B9%E8%B1%A1%E7%BC%96%E7%A8%8B"><span class="nav-number">1.5.</span> <span class="nav-text">面向对象编程</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E5%B9%B6%E8%A1%8C%E7%BC%96%E7%A8%8B%E6%A8%A1%E5%BC%8F"><span class="nav-number">1.6.</span> <span class="nav-text">并行编程模式</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E9%80%BB%E8%BE%91%E7%BC%96%E7%A8%8B"><span class="nav-number">1.7.</span> <span class="nav-text">逻辑编程</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E6%95%B0%E6%8D%AE%E9%A9%B1%E5%8A%A8%E7%BC%96%E7%A8%8B"><span class="nav-number">1.8.</span> <span class="nav-text">数据驱动编程</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E5%87%BD%E6%95%B0%E5%BC%8F%E7%BC%96%E7%A8%8B"><span class="nav-number">1.9.</span> <span class="nav-text">函数式编程</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#%E5%87%BD%E6%95%B0%E5%BC%8F%E7%BC%96%E7%A8%8B%E7%9A%84%E5%9F%BA%E6%9C%AC%E5%8E%9F%E7%90%86"><span class="nav-number">1.9.1.</span> <span class="nav-text">函数式编程的基本原理</span></a><ol class="nav-child"><li class="nav-item nav-level-5"><a class="nav-link" href="#%E5%A4%B4%E7%AD%89%E5%87%BD%E6%95%B0%EF%BC%88first-class-function%EF%BC%89"><span class="nav-number">1.9.1.1.</span> <span class="nav-text">头等函数（first-class function）</span></a></li><li class="nav-item nav-level-5"><a class="nav-link" href="#%E9%AB%98%E9%98%B6%E5%87%BD%E6%95%B0%EF%BC%88higher-order-function%EF%BC%89"><span class="nav-number">1.9.1.2.</span> <span class="nav-text">高阶函数（higher-order function）</span></a></li><li class="nav-item nav-level-5"><a class="nav-link" href="#%E4%B8%8D%E5%8F%AF%E5%8F%98%E7%8A%B6%E6%80%81%EF%BC%88Immutable-State%EF%BC%89"><span class="nav-number">1.9.1.3.</span> <span class="nav-text">不可变状态（Immutable State）</span></a></li><li class="nav-item nav-level-5"><a class="nav-link" href="#%E5%87%BD%E6%95%B0%E7%BB%84%E5%90%88%E5%AD%90%EF%BC%88Functional-Combinators%EF%BC%89"><span class="nav-number">1.9.1.4.</span> <span class="nav-text">函数组合子（Functional Combinators）</span></a></li><li class="nav-item nav-level-5"><a class="nav-link" href="#%E6%9F%AF%E9%87%8C%E5%8C%96%E5%87%BD%E6%95%B0-Currying"><span class="nav-number">1.9.1.5.</span> <span class="nav-text">柯里化函数(Currying)</span></a></li></ol></li></ol></li></ol></li></ol></div>
+        </div>
+        <!--/noindex-->
+
+        <div class="site-overview-wrap sidebar-panel">
+          <div class="site-author site-overview-item animated" itemprop="author" itemscope itemtype="http://schema.org/Person">
+    <img class="site-author-image" itemprop="image" alt="Absurd"
+      src="/hexo/images/avatar.gif">
+  <p class="site-author-name" itemprop="name">Absurd</p>
+  <div class="site-description" itemprop="description"></div>
+</div>
+<div class="site-state-wrap site-overview-item animated">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+        <a href="/hexo/archives/">
+          <span class="site-state-item-count">76</span>
+          <span class="site-state-item-name">posts</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+          <a href="/hexo/categories/">
+        <span class="site-state-item-count">17</span>
+        <span class="site-state-item-name">categories</span></a>
+      </div>
+      <div class="site-state-item site-state-tags">
+          <a href="/hexo/tags/">
+        <span class="site-state-item-count">46</span>
+        <span class="site-state-item-name">tags</span></a>
+      </div>
+  </nav>
+</div>
+  <div class="links-of-author site-overview-item animated">
+      <span class="links-of-author-item">
+        <a href="https://github.com/www1350" title="GitHub → https:&#x2F;&#x2F;github.com&#x2F;www1350" rel="noopener" target="_blank"><i class="fab fa-github fa-fw"></i>GitHub</a>
+      </span>
+      <span class="links-of-author-item">
+        <a href="mailto:www_1350@163.com" title="E-Mail → mailto:www_1350@163.com" rel="noopener" target="_blank"><i class="fa fa-envelope fa-fw"></i>E-Mail</a>
+      </span>
+  </div>
+
+
+
+        </div>
+      </div>
+    </div>
+  </aside>
+  <div class="sidebar-dimmer"></div>
+
+
+    </header>
+
+    
+  <div class="back-to-top" role="button" aria-label="Back to top">
+    <i class="fa fa-arrow-up"></i>
+    <span>0%</span>
+  </div>
+
+<noscript>
+  <div class="noscript-warning">Theme NexT works best with JavaScript enabled</div>
+</noscript>
+
+
+    <div class="main-inner post posts-expand">
+
+
+  
+
+
+<div class="post-block">
+  
+  
+
+  <article itemscope itemtype="http://schema.org/Article" class="post-content" lang="zh-Hans">
+    <link itemprop="mainEntityOfPage" href="https://www1350.github.io/hexo/post/1690d21b.html">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/hexo/images/avatar.gif">
+      <meta itemprop="name" content="Absurd">
+      <meta itemprop="description" content="">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Absurd博客">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          函数式编程
+        </h1>
+
+        <div class="post-meta-container">
+          <div class="post-meta">
+    <span class="post-meta-item">
+      <span class="post-meta-item-icon">
+        <i class="far fa-calendar"></i>
+      </span>
+      <span class="post-meta-item-text">Posted on</span>
+      
+
+      <time title="Created: 2022-03-09 23:06:59 / Modified: 23:45:06" itemprop="dateCreated datePublished" datetime="2022-03-09T23:06:59+08:00">2022-03-09</time>
+    </span>
+
+  
+</div>
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+        <h2 id="编程范式"><a href="#编程范式" class="headerlink" title="编程范式"></a>编程范式</h2><p>Programming paradigm(编程范式) 是指某种编程语言典型的编程风格或编程方式。 编程范式是编程语言的一种分类方式，它并不针对某种编程语言。就编程语言而言，一种编程语言也可以适用多种编程范式。</p>
+<p>常见的编程范型有：<a target="_blank" rel="noopener" href="https://zh.wikipedia.org/wiki/%E5%87%BD%E6%95%B8%E5%BC%8F%E7%B7%A8%E7%A8%8B">函数式编程</a>、<a target="_blank" rel="noopener" href="https://zh.wikipedia.org/wiki/%E6%8C%87%E4%BB%A4%E5%BC%8F%E7%BC%96%E7%A8%8B">指令式编程</a>、<a target="_blank" rel="noopener" href="https://zh.wikipedia.org/wiki/%E8%BF%87%E7%A8%8B%E5%BC%8F%E7%BC%96%E7%A8%8B">过程式编程</a>、<a target="_blank" rel="noopener" href="https://zh.wikipedia.org/wiki/%E9%9D%A2%E5%90%91%E5%AF%B9%E8%B1%A1%E7%BC%96%E7%A8%8B">面向对象编程</a>等等。</p>
+<h3 id="指令式编程"><a href="#指令式编程" class="headerlink" title="指令式编程"></a>指令式编程</h3><p><strong>指令式编程、命令式编程</strong>（英语：Imperative programming）；是一种描述电脑所需作出的行为的<a target="_blank" rel="noopener" href="https://zh.wikipedia.org/wiki/%E7%B7%A8%E7%A8%8B%E5%85%B8%E7%AF%84">编程典范</a>。几乎所有电脑的<a target="_blank" rel="noopener" href="https://zh.wikipedia.org/wiki/%E7%A1%AC%E9%AB%94">硬件</a>都是指令式工作；几乎所有电脑的硬件都是能执行<a target="_blank" rel="noopener" href="https://zh.wikipedia.org/wiki/%E6%A9%9F%E5%99%A8%E7%A2%BC">机器代码</a>，而机器代码是使用指令式的风格来写的。较高端的指令式<a target="_blank" rel="noopener" href="https://zh.wikipedia.org/wiki/%E7%B7%A8%E7%A8%8B%E8%AA%9E%E8%A8%80">编程语言</a>使用<a target="_blank" rel="noopener" href="https://zh.wikipedia.org/wiki/%E8%AE%8A%E6%95%B8">变量</a>和更复杂的语句，但仍依从相同的典范。菜谱和行动清单，虽非计算机程序，但与指令式编程有相似的风格：每步都是指令。因为指令式编程的基础观念，不但概念上比较熟悉，而且较容易具体表现于硬件，所以大部分的编程语言都是指令式的。</p>
+<h4 id="原理和基础"><a href="#原理和基础" class="headerlink" title="原理和基础"></a>原理和基础</h4><p>很多指令式编程语言（比如<a target="_blank" rel="noopener" href="https://zh.wikipedia.org/wiki/Fortran">Fortran</a>、<a target="_blank" rel="noopener" href="https://zh.wikipedia.org/wiki/BASIC">BASIC</a>和<a target="_blank" rel="noopener" href="https://zh.wikipedia.org/wiki/C%E8%AF%AD%E8%A8%80">C</a>）是<a target="_blank" rel="noopener" href="https://zh.wikipedia.org/wiki/%E6%B1%87%E7%BC%96%E8%AF%AD%E8%A8%80">汇编语言</a>的<a target="_blank" rel="noopener" href="https://zh.wikipedia.org/wiki/%E6%8A%BD%E8%B1%A1%E5%8C%96_(%E8%A8%88%E7%AE%97%E6%A9%9F%E7%A7%91%E5%AD%B8)">抽象化</a>。</p>
+<p>大部分的<a target="_blank" rel="noopener" href="https://zh.wikipedia.org/wiki/%E9%AB%98%E7%BA%A7%E8%AF%AD%E8%A8%80">高级语言</a>都支持四种基本的语句：</p>
+<ol>
+<li><strong>运算语句</strong>一般来说都表现了在存储器内的资料进行运算的行为，然后将结果存入存储器中以便日后使用。高端指令式编程语言更能处理复杂的表达式，可能会产生四则运算和函数计算的结合。</li>
+<li><strong>循环语句</strong>容许一些语句反复执行数次。循环可依据一个默认的数目来决定执行这些语句的次数；或反复执行它们，直至某些条件改变。</li>
+<li><strong>条件分支语句</strong>容许仅当某些条件成立时才执行某个区块。否则，这个区块中的语句会略去，然后按区块后的语句继续执行。</li>
+<li><strong>无条件分支语句</strong>容许执行顺序转移到程序的其他部分之中。包括跳跃（在很多语言中称为<a target="_blank" rel="noopener" href="https://zh.wikipedia.org/wiki/Goto">Goto</a>）、副程序和Procedure等。</li>
+</ol>
+<p>循环、条件分支和无条件分支都是<a target="_blank" rel="noopener" href="https://zh.wikipedia.org/wiki/%E6%8E%A7%E5%88%B6%E6%B5%81%E7%A8%8B">控制流程</a>。</p>
+<p>一些语言，如：Fortran, <a target="_blank" rel="noopener" href="https://www.geeksforgeeks.org/java/">Java</a>, <a target="_blank" rel="noopener" href="https://www.geeksforgeeks.org/c-programming-language/">C</a>, <a target="_blank" rel="noopener" href="https://www.geeksforgeeks.org/c-plus-plus/">C++</a> </p>
+<h3 id="声明式编程"><a href="#声明式编程" class="headerlink" title="声明式编程"></a>声明式编程</h3><p><strong>声明式编程</strong>（英语：Declarative programming）或译为声明式编程，是对与<a target="_blank" rel="noopener" href="https://zh.wikipedia.org/wiki/%E6%8C%87%E4%BB%A4%E5%BC%8F%E7%B7%A8%E7%A8%8B">命令式编程</a>不同的<a target="_blank" rel="noopener" href="https://zh.wikipedia.org/wiki/%E7%BC%96%E7%A8%8B%E8%8C%83%E5%9E%8B">编程范型</a>的一种合称。它们建造计算机程序的结构和元素，表达<a target="_blank" rel="noopener" href="https://zh.wikipedia.org/wiki/%E8%AE%A1%E7%AE%97">计算</a>的逻辑而不用描述它的<a target="_blank" rel="noopener" href="https://zh.wikipedia.org/wiki/%E6%8E%A7%E5%88%B6%E6%B5%81%E7%A8%8B">控制流程</a>。开发人员更关心的答案。它声明那种我们想要的结果,编程语言只关注如何产生</p>
+<h3 id="区别"><a href="#区别" class="headerlink" title="区别"></a>区别</h3><ul>
+<li>命令式编程：命令“机器”如何去做事情(how)，这样不管你想要的是什么(what)，它都会按照你的命令实现。</li>
+<li>声明式编程：告诉“机器”你想要的是什么(what)，让机器想出如何去做(how)。</li>
+</ul>
+<p><img src="/images/%E5%87%BD%E6%95%B0%E5%BC%8F%E7%BC%96%E7%A8%8B/157470078-42270eb9-131b-46f4-a7a6-7b8d38d177a7-20220309233741541.png" alt="img"></p>
+<p><img src="/images/%E5%87%BD%E6%95%B0%E5%BC%8F%E7%BC%96%E7%A8%8B/1646646643161-8f4178d6-cb26-4802-a3e6-059d5f87ad6a.png" alt="image.png"></p>
+<p>现在下面这样的表达式</p>
+<figure class="highlight r"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">(<span class="number">1</span>+<span class="number">2</span>) * <span class="number">8</span> / <span class="number">4</span></span><br></pre></td></tr></table></figure>
+
+
+
+<p>命令式</p>
+<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">int</span> a = <span class="number">1</span> + <span class="number">2</span>;</span><br><span class="line"><span class="keyword">int</span> b = a * <span class="number">8</span>;</span><br><span class="line"><span class="keyword">int</span> c = b / <span class="number">4</span>;</span><br></pre></td></tr></table></figure>
+
+<p>声明式</p>
+<figure class="highlight r"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">divide(multiply(add(<span class="number">1</span>, <span class="number">2</span>), <span class="number">3</span>), <span class="number">4</span>)</span><br></pre></td></tr></table></figure>
+
+
+
+<h3 id="过程式编程"><a href="#过程式编程" class="headerlink" title="过程式编程"></a>过程式编程</h3><p><strong>过程式程序设计</strong>（英语：Procedural programming），又称过程化编程，一种<a target="_blank" rel="noopener" href="https://zh.wikipedia.org/wiki/%E7%B7%A8%E7%A8%8B%E5%85%B8%E7%AF%84">编程典范</a>，派生自<a target="_blank" rel="noopener" href="https://zh.wikipedia.org/wiki/%E6%8C%87%E4%BB%A4%E5%BC%8F%E7%B7%A8%E7%A8%8B">指令式编程</a>，有时会被视为是同义语。主要要采取<a target="_blank" rel="noopener" href="https://zh.wikipedia.org/wiki/%E5%AD%90%E7%A8%8B%E5%BA%8F">过程调用</a>或函数调用的方式来进行<a target="_blank" rel="noopener" href="https://zh.wikipedia.org/wiki/%E6%B5%81%E7%A8%8B%E6%8E%A7%E5%88%B6">流程控制</a>。流程则由包涵一系列运算步骤的过程（Procedures），例程（routines），<a target="_blank" rel="noopener" href="https://zh.wikipedia.org/wiki/%E5%AD%90%E7%A8%8B%E5%BA%8F">子程序</a>（subroutines）, 方法（methods），或函数（functions）来控制。在程序执行的任何一个时间点，都可以调用某个特定的程序。任何一个特定的程序，也能被任意一个程序或是它自己本身调用。</p>
+<p>过程化语言适合解决线性的算法问题，强调“自上而下”、“精益求精”的设计方式。</p>
+<p>最初的主要过程式编程语言出现在大约1957年至1964年，包括<a target="_blank" rel="noopener" href="https://zh.wikipedia.org/wiki/Fortran">Fortran</a>、<a target="_blank" rel="noopener" href="https://zh.wikipedia.org/wiki/ALGOL">ALGOL</a>、<a target="_blank" rel="noopener" href="https://zh.wikipedia.org/wiki/COBOL">COBOL</a>、<a target="_blank" rel="noopener" href="https://zh.wikipedia.org/wiki/PL/I">PL/I</a>和<a target="_blank" rel="noopener" href="https://zh.wikipedia.org/wiki/BASIC">BASIC</a>，后来的<a target="_blank" rel="noopener" href="https://zh.wikipedia.org/wiki/Pascal_(%E7%A8%8B%E5%BC%8F%E8%AA%9E%E8%A8%80)">Pascal</a>和<a target="_blank" rel="noopener" href="https://zh.wikipedia.org/wiki/C%E8%AF%AD%E8%A8%80">C</a>发表于大约1970年至1972年。</p>
+<h3 id="面向对象编程"><a href="#面向对象编程" class="headerlink" title="面向对象编程"></a>面向对象编程</h3><p><strong>面向对象程序设计</strong>（英语：Object-oriented programming，<a target="_blank" rel="noopener" href="https://zh.wikipedia.org/wiki/%E7%BC%A9%E5%86%99">缩写</a>：OOP）是种具有<a target="_blank" rel="noopener" href="https://zh.wikipedia.org/wiki/%E5%AF%B9%E8%B1%A1_(%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%A7%91%E5%AD%A6)">对象</a>概念的<a target="_blank" rel="noopener" href="https://zh.wikipedia.org/wiki/%E7%BC%96%E7%A8%8B%E8%8C%83%E5%9E%8B">编程典范</a>，同时也是一种程序开发的抽象方针。它可能包含<a target="_blank" rel="noopener" href="https://zh.wikipedia.org/wiki/%E6%95%B0%E6%8D%AE">数据</a>、<a target="_blank" rel="noopener" href="https://zh.wikipedia.org/wiki/%E7%89%B9%E6%80%A7_(%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%A7%91%E5%AD%A6)">特性</a>、<a target="_blank" rel="noopener" href="https://zh.wikipedia.org/wiki/%E6%BA%90%E4%BB%A3%E7%A0%81">代码</a>与<a target="_blank" rel="noopener" href="https://zh.wikipedia.org/wiki/%E6%96%B9%E6%B3%95_(%E9%9B%BB%E8%85%A6%E7%A7%91%E5%AD%B8)">方法</a>。对象则指的是<a target="_blank" rel="noopener" href="https://zh.wikipedia.org/wiki/%E7%B1%BB_(%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%A7%91%E5%AD%A6)">类</a>（class）的实例。它将<a target="_blank" rel="noopener" href="https://zh.wikipedia.org/wiki/%E7%89%A9%E4%BB%B6_(%E9%9B%BB%E8%85%A6%E7%A7%91%E5%AD%B8)">对象</a>作为<a target="_blank" rel="noopener" href="https://zh.wikipedia.org/wiki/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%A8%8B%E5%BA%8F">程序</a>的基本单元，将程序和<a target="_blank" rel="noopener" href="https://zh.wikipedia.org/wiki/%E6%95%B0%E6%8D%AE">数据</a><a target="_blank" rel="noopener" href="https://zh.wikipedia.org/wiki/%E5%B0%81%E8%A3%9D_(%E7%89%A9%E4%BB%B6%E5%B0%8E%E5%90%91%E7%A8%8B%E5%BC%8F%E8%A8%AD%E8%A8%88)">封装</a>其中，以提高软件的重用性、灵活性和扩展性，对象里的程序可以访问及经常修改对象相关连的数据。在面向对象程序编程里，计算机程序会被设计成彼此相关的对象。</p>
+<p>重要的面向对象编程语言包含<a target="_blank" rel="noopener" href="https://zh.wikipedia.org/wiki/Common_Lisp">Common Lisp</a>、<a target="_blank" rel="noopener" href="https://zh.wikipedia.org/wiki/Python">Python</a>、<a target="_blank" rel="noopener" href="https://zh.wikipedia.org/wiki/C%2B%2B">C++</a>、<a target="_blank" rel="noopener" href="https://zh.wikipedia.org/wiki/Objective-C">Objective-C</a>、<a target="_blank" rel="noopener" href="https://zh.wikipedia.org/wiki/Smalltalk">Smalltalk</a>、<a target="_blank" rel="noopener" href="https://zh.wikipedia.org/wiki/Delphi">Delphi</a>、<a target="_blank" rel="noopener" href="https://zh.wikipedia.org/wiki/Java">Java</a>、<a target="_blank" rel="noopener" href="https://zh.wikipedia.org/wiki/Swift_(%E7%A8%8B%E5%BC%8F%E8%AA%9E%E8%A8%80)">Swift</a>、<a target="_blank" rel="noopener" href="https://zh.wikipedia.org/wiki/C%E2%99%AF">C#</a>、<a target="_blank" rel="noopener" href="https://zh.wikipedia.org/wiki/Perl">Perl</a>、<a target="_blank" rel="noopener" href="https://zh.wikipedia.org/wiki/Ruby">Ruby</a>、<a target="_blank" rel="noopener" href="https://zh.wikipedia.org/wiki/JavaScript">JavaScript</a> 与 <a target="_blank" rel="noopener" href="https://zh.wikipedia.org/wiki/PHP">PHP</a>等。</p>
+<p><img src="/images/%E5%87%BD%E6%95%B0%E5%BC%8F%E7%BC%96%E7%A8%8B/image-20220309233528183-6840323.png" alt="image-20220309233528183"></p>
+<h3 id="并行编程模式"><a href="#并行编程模式" class="headerlink" title="并行编程模式"></a>并行编程模式</h3><p>在<a target="_blank" rel="noopener" href="https://zh.wikipedia.org/wiki/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%A7%91%E5%AD%A6">计算机科学</a>中，<strong>并行编程模型</strong>（Parallel programming model）是<a target="_blank" rel="noopener" href="https://zh.wikipedia.org/wiki/%E5%B9%B6%E8%A1%8C%E8%AE%A1%E7%AE%97">并行计算机</a>架构的<a target="_blank" rel="noopener" href="https://zh.wikipedia.org/wiki/%E6%8A%BD%E8%B1%A1%E5%8C%96_(%E8%A8%88%E7%AE%97%E6%A9%9F%E7%A7%91%E5%AD%B8)">抽象化</a>，通过它可方便的表达<a target="_blank" rel="noopener" href="https://zh.wikipedia.org/wiki/%E7%AE%97%E6%B3%95">算法</a>和它们在<a target="_blank" rel="noopener" href="https://zh.wikipedia.org/wiki/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%A8%8B%E5%BA%8F">程序</a>中的合成。判别编程模型的价值可以通过它的通用性：在各种不同架构上能表达多大范围的不同问题，和它的性能：编译的程序在执行时有多高的效率[<a target="_blank" rel="noopener" href="https://zh.wikipedia.org/wiki/%E5%B9%B6%E8%A1%8C%E7%BC%96%E7%A8%8B%E6%A8%A1%E5%9E%8B#cite_note-Skillicorn-1">1]</a>。并行编程模型的实现形式可以是从“顺序编程”语言中调用的<a target="_blank" rel="noopener" href="https://zh.wikipedia.org/wiki/%E5%87%BD%E5%BC%8F%E5%BA%AB">函数库</a>，作为现存语言的扩展，或作为全新的语言。</p>
+<p>围绕特定编程模型的共识是很重要的，这可导致建造不同的并行计算机来支持这个模型，从而促进软件的<a target="_blank" rel="noopener" href="https://zh.wikipedia.org/wiki/%E8%BB%9F%E9%AB%94%E5%8F%AF%E7%A7%BB%E6%A4%8D%E6%80%A7">可移植性</a>。在这个意义上，编程模型被称为在硬件和软件之间的<a target="_blank" rel="noopener" href="https://zh.wikipedia.org/w/index.php?title=%E6%A1%A5%E6%8E%A5%E6%A8%A1%E5%9E%8B&action=edit&redlink=1">桥接</a>[<a target="_blank" rel="noopener" href="https://zh.wikipedia.org/wiki/%E5%B9%B6%E8%A1%8C%E7%BC%96%E7%A8%8B%E6%A8%A1%E5%9E%8B#cite_note-Valiant1990-2">2]</a>。</p>
+<p><img src="/images/1646723393125-4ee8e029-5dcd-4f9f-b8b5-f12af590eab8.png" alt="img"></p>
+<p>关键：</p>
+<ul>
+<li>任务分解，识别出多个能够并发执行的任务</li>
+<li>数据分解，识别出从属于每个任务的局部数据</li>
+<li>分组任务和排序分组的方式满足时间约束</li>
+<li>任务之间的依赖分析</li>
+</ul>
+<p><img src="/images/%E5%87%BD%E6%95%B0%E5%BC%8F%E7%BC%96%E7%A8%8B/1646723405108-44c8f62d-6eca-465d-86ce-9945b18b3f0a.png" alt="img"></p>
+<p>关键：</p>
+<ul>
+<li>任务并行，重点要解决任务之间的依赖性，解决顺序依赖约束和共享数据依赖约束，可以通过消除依赖、分离依赖等方式解决；通过轮询、工作窃取法等方式来实现调度</li>
+<li></li>
+</ul>
+<p><img src="/images/%E5%87%BD%E6%95%B0%E5%BC%8F%E7%BC%96%E7%A8%8B/1646723420340-41d09cf6-6f16-42fc-920d-3c7d218c9c91-6840367.png" alt="img"></p>
+<p>关键：</p>
+<ul>
+<li>SPMD（单程序多数据）。在SPMD程序中，所有UE（执行单元）并行执行同一个程序（单程序），但每个UE都拥有自己的私有数据集（多数据）</li>
+<li>主从模式。主进程为从进程建立一个工作池和一个任务包。所有从进程并发执行，每个从进程迭代的从任务包中移除一个任务并处理它，指导所有任务都处理完毕或到达某些终止条件为止</li>
+<li>循环并行。该模式解决计算密集型循环为主导串行程序转成并行程序时出现的问题</li>
+<li>派生聚合模式Fork/Join 模式。一个主UE里面Fork出多个子的UE，这些子UE并行完成任务的一部分，等待这一步的全部子UE完成了这些任务之后，进行聚合操作。</li>
+<li>共享数据。解决多个UE共享数据时常见问题，并讨论正确性和性能。<a target="_blank" rel="noopener" href="https://zh.wikipedia.org/wiki/%E5%85%B1%E4%BA%AB%E5%86%85%E5%AD%98">共享内存</a>是在进程间传递数据的高效方式。在共享内存模型中，并行进程共享它们可以异步读与写的全局地址空间。异步并发访问可能导致<a target="_blank" rel="noopener" href="https://zh.wikipedia.org/wiki/%E7%AB%9E%E4%BA%89%E6%9D%A1%E4%BB%B6">竞争条件</a>，和用来避免它们的机制如：<a target="_blank" rel="noopener" href="https://zh.wikipedia.org/wiki/%E9%94%81_(%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%A7%91%E5%AD%A6)">锁</a>、<a target="_blank" rel="noopener" href="https://zh.wikipedia.org/wiki/%E4%BF%A1%E5%8F%B7%E9%87%8F">信号量</a>和<a target="_blank" rel="noopener" href="https://zh.wikipedia.org/wiki/%E7%9B%91%E8%A7%86%E5%99%A8_(%E7%A8%8B%E5%BA%8F%E5%90%8C%E6%AD%A5%E5%8C%96)">监视器</a>。常规的<a target="_blank" rel="noopener" href="https://zh.wikipedia.org/wiki/%E5%A4%9A%E6%A0%B8%E5%A4%84%E7%90%86%E5%99%A8">多核处理器</a>直接支持共享内存</li>
+<li>分布式数组模式。一维或多维数组，被划分为多个子数组，并在进程或线程间进行分配</li>
+</ul>
+<p><img src="/images/%E5%87%BD%E6%95%B0%E5%BC%8F%E7%BC%96%E7%A8%8B/1646723444427-c4d5040f-4fb8-40e8-9029-d8326dd23d62-6840376.png" alt="img"></p>
+<p>关键：</p>
+<ul>
+<li>UE管理。线程/进程的创建和销毁</li>
+<li>同步。内存同步和围栅、栏栅、互斥</li>
+<li>通信。消息传递、集合通信</li>
+</ul>
+<p><img src="/images/%E5%87%BD%E6%95%B0%E5%BC%8F%E7%BC%96%E7%A8%8B/1646646751422-c6d6dd51-5936-43d7-b357-90e299f9f76e-6840384.png" alt="img"></p>
+<h3 id="逻辑编程"><a href="#逻辑编程" class="headerlink" title="逻辑编程"></a>逻辑编程</h3><p>逻辑编程是种编程典范，它设定答案须符合的规则来解决问题，而非设定步骤来解决问题，过程是事实+规则=结果。</p>
+<p>事实</p>
+<p>实际上，每个逻辑程序都需要使用事实才能实现给定的目标。事实基本上是关于程序和数据的真实陈述。例如，新德里是印度的首都。</p>
+<p>规则</p>
+<p>实际上，规则是允许我们对问题域做出结论的约束。规则基本上写成逻辑条款来表达各种事实。例如，如果我们正在构建任何游戏，那么必须定义所有规则。</p>
+<p>规则对于解决逻辑编程中的任何问题非常重要。规则基本上是逻辑结论，可以表达事实。以下是规则的语法</p>
+<figure class="highlight r"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">A∶− B1,B2,...,Bn.</span><br></pre></td></tr></table></figure>
+
+<p>这里，A是头部，B1，B2，… Bn是身体。</p>
+<p>例如 − ancestor(X,Y) :- father(X,Y).</p>
+<p>ancestor(X,Z) :- father(X,Y), ancestor(Y,Z).</p>
+<p>这可以理解为，对于每个X和Y，如果X是Y的父亲而Y是Z的祖先，则X是Z的祖先。对于每个X和Y，X是Z的祖先，如果X是Y和Y的父亲是Z的祖先。</p>
+<p>python-kanren</p>
+<p><img src="/images/%E5%87%BD%E6%95%B0%E5%BC%8F%E7%BC%96%E7%A8%8B/1646727263171-2b1c6cb6-7791-4703-843d-e21ee7509e08.png" alt="img"></p>
+<h3 id="数据驱动编程"><a href="#数据驱动编程" class="headerlink" title="数据驱动编程"></a>数据驱动编程</h3><p>在计算机编程中，<strong>数据驱动</strong>编程，是一种<a target="_blank" rel="noopener" href="https://zh.wikipedia.org/wiki/%E7%BC%96%E7%A8%8B%E8%8C%83%E5%BC%8F">编程范式</a>，在其中程序语句描述要匹配的数据，和对它需要做的处理，程序本身不定义选取数据的一序列文件操作步骤[<a target="_blank" rel="noopener" href="https://zh.wikipedia.org/wiki/%E6%95%B0%E6%8D%AE%E9%A9%B1%E5%8A%A8%E7%BC%96%E7%A8%8B#cite_note-awk-1">1]</a>。数据驱动语言的标准例子是文本处理语言<a target="_blank" rel="noopener" href="https://zh.wikipedia.org/wiki/Sed">sed</a>和<a target="_blank" rel="noopener" href="https://zh.wikipedia.org/wiki/AWK">AWK</a>[<a target="_blank" rel="noopener" href="https://zh.wikipedia.org/wiki/%E6%95%B0%E6%8D%AE%E9%A9%B1%E5%8A%A8%E7%BC%96%E7%A8%8B#cite_note-awk-1">1]</a>，在其中数据是<a target="_blank" rel="noopener" href="https://zh.wikipedia.org/wiki/%E6%A8%99%E6%BA%96%E4%B8%B2%E6%B5%81">输入流</a>中的一序列的行，因而它们也叫面向行的语言，而<a target="_blank" rel="noopener" href="https://zh.wikipedia.org/wiki/%E6%A8%A1%E5%BC%8F%E5%8C%B9%E9%85%8D">模式匹配</a>主要通过<a target="_blank" rel="noopener" href="https://zh.wikipedia.org/wiki/%E6%AD%A3%E5%88%99%E8%A1%A8%E8%BE%BE%E5%BC%8F">正则表达式</a>或行号来完成。</p>
+<p>在数据驱动的编程中,由数据本身驱动程序的逻辑。在游戏编程中,通常是数据驱动的编程方式使用某种形式的脚本语言。游戏的行为由变化的数据文件决定,而不做任何重新编译。</p>
+<p>无数据驱动的时候</p>
+<figure class="highlight xml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line">data_lloyd = &#123;&#x27;name&#x27;: &#x27;Lloyd&#x27;, &#x27;lives&#x27;: &#x27;Alcoy &#125;</span><br><span class="line">data_jason = &#123;&#x27;name&#x27;: &#x27;Jason&#x27;, &#x27;lives&#x27;: &#x27;London&#x27; &#125;</span><br><span class="line">go = function(x) </span><br><span class="line">    if x.name == &#x27;Lloyd&#x27; </span><br><span class="line">    then </span><br><span class="line">        print(&quot;Alcoy, Spain&quot;) </span><br><span class="line">    else </span><br><span class="line">        print(&quot;London, UK&quot;) </span><br><span class="line">end</span><br></pre></td></tr></table></figure>
+
+
+
+<p>数据驱动</p>
+<figure class="highlight xml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">data_lloyd = &#123;&#x27;name&#x27;: &#x27;Lloyd&#x27;, &#x27;lives&#x27;: function()&#123; print(&quot;Alcoy, Spain&quot;) &#125;</span><br><span class="line">data_jason = &#123;&#x27;name&#x27;: &#x27;Jason&#x27;, &#x27;lives&#x27;: function()&#123; print(&quot;London, UK&quot;) &#125;</span><br><span class="line">go = function(x)</span><br><span class="line">    x.lives()</span><br><span class="line">end</span><br></pre></td></tr></table></figure>
+
+
+
+
+
+<p>demo：</p>
+<p>我们将使用一个简单的门。当玩家进入一个触发器区域,门打开时,当玩家离开引发地区,门关闭:</p>
+<p><img src="/images/%E5%87%BD%E6%95%B0%E5%BC%8F%E7%BC%96%E7%A8%8B/1646731476987-ba1b4d64-4ef2-4e4d-91c4-1b04fcabf94a.png" alt="img"></p>
+<p>如果我们让触发器区域覆盖整个门,然后门更多的是一种视觉细节,像一个星际旅行输送机的门:</p>
+<p><img src="/images/%E5%87%BD%E6%95%B0%E5%BC%8F%E7%BC%96%E7%A8%8B/1646731517811-695d1abd-95bc-4dc0-94cb-caee362d0549.png" alt="img"></p>
+<p>我们可以创建一个触发门对象有两个部分:一个触发器区域(即不是画在屏幕上),和一个物理的门,这是绘制在屏幕上,和通过阻止玩家/怪物。我们的门可以有两种状态,打开和关闭。关闭时,碰撞区域的门充满整个部分的走廊,当打开碰撞区域移动(或门对象标记为一个对象,不会撞上东西。)</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br></pre></td><td class="code"><pre><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">WorldObject</span></span></span><br><span class="line"><span class="class">   &#123;</span></span><br><span class="line"><span class="class">       <span class="title">public</span> <span class="title">Vector2</span> <span class="title">Position</span> &#123; <span class="title">get</span>; <span class="title">set</span>; &#125;</span></span><br><span class="line"><span class="class">       <span class="title">public</span> <span class="title">Rectangle</span> <span class="title">CollisionArea</span> &#123; <span class="title">get</span>; <span class="title">set</span>; &#125;</span></span><br><span class="line"><span class="class">       <span class="title">public</span> <span class="title">bool</span> <span class="title">CallbackIfNotColliding</span> &#123; <span class="title">get</span>; <span class="title">set</span>; &#125;</span></span><br><span class="line"><span class="class">    </span></span><br><span class="line"><span class="class">       // <span class="title">Called</span> <span class="title">when</span> <span class="title">the</span> <span class="title">world</span> <span class="title">detects</span> <span class="title">a</span> <span class="title">collision</span>, <span class="title">with</span> <span class="title">a</span> <span class="title">pointer</span></span></span><br><span class="line"><span class="class">       //  <span class="title">to</span> <span class="title">the</span> <span class="title">object</span> <span class="title">we</span> <span class="title">collided</span> <span class="title">with</span></span></span><br><span class="line"><span class="class">       <span class="title">public</span> <span class="title">virtual</span> <span class="title">void</span> <span class="title">Collide</span>(<span class="params">WorldObject otherObject</span>) &#123; &#125;</span></span><br><span class="line"><span class="class">    </span></span><br><span class="line"><span class="class">       // <span class="title">Called</span> <span class="title">when</span> <span class="title">we</span> <span class="title">don</span>&#x27;<span class="title">t</span> <span class="title">collide</span> <span class="title">with</span> <span class="title">anything</span>, <span class="title">if</span> <span class="title">our</span></span></span><br><span class="line"><span class="class">       // <span class="title">CallbackIfNotColliding</span> <span class="title">flag</span> <span class="title">is</span> <span class="title">set</span></span></span><br><span class="line"><span class="class">       <span class="title">public</span> <span class="title">virtual</span> <span class="title">void</span> <span class="title">NoCollision</span>() &#123; &#125;</span></span><br><span class="line"><span class="class">   &#125;</span></span><br><span class="line"><span class="class">   <span class="title">class</span> <span class="title">Door</span> :</span> WorldObject</span><br><span class="line">   &#123;</span><br><span class="line">       public void Draw(Spritebatch sb)</span><br><span class="line">       &#123;</span><br><span class="line">            <span class="keyword">if</span> (mIsOpen)</span><br><span class="line">            &#123;</span><br><span class="line">            	// Draw <span class="built_in">open</span> door</span><br><span class="line">            &#125;</span><br><span class="line">            <span class="keyword">else</span></span><br><span class="line">            &#123;</span><br><span class="line">            	// Draw closed door</span><br><span class="line">            &#125;</span><br><span class="line">       </span><br><span class="line">       		// Could also keep track <span class="keyword">if</span> door <span class="keyword">is</span> opening / closing, draw animation</span><br><span class="line">       &#125;</span><br><span class="line">       </span><br><span class="line">       public void Update(GameTime gameTime)</span><br><span class="line">       &#123;</span><br><span class="line">            // Updating <span class="keyword">for</span> <span class="built_in">any</span> dynamic behavior (like animating opening / closing,</span><br><span class="line">            //    <span class="keyword">or</span> a revolving door, <span class="keyword">or</span> something <span class="keyword">else</span>)       </span><br><span class="line">       &#125;</span><br><span class="line">       </span><br><span class="line">       </span><br><span class="line">        public <span class="built_in">bool</span> IsOpen</span><br><span class="line">        &#123;</span><br><span class="line">            get</span><br><span class="line">            &#123;</span><br><span class="line">                <span class="keyword">return</span> mIsOpen;</span><br><span class="line">            &#125;</span><br><span class="line">            <span class="built_in">set</span></span><br><span class="line">            &#123;</span><br><span class="line">            	<span class="keyword">if</span> (value != mIsOpen)</span><br><span class="line">                &#123;</span><br><span class="line">                  // Either modify collision volume that world uses, <span class="keyword">or</span> <span class="built_in">set</span> a flag</span><br><span class="line">                  //  <span class="keyword">for</span> the world to ignore / allow collisions <span class="keyword">with</span> this door </span><br><span class="line">                  mIsOpen = value;</span><br><span class="line">                &#125;</span><br><span class="line">            &#125;</span><br><span class="line">       &#125;</span><br><span class="line">       		</span><br><span class="line">       private <span class="built_in">bool</span> mIsOpen;</span><br><span class="line">   &#125;</span><br></pre></td></tr></table></figure>
+
+
+
+
+
+
+
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br></pre></td><td class="code"><pre><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">TriggeredDoor</span> :</span> WorldObject</span><br><span class="line">&#123;</span><br><span class="line">     private Door mDoor;</span><br><span class="line"></span><br><span class="line">     public override void Collide(WorldObject otherObject)</span><br><span class="line">     &#123;</span><br><span class="line">     	Door.IsOpen = true;</span><br><span class="line">     &#125;</span><br><span class="line">     </span><br><span class="line">     public override void NoCollide()</span><br><span class="line">     &#123;</span><br><span class="line">     	Door.IsOpen = false;</span><br><span class="line">     &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+
+
+
+
+<figure class="highlight xml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br></pre></td><td class="code"><pre><span class="line"><span class="tag">&lt;<span class="name">TriggeredDoor</span>&gt;</span></span><br><span class="line">  <span class="tag">&lt;<span class="name">TriggerArea</span> <span class="attr">type</span> = <span class="string">&quot;Rectangle&quot;</span>&gt;</span></span><br><span class="line">    <span class="tag">&lt;<span class="name">x</span>&gt;</span></span><br><span class="line">      300</span><br><span class="line">    <span class="tag">&lt;/<span class="name">x</span>&gt;</span></span><br><span class="line">    <span class="tag">&lt;<span class="name">y</span>&gt;</span> </span><br><span class="line">      200</span><br><span class="line">    <span class="tag">&lt;/<span class="name">y</span>&gt;</span></span><br><span class="line">    <span class="tag">&lt;<span class="name">w</span>&gt;</span></span><br><span class="line">      30</span><br><span class="line">    <span class="tag">&lt;/<span class="name">w</span>&gt;</span></span><br><span class="line">    <span class="tag">&lt;<span class="name">h</span>&gt;</span></span><br><span class="line">      20</span><br><span class="line">    <span class="tag">&lt;/<span class="name">h</span>&gt;</span></span><br><span class="line">  <span class="tag">&lt;/<span class="name">TriggerArea</span>&gt;</span></span><br><span class="line">  <span class="tag">&lt;<span class="name">ClosedCollisionArea</span> <span class="attr">type</span> = <span class="string">&quot;Rectangle&quot;</span>&gt;</span></span><br><span class="line">    <span class="tag">&lt;<span class="name">x</span>&gt;</span></span><br><span class="line">      320</span><br><span class="line">    <span class="tag">&lt;/<span class="name">x</span>&gt;</span></span><br><span class="line">    <span class="tag">&lt;<span class="name">y</span>&gt;</span> </span><br><span class="line">      200</span><br><span class="line">    <span class="tag">&lt;/<span class="name">y</span>&gt;</span></span><br><span class="line">    <span class="tag">&lt;<span class="name">w</span>&gt;</span></span><br><span class="line">      5</span><br><span class="line">    <span class="tag">&lt;/<span class="name">w</span>&gt;</span></span><br><span class="line">    <span class="tag">&lt;<span class="name">h</span>&gt;</span></span><br><span class="line">      20</span><br><span class="line">    <span class="tag">&lt;/<span class="name">h</span>&gt;</span></span><br><span class="line">  <span class="tag">&lt;/<span class="name">ClosedCollisionArea</span>&gt;</span></span><br><span class="line">  <span class="tag">&lt;<span class="name">OpenCollisionArea</span> <span class="attr">type</span> = <span class="string">&quot;Rectangle&quot;</span>&gt;</span></span><br><span class="line">    <span class="tag">&lt;<span class="name">x</span>&gt;</span></span><br><span class="line">      320</span><br><span class="line">    <span class="tag">&lt;/<span class="name">x</span>&gt;</span></span><br><span class="line">    <span class="tag">&lt;<span class="name">y</span>&gt;</span> </span><br><span class="line">      200</span><br><span class="line">    <span class="tag">&lt;/<span class="name">y</span>&gt;</span></span><br><span class="line">    <span class="tag">&lt;<span class="name">w</span>&gt;</span></span><br><span class="line">      5</span><br><span class="line">    <span class="tag">&lt;/<span class="name">w</span>&gt;</span></span><br><span class="line">    <span class="tag">&lt;<span class="name">h</span>&gt;</span></span><br><span class="line">      2</span><br><span class="line">    <span class="tag">&lt;/<span class="name">h</span>&gt;</span></span><br><span class="line">  <span class="tag">&lt;/<span class="name">OpenCollisionArea</span>&gt;</span></span><br><span class="line">  <span class="tag">&lt;<span class="name">OpenTexture</span> <span class="attr">type</span> = <span class="string">&quot;String&quot;</span>&gt;</span>OpenDoor1<span class="tag">&lt;/<span class="name">OpenTexture</span>&gt;</span></span><br><span class="line">  <span class="tag">&lt;<span class="name">ClosedTexture</span> <span class="attr">type</span> = <span class="string">&quot;String&quot;</span>&gt;</span>ClosedDoor1<span class="tag">&lt;/<span class="name">ClosedTexture</span>&gt;</span></span><br><span class="line">  <span class="tag">&lt;<span class="name">TexturePosition</span> <span class="attr">type</span> = <span class="string">&quot;Vector2&quot;</span>&gt;</span></span><br><span class="line">    <span class="tag">&lt;<span class="name">x</span>&gt;</span></span><br><span class="line">      100</span><br><span class="line">    <span class="tag">&lt;/<span class="name">x</span>&gt;</span></span><br><span class="line">    <span class="tag">&lt;<span class="name">y</span>&gt;</span> </span><br><span class="line">      100</span><br><span class="line">      </span><br><span class="line">      <span class="tag">&lt;/<span class="name">TexturePosition</span>&gt;</span></span><br><span class="line"><span class="tag">&lt;/<span class="name">TriggeredDoor</span>&gt;</span></span><br></pre></td></tr></table></figure>
+
+<p>当你输入一个特定的体积。如果有一个全局函数,关掉灯,我们可以在我们的世界文件中创建一个条目,看起来像下面的:</p>
+<figure class="highlight xml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br></pre></td><td class="code"><pre><span class="line"><span class="tag">&lt;<span class="name">TriggeringArea</span>&gt;</span></span><br><span class="line">   <span class="tag">&lt;<span class="name">Area</span> <span class="attr">type</span> = <span class="string">&quot;Rectangle&quot;</span>&gt;</span></span><br><span class="line">      <span class="tag">&lt;<span class="name">x</span>&gt;</span></span><br><span class="line">         100</span><br><span class="line">      <span class="tag">&lt;/<span class="name">x</span>&gt;</span></span><br><span class="line">      <span class="tag">&lt;<span class="name">y</span>&gt;</span></span><br><span class="line">         50</span><br><span class="line">      <span class="tag">&lt;/<span class="name">y</span>&gt;</span> </span><br><span class="line">      <span class="tag">&lt;<span class="name">w</span>&gt;</span></span><br><span class="line">         30</span><br><span class="line">      <span class="tag">&lt;/<span class="name">w</span>&gt;</span> </span><br><span class="line">      <span class="tag">&lt;<span class="name">h</span>&gt;</span></span><br><span class="line">          10</span><br><span class="line">      <span class="tag">&lt;/<span class="name">h</span>&gt;</span></span><br><span class="line">   <span class="tag">&lt;/<span class="name">Area</span>&gt;</span></span><br><span class="line">   <span class="tag">&lt;<span class="name">code</span>&gt;</span></span><br><span class="line">       TurnOffLights()</span><br><span class="line">   <span class="tag">&lt;/<span class="name">code</span>&gt;</span></span><br><span class="line"><span class="tag">&lt;/<span class="name">triggeringarea</span>&gt;</span></span><br></pre></td></tr></table></figure>
+
+<p>脚本执行器</p>
+<figure class="highlight xml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">Object obj = Scripting.GetInstance();                              // Get a pointer ot the object</span><br><span class="line">MethodType method = obj.GetType().GetMethod(&quot;TurnOnLights&quot;);       // Get a pointer to the method object</span><br><span class="line">Obj [] params = new Obj[0];                                        // Array of parameters (none, in this example)</span><br><span class="line">method.Invoke(obj, params);                                        // Call the method</span><br><span class="line"></span><br></pre></td></tr></table></figure>
+
+
+
+
+
+
+
+<p>在其之下隐藏的设计思想</p>
+<p>1、控制复杂度。通过把程序逻辑的复杂度转移到人类更容易处理的数据中来，从而达到控制复杂度的目标。代码流程从命令式变成了 声明式<br>2、隔离变化。像上面的例子，每个消息处理的逻辑是不变的，但是消息可能是变化的，那就把容易变化的消息和不容易变化的逻辑分离。<br>3、机制和策略的分离。机制就是消息的处理逻辑，策略就是不同的消息处理。</p>
+<p><img src="/images/%E5%87%BD%E6%95%B0%E5%BC%8F%E7%BC%96%E7%A8%8B/1646654817397-cc4ea5b6-a55e-4d97-a923-7f3810607fbb.png" alt="img"></p>
+<h3 id="函数式编程"><a href="#函数式编程" class="headerlink" title="函数式编程"></a>函数式编程</h3><p><strong>函数式编程</strong>，或称<strong>函数程序设计</strong>、<strong>泛函编程</strong>（英語：Functional programming），是一种<a target="_blank" rel="noopener" href="https://zh.wikipedia.org/wiki/%E7%BC%96%E7%A8%8B%E8%8C%83%E5%BC%8F">编程范式</a>，它将<a target="_blank" rel="noopener" href="https://zh.wikipedia.org/wiki/%E9%9B%BB%E8%85%A6%E9%81%8B%E7%AE%97">电脑运算</a>视为<a target="_blank" rel="noopener" href="https://zh.wikipedia.org/wiki/%E5%87%BD%E6%95%B0">函数</a>运算，并且避免使用程式<a target="_blank" rel="noopener" href="https://zh.wikipedia.org/w/index.php?title=%E7%8A%B6%E6%80%81_(%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%A7%91%E5%AD%A6)&action=edit&redlink=1">状态</a>（英语：<a target="_blank" rel="noopener" href="https://en.wikipedia.org/wiki/State_(computer_science)">State (computer science)</a>）以及<a target="_blank" rel="noopener" href="https://zh.wikipedia.org/wiki/%E4%B8%8D%E5%8F%AF%E8%AE%8A%E7%89%A9%E4%BB%B6">易变物件</a>。其中，<a target="_blank" rel="noopener" href="https://zh.wikipedia.org/wiki/%CE%9B%E6%BC%94%E7%AE%97">λ演算</a>为该语言最重要的基础。而且，λ演算的函数可以接受函数作为输入參數和输出返回值。</p>
+<p>比起<a target="_blank" rel="noopener" href="https://zh.wikipedia.org/wiki/%E6%8C%87%E4%BB%A4%E5%BC%8F%E7%B7%A8%E7%A8%8B">指令式編程</a>，函数式编程更加强调程序执行的结果而非执行的过程，倡导利用若干简单的执行单元让计算结果不断渐进，逐层推导复杂的运算，而不是设计一个复杂的执行过程。</p>
+<p>在函数式编程中，函数是<a target="_blank" rel="noopener" href="https://zh.wikipedia.org/wiki/%E5%A4%B4%E7%AD%89%E5%AF%B9%E8%B1%A1">头等对象</a>，意思是说一个函数，既可以作为其它函数的输入参数值，也可以从函数中返回值，被修改或者被分配给一个变量。</p>
+<p>早在50年代函数式编程开始之前，Lisp 语言就已经在 IBM 700/7000 系列的科学计算机上运行了。Lisp 引入了很多与我们现在的函数式编程有关的示例与功能，我们甚至可以称 Lisp 是所有函数式编程语言的鼻祖。</p>
+<p>这也是函数式编程中最有趣的方面，所有函数式编程语言都是基于相同的 <a target="_blank" rel="noopener" href="https://zh.wikipedia.org/wiki/%CE%9B%E6%BC%94%E7%AE%97">λ演算</a>，这种简单数学基础。</p>
+<p>λ演算是图灵完备的，它是一种通用的计算模型，可用于模拟任何一台单带图灵机。它名字中的希腊字母 lambda（λ），被使用在了 lambda 表达式和 lambda 项绑定函数中的变量中。</p>
+<p>λ演算是一个极其简单但又十分强大的概念。它的核心主要有两个概念：</p>
+<ul>
+<li>函数的抽象，通过引入变量来归纳得出表达式；</li>
+<li>函数的应用，通过给变量赋值来对已得出的表达式进行计算；</li>
+</ul>
+<p>让我们来看个小例子，单参数函数 f，将参数递增1。</p>
+<figure class="highlight xml"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">f = λ x. x+1 </span><br></pre></td></tr></table></figure>
+
+<p>假设我们应用函数在数字5上，那么函数读取如下：</p>
+<figure class="highlight xml"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">f(5) =&gt; 5 + 1</span><br></pre></td></tr></table></figure>
+
+
+
+<h4 id="函数式编程的基本原理"><a href="#函数式编程的基本原理" class="headerlink" title="函数式编程的基本原理"></a>函数式编程的基本原理</h4><p>现在，数学知识已经够了。让我们看一下使函数式编程变得强大的特性有哪些？</p>
+<h5 id="头等函数（first-class-function）"><a href="#头等函数（first-class-function）" class="headerlink" title="头等函数（first-class function）"></a>头等函数（first-class function）</h5><p>在函数式编程中，函数是一等公民，意思是说函数可以赋值给变量，例如在 <a target="_blank" rel="noopener" href="http://elixir-lang.org/getting-started/introduction.html">elixir</a> 中，</p>
+<figure class="highlight xml"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">double = fn(x) -&gt; x * 2 </span><br></pre></td></tr></table></figure>
+
+<p>然后我们可以如下来调用函数：</p>
+<figure class="highlight xml"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">double.(2) </span><br></pre></td></tr></table></figure>
+
+<p>scala</p>
+<figure class="highlight xml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">def m(x: Int):Int = x * 2</span><br><span class="line"></span><br><span class="line">m(2) //输出4</span><br></pre></td></tr></table></figure>
+
+
+
+<p>scala匿名函数/闭包</p>
+<figure class="highlight xml"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">val m = (x: Int) =&gt; x * 2</span><br></pre></td></tr></table></figure>
+
+
+
+
+
+<p>java中的运用</p>
+<figure class="highlight xml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line">@FunctionalInterface</span><br><span class="line">interface FunctionMul&#123;</span><br><span class="line">    int multiTwo(int x);</span><br><span class="line">&#125;        </span><br><span class="line"></span><br><span class="line"></span><br><span class="line">FunctionMul func = x -&gt; x * 2;</span><br><span class="line">func.multi(2); //输出4</span><br></pre></td></tr></table></figure>
+
+<p>一个最常用的Function</p>
+<p><img src="../images/1646740610546-c1403a0d-4ca7-498b-8b57-eb4c33e699b4.png" alt="img"></p>
+<figure class="highlight xml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">Function&lt;Integer,Integer&gt; function = x -&gt; x * 2;</span><br><span class="line"></span><br><span class="line">function.apply(2); // </span><br></pre></td></tr></table></figure>
+
+
+
+
+
+<h5 id="高阶函数（higher-order-function）"><a href="#高阶函数（higher-order-function）" class="headerlink" title="高阶函数（higher-order function）"></a>高阶函数（higher-order function）</h5><p>高阶函数的定义是，接收一个或多个函数变量作为参数，然后生成的新函数，即为高阶函数。具体有两种情况：</p>
+<ol>
+<li>函数可以作为参数被传递</li>
+<li>函数可以作为返回值输出</li>
+</ol>
+<p>让我们再次使用函数 double 来说明这个概念：</p>
+<figure class="highlight xml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">double = fn(x) -&gt; x * 2</span><br><span class="line">Enum.map(1..10, double) </span><br></pre></td></tr></table></figure>
+
+<p>这例子中，Enum.map 将一个枚举列表作为第一参数，之前定义的函数作为第二参数；然后将这个函数应用到枚举中的每一个元素，结果为：</p>
+<figure class="highlight xml"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">[2,4,6,8,10,12,14,16,18,20] </span><br></pre></td></tr></table></figure>
+
+<p>scala中的高阶函数</p>
+<figure class="highlight xml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line">def test(f:Int =&gt; String , num : Int) = f(num)</span><br><span class="line"></span><br><span class="line">def f(num:Int) : String = &#123;</span><br><span class="line">  10 + num + &quot;&quot;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">def main(args: Array[String]): Unit = &#123;</span><br><span class="line">  println(test(f,10))</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+
+
+
+
+
+
+<p>java中的例子</p>
+<figure class="highlight xml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">Integer[] arr = new Integer[]&#123;2,4,6,8,10,12,14,16,18,20&#125;;</span><br><span class="line">Arrays.stream(arr)</span><br><span class="line">                .map(function)</span><br><span class="line">                .toArray();</span><br></pre></td></tr></table></figure>
+
+
+
+<p>java非常常见的写法</p>
+<figure class="highlight xml"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">Arrays.sort(arr, (s1, s2)-&gt;s1.compareToIgnoreCase(s2));</span><br></pre></td></tr></table></figure>
+
+
+
+
+
+<h5 id="不可变状态（Immutable-State）"><a href="#不可变状态（Immutable-State）" class="headerlink" title="不可变状态（Immutable State）"></a>不可变状态（Immutable State）</h5><p>在函数式编程语言中，状态是不可变的。这意味着一旦一个变量被绑定了一个值，它将不能再被重新定义。这在防止副作用与条件竞争上有明显的优势，使并发编程更简单。</p>
+<p>另外，函数式编程中的“值不可变性”避免了对公共的可变状态进行同步访问控制的复杂问题，能够较好满足分布式并行编程的需求，适应大数据时代的到来。</p>
+<p>和上面一样，让我们使用 Elixir 来说明一下这概念：</p>
+<figure class="highlight xml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line">iex&gt; tuple = &#123;:ok, &quot;hello&quot;&#125; </span><br><span class="line">&#123;:ok, &quot;hello&quot;&#125; </span><br><span class="line">iex&gt; put_elem(tuple, 1, &quot;world&quot;) </span><br><span class="line">&#123;:ok, &quot;world&quot;&#125; </span><br><span class="line">iex&gt; tuple </span><br><span class="line">&#123;:ok, &quot;hello&quot;&#125; </span><br></pre></td></tr></table></figure>
+
+<p>这个例子中，tuple 的值从来没有改变过，第三行 put_elem 是返回了一个完全新的 tuple， 而没有去修改原有的值。</p>
+<p>Scala 中定义变量分为 var（可变变量）和 val（不可变变量）</p>
+<p>Scala 中集合框架也分为可变集合和不可变集合。比如 List（列表） 和 Tuple（元组）本身就是不可变的，set 和 map 分为可变和不可变的，默认为不可变。</p>
+<figure class="highlight xml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line">//创建List</span><br><span class="line">val list = List(&quot;abc&quot;,&quot;xyz&quot;)</span><br><span class="line"></span><br><span class="line"></span><br><span class="line">//添加元素。list本身不变，返回一个新的list</span><br><span class="line">val list1 = list :+ 6 //加到后面 List(abc, xyz, 6)</span><br><span class="line">val list2 = 10 +: list //加到前面 List(10, abc, xyz)</span><br></pre></td></tr></table></figure>
+
+
+
+
+
+<h5 id="函数组合子（Functional-Combinators）"><a href="#函数组合子（Functional-Combinators）" class="headerlink" title="函数组合子（Functional Combinators）"></a>函数组合子（Functional Combinators）</h5><p>组合子逻辑意图作为简单的元逻辑，它能澄清在逻辑符号中的量化变量的意义，并真正的消除对它们的需要。消除量化变量的另一种方式是<a target="_blank" rel="noopener" href="https://zh.wikipedia.org/wiki/%E8%92%AF%E5%9B%A0">蒯因</a>的谓词函子。尽管多数组合子逻辑系统超出了一阶逻辑的表达能力，蒯因的谓词函子的表达能力等价于一阶逻辑</p>
+<ul>
+<li>map对列表中的每个元素应用一个函数，返回应用后的元素所组成的列表。</li>
+<li>filter移除任何对传入函数计算结果为false的元素。返回一个布尔值的函数通常被称为谓词函数[或判定函数]。</li>
+<li>zip将两个列表的内容聚合到一个对偶列表中。</li>
+<li>partition将使用给定的谓词函数分割列表。</li>
+<li>find返回集合中第一个匹配谓词函数的元素。</li>
+<li>foldLeft，0为初始值（记住numbers是List[Int]类型），m作为一个累加器。</li>
+<li>flatten将嵌套结构扁平化为一个层次的集合。</li>
+<li>flatMap是一种常用的组合子，结合映射[mapping]和扁平化[flattening]。 flatMap需要一个处理嵌套列表的函数，然后将结果串连起来。</li>
+</ul>
+<p>scala</p>
+<figure class="highlight xml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br></pre></td><td class="code"><pre><span class="line">scala&gt; numbers.map((i: Int) =&gt; i * 2)</span><br><span class="line">res0: List[Int] = List(2, 4, 6, 8)</span><br><span class="line"></span><br><span class="line">scala&gt; numbers.filter((i: Int) =&gt; i % 2 == 0)</span><br><span class="line">res0: List[Int] = List(2, 4)</span><br><span class="line"></span><br><span class="line">scala&gt; List(1, 2, 3).zip(List(&quot;a&quot;, &quot;b&quot;, &quot;c&quot;))</span><br><span class="line">res0: List[(Int, String)] = List((1,a), (2,b), (3,c))</span><br><span class="line"></span><br><span class="line">scala&gt; val numbers = List(1, 2, 3, 4, 5, 6, 7, 8, 9, 10)</span><br><span class="line">scala&gt; numbers.partition(_ % 2 == 0)</span><br><span class="line">res0: (List[Int], List[Int]) = (List(2, 4, 6, 8, 10),List(1, 3, 5, 7, 9))</span><br><span class="line"></span><br><span class="line">scala&gt; numbers.find((i: Int) =&gt; i &gt; 5)</span><br><span class="line">res0: Option[Int] = Some(6)</span><br><span class="line"></span><br><span class="line">scala&gt; numbers.foldLeft(0)((m: Int, n: Int) =&gt; m + n)</span><br><span class="line">res0: Int = 55</span><br></pre></td></tr></table></figure>
+
+
+
+
+
+<figure class="highlight xml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">Integer[] arr = new Integer[]&#123;2,4,6,8,10,12,14,16,18,20&#125;;</span><br><span class="line">Arrays.stream(arr)</span><br><span class="line">        .map(x -&gt; x * 2)</span><br><span class="line">        .toArray();</span><br></pre></td></tr></table></figure>
+
+
+
+<h5 id="柯里化函数-Currying"><a href="#柯里化函数-Currying" class="headerlink" title="柯里化函数(Currying)"></a>柯里化函数(Currying)</h5><p>在计算机科学中，柯里化（Currying）是把接受多个参数的函数变换成接受一个单一参数(最初函数的第一个参数)的函数，并且返回接受余下的参数且返回结果的新函数的技术。</p>
+<figure class="highlight scala"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br></pre></td><td class="code"><pre><span class="line">scala&gt; <span class="function"><span class="keyword">def</span> <span class="title">mul</span></span>(x:<span class="type">Int</span>,y:<span class="type">Int</span>):<span class="type">Int</span> = x *y</span><br><span class="line">mul: (x: <span class="type">Int</span>, y: <span class="type">Int</span>)<span class="type">Int</span></span><br><span class="line"></span><br><span class="line">scala&gt; mul(<span class="number">6</span>,<span class="number">7</span>)</span><br><span class="line">res12: <span class="type">Int</span> = <span class="number">42</span></span><br><span class="line"></span><br><span class="line"></span><br><span class="line">scala&gt; <span class="function"><span class="keyword">def</span> <span class="title">mul2</span></span>(x:<span class="type">Int</span>)(y:<span class="type">Int</span>)=x*y</span><br><span class="line">mul2: (x: <span class="type">Int</span>)(y: <span class="type">Int</span>)<span class="type">Int</span></span><br><span class="line"></span><br><span class="line"></span><br><span class="line">scala&gt; mul2(<span class="number">6</span>)(<span class="number">7</span>)</span><br><span class="line">res14: <span class="type">Int</span> = <span class="number">42</span></span><br><span class="line"></span><br><span class="line"><span class="comment">// 实际上是先变成这样一个函数</span></span><br><span class="line">scala&gt; <span class="function"><span class="keyword">def</span> <span class="title">mul2</span></span>(x:<span class="type">Int</span>)=(y:<span class="type">Int</span>)=&gt;x*y</span><br><span class="line">mul2: (x: <span class="type">Int</span>)<span class="type">Int</span> =&gt; <span class="type">Int</span></span><br><span class="line"></span><br><span class="line"></span><br><span class="line">scala&gt; <span class="keyword">val</span> result = mul2(<span class="number">6</span>)</span><br><span class="line">result: (y:<span class="type">Int</span>)=&gt;<span class="number">6</span>*y</span><br><span class="line"></span><br><span class="line"></span><br><span class="line">scala&gt; <span class="keyword">val</span> sum = result(<span class="number">7</span>)</span><br><span class="line">sum: <span class="number">42</span></span><br></pre></td></tr></table></figure>
+
+
+
+
+
+
+
+<p>运用</p>
+<figure class="highlight scala"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">def</span> <span class="title">getLines</span></span>(filename: <span class="type">String</span>)(isFileReadable: (<span class="type">File</span>) =&gt; <span class="type">Boolean</span>)(closableStream: (<span class="type">Closeable</span>) =&gt; <span class="type">Unit</span>):<span class="type">List</span>[<span class="type">String</span>] = &#123;</span><br><span class="line">  <span class="keyword">val</span> file = <span class="keyword">new</span> <span class="type">File</span>(filename)</span><br><span class="line">  <span class="keyword">if</span> (isFileReadable(file)) &#123;</span><br><span class="line">    <span class="keyword">val</span> readerStream = <span class="keyword">new</span> <span class="type">FileReader</span>(file)</span><br><span class="line">    <span class="keyword">val</span> buffer = <span class="keyword">new</span> <span class="type">BufferedReader</span>(readerStream)</span><br><span class="line">    <span class="keyword">try</span> &#123;</span><br><span class="line">      <span class="keyword">var</span> list: <span class="type">List</span>[<span class="type">String</span>] = <span class="type">List</span>()</span><br><span class="line">      <span class="keyword">var</span> str = <span class="string">&quot;&quot;</span></span><br><span class="line">      <span class="keyword">var</span> isReadOver = <span class="literal">false</span></span><br><span class="line">      <span class="keyword">while</span> (!isReadOver) &#123;</span><br><span class="line">        str = buffer.readLine()</span><br><span class="line">        <span class="keyword">if</span> (str == <span class="literal">null</span>) isReadOver = <span class="literal">true</span></span><br><span class="line">        <span class="keyword">else</span> list = str :: list</span><br><span class="line">      &#125;</span><br><span class="line">      list.reverse</span><br><span class="line">    &#125; <span class="keyword">finally</span> &#123;</span><br><span class="line">      closableStream(buffer)</span><br><span class="line">      closableStream(readerStream)</span><br><span class="line">    &#125;</span><br><span class="line">  &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">    <span class="type">List</span>()</span><br><span class="line">  &#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">def</span> <span class="title">isReadable</span></span>(file: <span class="type">File</span>) = &#123;</span><br><span class="line">  <span class="keyword">if</span> (<span class="literal">null</span> != file &amp;&amp; file.exists() &amp;&amp; file.canRead()) <span class="literal">true</span></span><br><span class="line">  <span class="keyword">else</span> <span class="literal">false</span></span><br><span class="line">&#125;</span><br><span class="line"><span class="function"><span class="keyword">def</span> <span class="title">closeStream</span></span>(stream: <span class="type">Closeable</span>) &#123;</span><br><span class="line">  <span class="keyword">if</span> (<span class="literal">null</span> != stream) &#123;</span><br><span class="line">    <span class="keyword">try</span> &#123;</span><br><span class="line">      stream.close</span><br><span class="line">    &#125; <span class="keyword">catch</span> &#123;</span><br><span class="line">      <span class="keyword">case</span> ex =&gt; <span class="type">Log</span>.error(“[”+<span class="keyword">this</span>.getClass.getName+”.closeStream]”,ex.getMessage)</span><br><span class="line">    &#125;</span><br><span class="line">  &#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">def</span> <span class="title">getLines</span></span>(filename:<span class="type">String</span>):<span class="type">List</span>[<span class="type">String</span>]=&#123;</span><br><span class="line">  getLines(filename)(isReadable)(closeStream)</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+
+
+<p>spark源码</p>
+<figure class="highlight scala"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">def</span> <span class="title">sql</span></span>(sqlText: <span class="type">String</span>): <span class="type">DataFrame</span> = &#123;</span><br><span class="line">    <span class="type">Dataset</span>.ofRows(self, sessionState.sqlParser.parsePlan(sqlText))</span><br><span class="line">&#125;</span><br><span class="line">        </span><br><span class="line">        </span><br><span class="line"><span class="keyword">override</span> <span class="function"><span class="keyword">def</span> <span class="title">parsePlan</span></span>(sqlText: <span class="type">String</span>): <span class="type">LogicalPlan</span> = parse(sqlText) &#123; parser =&gt;</span><br><span class="line">    astBuilder.visitSingleStatement(parser.singleStatement()) <span class="keyword">match</span> &#123;</span><br><span class="line">      <span class="keyword">case</span> plan: <span class="type">LogicalPlan</span> =&gt; plan</span><br><span class="line">      <span class="keyword">case</span> _ =&gt;</span><br><span class="line">        <span class="keyword">val</span> position = <span class="type">Origin</span>(<span class="type">None</span>, <span class="type">None</span>)</span><br><span class="line">        <span class="keyword">throw</span> <span class="keyword">new</span> <span class="type">ParseException</span>(<span class="type">Option</span>(sqlText), <span class="string">&quot;Unsupported SQL statement&quot;</span>, position, position)</span><br><span class="line">    &#125;</span><br><span class="line">  &#125;        </span><br><span class="line"></span><br><span class="line"></span><br><span class="line"></span><br><span class="line"></span><br><span class="line"></span><br><span class="line"><span class="keyword">protected</span> <span class="function"><span class="keyword">def</span> <span class="title">parse</span></span>[<span class="type">T</span>](command: <span class="type">String</span>)(toResult: <span class="type">SqlBaseParser</span> =&gt; <span class="type">T</span>): <span class="type">T</span> = &#123;</span><br><span class="line">    logInfo(<span class="string">s&quot;Parsing command: <span class="subst">$command</span>&quot;</span>)</span><br><span class="line"></span><br><span class="line">    <span class="keyword">val</span> lexer = <span class="keyword">new</span> <span class="type">SqlBaseLexer</span>(<span class="keyword">new</span> <span class="type">ANTLRNoCaseStringStream</span>(command))</span><br><span class="line">    lexer.removeErrorListeners()</span><br><span class="line">    lexer.addErrorListener(<span class="type">ParseErrorListener</span>)</span><br><span class="line"></span><br><span class="line">    <span class="keyword">val</span> tokenStream = <span class="keyword">new</span> <span class="type">CommonTokenStream</span>(lexer)</span><br><span class="line">    <span class="keyword">val</span> parser = <span class="keyword">new</span> <span class="type">SqlBaseParser</span>(tokenStream)</span><br><span class="line">    parser.addParseListener(<span class="type">PostProcessor</span>)</span><br><span class="line">    parser.removeErrorListeners()</span><br><span class="line">    parser.addErrorListener(<span class="type">ParseErrorListener</span>)</span><br><span class="line"></span><br><span class="line">    <span class="keyword">try</span> &#123;</span><br><span class="line">      <span class="keyword">try</span> &#123;</span><br><span class="line">        <span class="comment">// first, try parsing with potentially faster SLL mode</span></span><br><span class="line">        parser.getInterpreter.setPredictionMode(<span class="type">PredictionMode</span>.<span class="type">SLL</span>)</span><br><span class="line">        toResult(parser)</span><br><span class="line">      ...</span><br></pre></td></tr></table></figure>
+
+    </div>
+
+    
+    
+    
+
+    <footer class="post-footer">
+          <div class="reward-container">
+  <div>Buy me a coffee</div>
+  <button>
+    Donate
+  </button>
+  <div class="post-reward">
+      <div>
+        <img src="/hexo/images/wechatpay.png" alt="Absurd WeChat Pay">
+        <span>WeChat Pay</span>
+      </div>
+
+  </div>
+</div>
+
+
+        
+
+          <div class="post-nav">
+            <div class="post-nav-item">
+                <a href="/hexo/post/d6c1b591.html" rel="prev" title="dubbo3源码解析（十二）-Triple协议解析">
+                  <i class="fa fa-chevron-left"></i> dubbo3源码解析（十二）-Triple协议解析
+                </a>
+            </div>
+            <div class="post-nav-item">
+            </div>
+          </div>
+    </footer>
+  </article>
+</div>
+
+
+
+
+
+
+</div>
+  </main>
+
+  <footer class="footer">
+    <div class="footer-inner">
+
+
+<div class="copyright">
+  &copy; 
+  <span itemprop="copyrightYear">2022</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">Absurd</span>
+</div>
+  <div class="powered-by">Powered by <a href="https://hexo.io/" rel="noopener" target="_blank">Hexo</a> & <a href="https://theme-next.js.org/mist/" rel="noopener" target="_blank">NexT.Mist</a>
+  </div>
+
+    </div>
+  </footer>
+
+  
+  <script src="https://cdn.jsdelivr.net/npm/animejs@3.2.1/lib/anime.min.js" integrity="sha256-XL2inqUJaslATFnHdJOi9GfQ60on8Wx1C2H8DYiN1xY=" crossorigin="anonymous"></script>
+<script src="/hexo/js/comments.js"></script><script src="/hexo/js/utils.js"></script><script src="/hexo/js/motion.js"></script><script src="/hexo/js/schemes/muse.js"></script><script src="/hexo/js/next-boot.js"></script>
+
+  
+<script src="https://cdn.jsdelivr.net/npm/hexo-generator-searchdb@1.4.0/dist/search.js" integrity="sha256-vXZMYLEqsROAXkEw93GGIvaB2ab+QW6w3+1ahD9nXXA=" crossorigin="anonymous"></script>
+<script src="/hexo/js/third-party/search/local-search.js"></script>
+
+
+
+
+
+  
+
+
+
+
+
+</body>
+</html>

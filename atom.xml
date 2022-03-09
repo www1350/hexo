@@ -6,7 +6,7 @@
   <link href="/hexo/atom.xml" rel="self"/>
   
   <link href="https://www1350.github.io/hexo/"/>
-  <updated>2022-01-28T07:26:11.661Z</updated>
+  <updated>2022-03-09T15:45:06.092Z</updated>
   <id>https://www1350.github.io/hexo/</id>
   
   <author>
@@ -15,6 +15,25 @@
   </author>
   
   <generator uri="http://hexo.io/">Hexo</generator>
+  
+  <entry>
+    <title>函数式编程</title>
+    <link href="https://www1350.github.io/hexo/post/1690d21b.html"/>
+    <id>https://www1350.github.io/hexo/post/1690d21b.html</id>
+    <published>2022-03-09T15:06:59.000Z</published>
+    <updated>2022-03-09T15:45:06.092Z</updated>
+    
+    <summary type="html">
+    
+      
+      
+        &lt;h2 id=&quot;编程范式&quot;&gt;&lt;a href=&quot;#编程范式&quot; class=&quot;headerlink&quot; title=&quot;编程范式&quot;&gt;&lt;/a&gt;编程范式&lt;/h2&gt;&lt;p&gt;Programming paradigm(编程范式) 是指某种编程语言典型的编程风格或编程方式。 编程范式是编程语言的一种分
+      
+    
+    </summary>
+    
+    
+  </entry>
   
   <entry>
     <title>dubbo3源码解析（十二）-Triple协议解析</title>
@@ -525,38 +544,6 @@
       <category term="2PC" scheme="https://www1350.github.io/hexo/tags/2PC/"/>
     
       <category term="3PC" scheme="https://www1350.github.io/hexo/tags/3PC/"/>
-    
-  </entry>
-  
-  <entry>
-    <title>java基础概念</title>
-    <link href="https://www1350.github.io/hexo/post/a7ba99a3.html"/>
-    <id>https://www1350.github.io/hexo/post/a7ba99a3.html</id>
-    <published>2018-04-09T09:24:07.000Z</published>
-    <updated>2022-01-28T07:09:17.734Z</updated>
-    
-    <summary type="html">
-    
-      &lt;h2 id=&quot;基本概念&quot;&gt;&lt;a href=&quot;#基本概念&quot; class=&quot;headerlink&quot; title=&quot;基本概念&quot;&gt;&lt;/a&gt;基本概念&lt;/h2&gt;&lt;p&gt;JDK：包括编译器（javac.exe）、开发工具（javadoc.exe、jar.exe、keytool.exe、jconsole.exe）和更多的类库（如tools.jar）等。总结就是Java语言、Java虚拟机、Java API类库&lt;br&gt;JRE： 支持java运行的基本环境&lt;/p&gt;
-&lt;p&gt;&lt;img src=&quot;https://user-images.githubusercontent.com/7789698/29321251-65a89fd0-820c-11e7-93e7-b15d5c2db752.png&quot; alt=&quot;image&quot;&gt;&lt;/p&gt;
-&lt;p&gt;JIT：just in time&lt;/p&gt;
-&lt;p&gt;运行时数据区：&lt;br&gt;&lt;img src=&quot;https://user-images.githubusercontent.com/7789698/29417094-9fc9b106-839a-11e7-9be9-310174cd0d60.png&quot; alt=&quot;image&quot;&gt;&lt;/p&gt;
-&lt;h2 id=&quot;JVM的内存结构&quot;&gt;&lt;a href=&quot;#JVM的内存结构&quot; class=&quot;headerlink&quot; title=&quot;JVM的内存结构&quot;&gt;&lt;/a&gt;JVM的内存结构&lt;/h2&gt;&lt;h3 id=&quot;程序计数器：&quot;&gt;&lt;a href=&quot;#程序计数器：&quot; class=&quot;headerlink&quot; title=&quot;程序计数器：&quot;&gt;&lt;/a&gt;程序计数器：&lt;/h3&gt;&lt;p&gt;  当前代码行号指示器。各个线程计数器互不影响，独立存储。如果是执行Java方法，是虚拟机字节码地址。&lt;em&gt;如果是native方法，计数器为空。&lt;/em&gt;唯一一个没有OOM的区域。是当前线程所执行的字节码的行号指示器，每条线程都要有一个独立的程序计数器，这类内存也称为“&lt;strong&gt;线程私有&lt;/strong&gt;”的内存。&lt;/p&gt;
-&lt;p&gt;程序计数器是指CPU中的寄存器，它保存的是程序当前执行的指令的地址（也可以说保存下一条指令的所在存储单元的地址），当CPU需要执行指令时，需要从程序计数器中得到当前需要执行的指令所在存储单元的地址，然后根据得到的地址获取到指令，在得到指令之后，程序计数器便自动加1或者根据转移指针得到下一条指令的地址，如此循环，直至执行完所有的指令。　&lt;/p&gt;
-&lt;p&gt;在JVM规范中规定，如果线程执行的是非native方法，则程序计数器中保存的是当前需要执行的指令的地址；如果线程执行的是native方法，则程序计数器中的值是undefined。由于程序计数器中存储的数据所占空间的大小不会随程序的执行而发生改变，因此，对于程序计数器是不会发生内存溢出现象(OutOfMemory)的。&lt;/p&gt;
-&lt;h3 id=&quot;Java虚拟机栈：&quot;&gt;&lt;a href=&quot;#Java虚拟机栈：&quot; class=&quot;headerlink&quot; title=&quot;Java虚拟机栈：&quot;&gt;&lt;/a&gt;Java虚拟机栈：&lt;/h3&gt;&lt;p&gt;  描述Java方法执行的内存模型：每个执行时会创建一个栈帧，用于存储局部变量表、操作数栈、动态链接、方法出口等。每个方法调用到执行完成过程，对应一个栈帧在虚拟机栈中入栈到出栈的过程。&lt;strong&gt;线程私有&lt;/strong&gt;。&lt;/p&gt;
-&lt;ul&gt;
-&lt;li&gt;&lt;p&gt;局部变量表：&lt;/p&gt;
-&lt;p&gt;存放编译期可知的各种基本数据类型、对象引用类型（一个指向对象起始地址的引用指针）、returnAddress类型（一个字节码指令地址）。其中64位长度long和double会占用2个局部变量空间，其余占一个。局部变量表所需内存大小是在编译期间完成分配的，方法运行期间不会改变。如果栈深度大于虚拟机允许的深度，将抛出StackOverflowError异常；如果虚拟机栈动态扩张时无法申请到足够的内存，就会抛出OutOfMemoryError异常。&lt;/p&gt;
-&lt;/li&gt;
-&lt;/ul&gt;
-    
-    </summary>
-    
-      <category term="基础" scheme="https://www1350.github.io/hexo/categories/%E5%9F%BA%E7%A1%80/"/>
-    
-    
-      <category term="java" scheme="https://www1350.github.io/hexo/tags/java/"/>
     
   </entry>
   
