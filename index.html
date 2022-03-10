@@ -245,7 +245,7 @@
         <i class="far fa-calendar-check"></i>
       </span>
       <span class="post-meta-item-text">Edited on</span>
-      <time title="Modified: 2022-03-10 22:00:15" itemprop="dateModified" datetime="2022-03-10T22:00:15+08:00">2022-03-10</time>
+      <time title="Modified: 2022-03-10 22:03:26" itemprop="dateModified" datetime="2022-03-10T22:03:26+08:00">2022-03-10</time>
     </span>
 
   
@@ -538,7 +538,7 @@
 <h5 id="Actor简介"><a href="#Actor简介" class="headerlink" title="Actor简介"></a>Actor简介</h5><p>Actor模型(Actor model)首先是由Carl Hewitt在1973定义， 由Erlang OTP 推广，其 消息传递更加符合面向对象的原始意图。Actor属于并发组件模型，通过组件方式定义并发编程范式的高级阶段，避免使用者直接接触多线程并发或线程池等基础概念。</p>
 <p>Actor模型=数据+行为+消息。</p>
 <p>erlang，在语言层面就提供了Actor模型的支持，RabbitMQ 就是基于erlang开发的。</p>
-<h5 id=""><a href="#" class="headerlink" title=""></a></h5><h5 id="无锁"><a href="#无锁" class="headerlink" title="无锁"></a>无锁</h5><p>JAVA并发编程时需要特别的关注锁和内存原子性等一系列线程问题，而Actor模型内部的状态由它自己维护即它内部数据只能由它自己修改(通过消息传递来进行状态修改)，所以使用Actors模型进行并发编程可以很好地避免这些问题。Actor内部是以单线程的模式来执行的，类似于redis，所以Actor完全可以实现分布式锁类似的应用。</p>
+<h5 id="无锁"><a href="#无锁" class="headerlink" title="无锁"></a>无锁</h5><p>JAVA并发编程时需要特别的关注锁和内存原子性等一系列线程问题，而Actor模型内部的状态由它自己维护即它内部数据只能由它自己修改(通过消息传递来进行状态修改)，所以使用Actors模型进行并发编程可以很好地避免这些问题。Actor内部是以单线程的模式来执行的，类似于redis，所以Actor完全可以实现分布式锁类似的应用。</p>
 <h5 id="异步"><a href="#异步" class="headerlink" title="异步"></a>异步</h5><p>每个Actor都有一个专用的MailBox来接收消息，这也是Actor实现异步的基础。当一个Actor实例向另外一个Actor发消息的时候，并非直接调用Actor的方法，而是把消息传递到对应的MailBox里，就好像邮递员，并不是把邮件直接送到收信人手里，而是放进每家的邮箱，这样邮递员就可以快速的进行下一项工作。所以在Actor系统里，Actor发送一条消息是非常快的。</p>
 <p><img src="/hexo/images/%E5%87%BD%E6%95%B0%E5%BC%8F%E7%BC%96%E7%A8%8B/1646915681082-e71378c3-a1e2-44c5-88b9-98ce0d485827.png" alt="img"></p>
 <p>这样的设计主要优势就是解耦了Actor，数万个Actor并发的运行，每个actor都以自己的步调运行，且发送消息，接收消息都不会被阻塞。</p>
